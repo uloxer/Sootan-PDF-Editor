@@ -1,69 +1,48 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" alt="Stirling PDF logo">
-</p>
+# Sootan PDF Editor
 
-<h1 align="center">Stirling PDF - The Open-Source PDF Platform</h1>
+A local-use, MIT-licensed core fork of Stirling-PDF, based on upstream commit `684608d143779bf3a8ffc67639f077a1202c62ff`. The familiar editor and open-source PDF processing APIs are retained. Separately licensed application layers, accounts, commercial cloud integration, and analytics have been removed.
 
-Stirling PDF is a powerful, open-source PDF editing platform. Run it as a personal desktop app, in the browser, or deploy it on your own servers with a private API. Edit, sign, redact, convert, and automate PDFs without sending documents to external services.
+**This build has no login, accounts, MFA, API keys, or application access-control filter.** Run it on your own computer. The Java server binds to `127.0.0.1` by default; the compose example publishes only `127.0.0.1:8080`. Core's existing CORS behavior is retained and is not a substitute for authentication. Do not expose this application directly to an untrusted network. Existing PDF sanitization, encryption, redaction, signature verification, temporary-file management, and file-handling protections remain.
 
-<p align="center">
-  <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf">
-    <img src="https://img.shields.io/docker/pulls/frooodle/s-pdf" alt="Docker Pulls">
-  </a>
-  <a href="https://discord.gg/HYmhKj45pU">
-    <img src="https://img.shields.io/discord/1068636748814483718?label=Discord" alt="Discord">
-  </a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/Stirling-Tools/Stirling-PDF">
-    <img src="https://api.scorecard.dev/projects/github.com/Stirling-Tools/Stirling-PDF/badge" alt="OpenSSF Scorecard">
-  </a>
-  <a href="https://github.com/Stirling-Tools/stirling-pdf">
-    <img src="https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social" alt="GitHub Repo stars">
-  </a>
-</p>
+## Install with Docker
 
-![Stirling PDF - Dashboard](docs/images/home-light.png)
+Docker Engine with Compose is required. From this checkout:
 
-## Key Capabilities
-
-- **Everywhere you work** - Desktop client, browser UI, and self-hosted server with a private API.
-- **50+ PDF tools** - Edit, merge, split, sign, redact, convert, OCR, compress, and more.
-- **Automation & workflows** - No-code pipelines direct in UI with APIs to process millions of PDFs.
-- **Enterprise‑grade** - SSO, auditing, and flexible on‑prem deployments.
-- **Developer platform** - REST APIs available for nearly all tools to integrate into your existing systems.
-- **Global UI** - Interface available in 40+ languages.
-
-For a full feature list, see the docs: **https://docs.stirlingpdf.com**
-
-## Quick Start
-
-```bash
-docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf
+```sh
+docker compose build
+docker compose up -d
 ```
 
-Then open: http://localhost:8080
+Open http://127.0.0.1:8080. Stop with `docker compose down`. Named volumes preserve settings and local document storage. The recipe uses the upstream pinned full-tools base (including OCR and Office tooling), rather than removing document-processing features for a smaller image. Image size and container runtime have not been verified on the Windows implementation host because Docker is unavailable.
 
-For full installation options (including desktop and Kubernetes), see our [Documentation Guide](https://docs.stirlingpdf.com/#documentation-guide).
+## Build from source
 
-## Resources
+Install JDK 25, Node.js 24 (24.15 or newer), npm, and Task 3.54.0. No proprietary build mode is supported.
 
-- [**Documentation**](https://docs.stirlingpdf.com)
-- [**Homepage**](https://stirling.com)
-- [**API Docs**](https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/)
-- [**Server Plan & Enterprise**](https://docs.stirlingpdf.com/Paid-Offerings)
+```sh
+task install
+task check
+task build
+```
 
-## Support
+The bundled executable is in `app/core/build/libs/`. Run its generated JAR with `java -jar path-to-generated.jar`, then open http://127.0.0.1:8080. In PowerShell, list the exact output with `Get-ChildItem app/core/build/libs/*.jar` and pass that path to `java -jar`. For development, run `task dev`.
 
-- **Community**: [Discord](https://discord.gg/HYmhKj45pU)
-- **Bug Reports**: [GitHub Issues](https://github.com/Stirling-Tools/Stirling-PDF/issues)
+For an explicit Gradle build on Windows:
 
-## Contributing
+```powershell
+$env:STIRLING_FLAVOR = 'core'
+.\gradlew.bat :stirling-pdf:bootJar -PbuildWithFrontend=true
+```
 
-We welcome contributions! Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines.
+On Linux/macOS use `./gradlew` instead. Native PDFium libraries are bundled for the build host; use `-PjpdfiumPlatforms=linux-x64` or the matching target for a different platform. OCR and conversions need the existing external tools (qpdf, Ghostscript, Tesseract/OCRmyPDF, LibreOffice/unoserver, ImageMagick, and related tools); the container supplies these. A bare Java installation does not provide all native conversions. Keep the bundled font and translation resources for non-Latin documents.
 
-This project uses [Task](https://taskfile.dev/) as a unified command runner for all build, dev, and test commands. Run `task dev` to get started running the editor, run `task` to see the most common commands, or see the [Developer Guide](docs/developer/DeveloperGuide.md) for full details.
+## Features and limitations
 
-For adding translations, see the [Translation Guide](docs/developer/HowToAddNewLanguage.md).
+See [CORE_FEATURES.md](CORE_FEATURES.md) for retained tools, removals, dependency rationale and offline limitations. See [VERIFICATION.md](VERIFICATION.md) for measured results and unverified items. [SOOTAN_AUDIT.md](SOOTAN_AUDIT.md) records the starting baseline. Existing notices remain in [LICENSE](LICENSE), bundled dependency notices, including `app/core/src/main/resources/static/3rdPartyLicenses.json`.
 
-## License
+## Upstream security patches
 
-Stirling PDF is open-core. See [LICENSE](LICENSE) for details.
+1. Keep `upstream` read-only and `origin` pointing to your fork. Fetch upstream tags/commits and inspect advisories and dependency changes against the pinned baseline.
+2. Review each candidate's licence and path. Apply applicable MIT changes from `app/core`, `app/common`, shared build files and `frontend/src/editor/core`; do not copy code from excluded licence paths.
+3. Cherry-pick focused fixes onto a temporary branch from `privacy-core`, resolve conflicts, and rerun `task check`, `task build`, representative PDF security tests and offline network smoke checks.
+4. Review dependency notices and measured sizes, then merge into your fork. Update the recorded upstream baseline only after the applicable fixes and regressions have been reviewed. No automatic upstream merges or deployments are configured.
