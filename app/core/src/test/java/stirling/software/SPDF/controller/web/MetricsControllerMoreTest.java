@@ -23,7 +23,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
 
 import stirling.software.SPDF.config.EndpointInspector;
-import stirling.software.SPDF.service.WeeklyActiveUsersService;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
@@ -47,9 +46,7 @@ class MetricsControllerMoreTest {
         endpointInspector = mock(EndpointInspector.class);
         when(applicationProperties.getMetrics()).thenReturn(metrics);
         when(metrics.isEnabled()).thenReturn(true);
-        controller =
-                new MetricsController(
-                        applicationProperties, meterRegistry, endpointInspector, Optional.empty());
+        controller = new MetricsController(applicationProperties, meterRegistry, endpointInspector);
         controller.init();
     }
 
@@ -277,36 +274,6 @@ class MetricsControllerMoreTest {
             ResponseEntity<?> resp = controller.getAllUniqueEndpointLoads();
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Nested
-    @DisplayName("WAU present")
-    class WauPresent {
-
-        @Test
-        @DisplayName("returns stats payload including trackingSince")
-        void returnsStats() {
-            WeeklyActiveUsersService wau = mock(WeeklyActiveUsersService.class);
-            when(wau.getWeeklyActiveUsers()).thenReturn(3L);
-            when(wau.getTotalUniqueBrowsers()).thenReturn(8L);
-            when(wau.getDaysOnline()).thenReturn(2L);
-            when(wau.getStartTime()).thenReturn(java.time.Instant.parse("2025-02-02T00:00:00Z"));
-            MetricsController ctrl =
-                    new MetricsController(
-                            applicationProperties,
-                            meterRegistry,
-                            endpointInspector,
-                            Optional.of(wau));
-            ctrl.init();
-
-            ResponseEntity<?> resp = ctrl.getWeeklyActiveUsers();
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> body = (java.util.Map<String, Object>) resp.getBody();
-            assertThat(body).containsEntry("weeklyActiveUsers", 3L);
-            assertThat(body).containsKey("trackingSince");
         }
     }
 }

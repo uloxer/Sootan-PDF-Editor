@@ -958,11 +958,11 @@ sharingOn = "Activată"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud a răspuns, dar a refuzat acest server. Legătura contului poate fi fost revocată."
-title = "Stirling Cloud refuză acest server"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Acest server nu a putut contacta Stirling Cloud. Verificați legătura contului și că acest server poate accesa internetul."
-title = "Stirling Cloud inaccesibil"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud a acceptat acest server. Nu este nimic de rulat sau de corectat aici."
@@ -3222,7 +3222,7 @@ copy = "Copiați mesajul"
 [chat.dock]
 collapse = "Restrângeți chatul"
 placeholder = "Întrebați Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Goliți chatul"
@@ -7927,7 +7927,7 @@ loading = "Se verifică conexiunea contului"
 notLinked = "Neconectat"
 signedInAs = "Autentificat în Stirling Cloud ca"
 statusError = "Conexiunea contului nu a putut fi verificată"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Deconectează această instanță"
 
 [portal.accountLink.card.error]

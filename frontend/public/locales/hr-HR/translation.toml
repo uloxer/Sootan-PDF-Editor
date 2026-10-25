@@ -958,11 +958,11 @@ sharingOn = "Omogućeno"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud je odgovorio, ali je odbio ovaj poslužitelj. Veza računa možda je opozvana."
-title = "Stirling Cloud odbija ovaj poslužitelj"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Ovaj poslužitelj nije mogao pristupiti Stirling Cloud. Provjerite vezu računa i može li ovaj poslužitelj pristupiti internetu."
-title = "Stirling Cloud nije dostupan"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud je prihvatio ovaj poslužitelj. Ovdje nema ničega za pokretanje ili zakrpanje."
@@ -3222,7 +3222,7 @@ copy = "Kopiraj poruku"
 [chat.dock]
 collapse = "Sažmi chat"
 placeholder = "Pitaj Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Obriši chat"
@@ -7927,7 +7927,7 @@ loading = "Provjera veze računa"
 notLinked = "Nije povezano"
 signedInAs = "Prijavljeni ste u Stirling Cloud kao"
 statusError = "Nije moguće provjeriti vezu računa"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Odspoji ovu instancu"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "Prijenos vlasništva je na čekanju. Idite na Postavke → Ko
 after = "kako bi ovaj poslužitelj mogao dovršiti vezu kada se vratite."
 and = "i"
 before = "Postavite"
-title = "Stirling veza nije konfigurirana"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Dijalog za povezivanje računa nije moguće učitati."
@@ -13089,7 +13089,7 @@ settings = "Postavke"
 tools = "Alati"
 
 [survey]
-title = "Stirling-PDF anketa"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "kliknite ovdje"

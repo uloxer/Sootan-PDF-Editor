@@ -7,7 +7,6 @@ import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { AppRoot } from "@editor/components/layout/AppRoot";
-import Onboarding from "@editor/components/onboarding/Onboarding";
 
 const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
@@ -63,7 +62,6 @@ export default function App() {
               <AppProviders>
                 <AppLayout>
                   <AppRoot />
-                  <Onboarding />
                 </AppLayout>
               </AppProviders>
             }

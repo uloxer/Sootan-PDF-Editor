@@ -30,7 +30,6 @@ import { StirlingFile } from "@editor/types/fileContext";
 import { fileStorage } from "@editor/services/fileStorage";
 import { zipFileService } from "@editor/services/zipFileService";
 import { FileAnalyzer } from "@editor/services/fileAnalyzer";
-import { trackPdfUploaded } from "@editor/services/analytics";
 import {
   reportBulkAddProgress,
   clearBulkAddProgress,
@@ -659,10 +658,6 @@ export async function addFiles(
     // addFiles only resolves once every file is durably stored.
     if (enablePersistence && persistPromises.length > 0) {
       await Promise.all(persistPromises);
-    }
-
-    if (!options.skipUploadTracking && stirlingFiles.length > 0) {
-      trackPdfUploaded(stirlingFiles);
     }
 
     return stirlingFiles;

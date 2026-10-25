@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -29,7 +28,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -44,7 +42,6 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
-import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.TempFileManager;
 
 import tools.jackson.databind.ObjectMapper;
@@ -61,8 +58,6 @@ class PipelineControllerGapTest {
 
     @Mock private PipelineProcessor processor;
 
-    @Mock private PostHogService postHogService;
-
     @Mock private TempFileManager tempFileManager;
 
     private ObjectMapper objectMapper;
@@ -78,8 +73,7 @@ class PipelineControllerGapTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        controller =
-                new PipelineController(processor, objectMapper, postHogService, tempFileManager);
+        controller = new PipelineController(processor, objectMapper, tempFileManager);
     }
 
     /**
@@ -143,7 +137,6 @@ class PipelineControllerGapTest {
 
             assertNull(response);
             verifyNoInteractions(processor);
-            verifyNoInteractions(postHogService);
             verifyNoInteractions(tempFileManager);
         }
 
@@ -157,7 +150,6 @@ class PipelineControllerGapTest {
 
             assertNull(response);
             // Event still captured before processing begins.
-            verify(postHogService).captureEvent(eq("pipeline_api_event"), any());
             verify(processor, never()).runPipelineAgainstFiles(any(), any());
         }
 
@@ -223,29 +215,6 @@ class PipelineControllerGapTest {
                         new String(outBytes, StandardCharsets.UTF_8),
                         new String(is.readAllBytes(), StandardCharsets.UTF_8));
             }
-        }
-
-        @Test
-        @DisplayName("captures analytics event with operations and file count")
-        void singleOutput_capturesAnalytics() throws Exception {
-            stubTempFiles();
-            MultipartFile[] files = oneFile();
-            when(processor.generateInputFiles(files))
-                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
-
-            PipelineResult result = new PipelineResult();
-            result.setOutputFiles(List.of(namedResource("result.pdf", "body".getBytes())));
-            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
-
-            controller.handleData(request(files, VALID_JSON));
-
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<Map<String, Object>> propsCaptor = ArgumentCaptor.forClass(Map.class);
-            verify(postHogService).captureEvent(eq("pipeline_api_event"), propsCaptor.capture());
-
-            Map<String, Object> props = propsCaptor.getValue();
-            assertEquals(1, props.get("fileCount"));
-            assertEquals(List.of("/api/v1/misc/repair"), props.get("operations"));
         }
     }
 
@@ -358,37 +327,12 @@ class PipelineControllerGapTest {
 
             org.junit.jupiter.api.Assertions.assertThrows(
                     Exception.class, () -> controller.handleData(request(files, "not-valid-json")));
-
-            verifyNoInteractions(postHogService);
         }
     }
 
     @Nested
     @DisplayName("JSON config parsing")
     class JsonParsing {
-
-        @Test
-        @DisplayName("multiple operation names are extracted in order for analytics")
-        void multipleOperations_extractedInOrder() throws Exception {
-            MultipartFile[] files = oneFile();
-            String json =
-                    "{\"name\":\"multi\",\"pipeline\":["
-                            + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}},"
-                            + "{\"operation\":\"/api/v1/security/sanitize-pdf\",\"parameters\":{}}]}";
-
-            // Stop after analytics by returning no input files.
-            when(processor.generateInputFiles(files)).thenReturn(null);
-
-            controller.handleData(request(files, json));
-
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<Map<String, Object>> propsCaptor = ArgumentCaptor.forClass(Map.class);
-            verify(postHogService).captureEvent(eq("pipeline_api_event"), propsCaptor.capture());
-
-            assertEquals(
-                    List.of("/api/v1/misc/repair", "/api/v1/security/sanitize-pdf"),
-                    propsCaptor.getValue().get("operations"));
-        }
 
         @Test
         @DisplayName("real ObjectMapper deserializes the pipeline config used by analytics")

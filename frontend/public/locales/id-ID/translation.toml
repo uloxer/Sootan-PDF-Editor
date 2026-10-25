@@ -958,11 +958,11 @@ sharingOn = "Diaktifkan"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud menjawab tetapi menolak server ini. Tautan akun mungkin telah dicabut."
-title = "Stirling Cloud menolak server ini"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Server ini tidak dapat menjangkau Stirling Cloud. Periksa tautan akun dan pastikan server ini dapat menjangkau internet."
-title = "Stirling Cloud tidak dapat dijangkau"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud menerima server ini. Tidak ada yang perlu dijalankan atau ditambal di sini."
@@ -3222,7 +3222,7 @@ copy = "Salin pesan"
 [chat.dock]
 collapse = "Ciutkan chat"
 placeholder = "Tanyakan kepada Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Hapus obrolan"
@@ -7927,7 +7927,7 @@ loading = "Memeriksa koneksi akun"
 notLinked = "Tidak terhubung"
 signedInAs = "Masuk ke Stirling Cloud sebagai"
 statusError = "Tidak dapat memeriksa koneksi akun"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Putuskan koneksi instance ini"
 
 [portal.accountLink.card.error]

@@ -54,7 +54,6 @@ class WebMvcConfigTest {
     private static final String TAURI_PROP = "STIRLING_PDF_TAURI_MODE";
 
     @Mock private EndpointInterceptor endpointInterceptor;
-    @Mock private PdfMetricsInterceptor pdfMetricsInterceptor;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private ApplicationProperties.System system;
 
@@ -65,8 +64,7 @@ class WebMvcConfigTest {
     void setUp() {
         originalTauriProp = System.getProperty(TAURI_PROP);
         System.clearProperty(TAURI_PROP);
-        config =
-                new WebMvcConfig(endpointInterceptor, pdfMetricsInterceptor, applicationProperties);
+        config = new WebMvcConfig(endpointInterceptor, applicationProperties);
     }
 
     @AfterEach
@@ -83,8 +81,8 @@ class WebMvcConfigTest {
     class AddInterceptors {
 
         @Test
-        @DisplayName("registers both interceptors in order")
-        void registersBothInterceptors() {
+        @DisplayName("registers the endpoint interceptor")
+        void registersEndpointInterceptor() {
             InterceptorRegistry registry = mock(InterceptorRegistry.class);
             InterceptorRegistration registration = mock(InterceptorRegistration.class);
             when(registry.addInterceptor(any())).thenReturn(registration);
@@ -92,7 +90,6 @@ class WebMvcConfigTest {
             config.addInterceptors(registry);
 
             verify(registry).addInterceptor(endpointInterceptor);
-            verify(registry).addInterceptor(pdfMetricsInterceptor);
         }
     }
 

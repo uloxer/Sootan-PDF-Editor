@@ -16,10 +16,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -36,7 +34,6 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.service.PostHogService;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
 
@@ -58,7 +55,6 @@ public class PipelineDirectoryProcessor {
     private final ApiDocService apiDocService;
     private final ToolMetadataService toolMetadataService;
     private final PipelineProcessor processor;
-    private final PostHogService postHogService;
     private final FileReadinessChecker fileReadinessChecker;
     private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
@@ -72,14 +68,12 @@ public class PipelineDirectoryProcessor {
             ApiDocService apiDocService,
             ToolMetadataService toolMetadataService,
             PipelineProcessor processor,
-            PostHogService postHogService,
             FileReadinessChecker fileReadinessChecker,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
         this.toolMetadataService = toolMetadataService;
         this.processor = processor;
-        this.postHogService = postHogService;
         this.fileReadinessChecker = fileReadinessChecker;
         this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
@@ -216,13 +210,6 @@ public class PipelineDirectoryProcessor {
                 log.debug("No files detected for {} ", dir);
                 return;
             }
-
-            List<String> operationNames =
-                    config.getOperations().stream().map(PipelineOperation::getOperation).toList();
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("operations", operationNames);
-            properties.put("fileCount", files.length);
-            postHogService.captureEvent("pipeline_directory_event", properties);
 
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
             try (PipelineResult result =

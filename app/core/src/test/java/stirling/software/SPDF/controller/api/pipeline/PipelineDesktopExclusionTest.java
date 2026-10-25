@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.service.PostHogService;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.common.util.TempFileManager;
@@ -85,11 +84,6 @@ class PipelineDesktopExclusionTest {
         @Bean
         PipelineProcessor pipelineProcessor() {
             return mock(PipelineProcessor.class);
-        }
-
-        @Bean
-        PostHogService postHogService() {
-            return mock(PostHogService.class);
         }
 
         @Bean

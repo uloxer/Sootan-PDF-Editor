@@ -962,7 +962,7 @@ title = "O Stirling Cloud está recusando este servidor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Este servidor não conseguiu acessar o Stirling Cloud. Verifique o vínculo da conta e se este servidor consegue acessar a internet."
-title = "Stirling Cloud inacessível"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "O Stirling Cloud aceitou este servidor. Não há nada para executar ou corrigir aqui."
@@ -3222,7 +3222,7 @@ copy = "Copiar mensagem"
 [chat.dock]
 collapse = "Recolher chat"
 placeholder = "Pergunte ao Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Limpar chat"
@@ -7927,7 +7927,7 @@ loading = "Verificando conexão da conta"
 notLinked = "Não conectado"
 signedInAs = "Conectado ao Stirling Cloud como"
 statusError = "Não foi possível verificar a conexão da conta"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Desconectar esta instância"
 
 [portal.accountLink.card.error]

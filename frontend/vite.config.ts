@@ -502,24 +502,13 @@ export default defineConfig(async ({ mode, command }) => {
   // Relative to this config, not process.cwd(), so .env* load wherever vite is run from.
   const env = loadEnv(mode, import.meta.dirname, "");
 
-  // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
-  const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
-    ? (mode as BuildMode)
-    : null;
-  const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
-  const flavorMode: BuildMode | null =
-    flavor === "core" || flavor === "proprietary" || flavor === "saas"
-      ? flavor
-      : null;
-  const effectiveMode: BuildMode =
-    explicitMode ??
-    flavorMode ??
-    (process.env.ENABLE_SAAS === "true"
-      ? "saas"
-      : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
-        ? "core"
-        : "proprietary");
-
+  if (
+    ["proprietary", "saas", "desktop"].includes(mode) ||
+    (process.env.STIRLING_FLAVOR && process.env.STIRLING_FLAVOR !== "core")
+  ) {
+    throw new Error("Sootan PDF Editor supports only core mode");
+  }
+  const effectiveMode: BuildMode = "core";
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   // Subpath the app is served under (base becomes "/<runSubpath>/"). Empty = root.

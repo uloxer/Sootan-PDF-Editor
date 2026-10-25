@@ -1333,16 +1333,14 @@ public class ApplicationProperties {
     public static class System {
         private String defaultLocale;
         private boolean googlevisibility;
-        private boolean showUpdate = true;
+        private boolean showUpdate = false;
         private boolean showUpdateOnlyAdmin = true;
         private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
-        private Boolean enableAnalytics;
-        private Boolean enablePosthog;
-        private Boolean enableScarf;
-        private Boolean enableDesktopInstallSlide = true;
+        private Boolean enableAnalytics = false;
+        private Boolean enableDesktopInstallSlide = false;
         private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
@@ -1386,17 +1384,7 @@ public class ApplicationProperties {
         }
 
         public boolean isAnalyticsEnabled() {
-            return this.enableAnalytics != null && this.enableAnalytics;
-        }
-
-        public boolean isPosthogEnabled() {
-            // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled() && (this.enablePosthog == null || this.enablePosthog);
-        }
-
-        public boolean isScarfEnabled() {
-            // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
+            return false;
         }
     }
 

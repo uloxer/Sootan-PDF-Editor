@@ -32,7 +32,6 @@ import ErrorBoundary from "@editor/components/shared/ErrorBoundary";
 import { useAppInitialization } from "@editor/hooks/useAppInitialization";
 import { useLogoAssets } from "@editor/hooks/useLogoAssets";
 import AppConfigLoader from "@editor/components/shared/AppConfigLoader";
-import { UpdateStartupPopup } from "@editor/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@editor/contexts/RedactionContext";
 import { FormFillProvider } from "@editor/tools/formFill/FormFillContext";
 import { FolderProvider } from "@editor/contexts/FolderContext";
@@ -144,9 +143,6 @@ export function AppProviders({
               >
                 <AppConfigLoader />
                 <ServerDefaultsSync />
-                {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-                  No-ops inside Tauri — the desktop popup handles that flow. */}
-                <UpdateStartupPopup />
                 <FileContextProvider
                   enableUrlSync={true}
                   enablePersistence={true}

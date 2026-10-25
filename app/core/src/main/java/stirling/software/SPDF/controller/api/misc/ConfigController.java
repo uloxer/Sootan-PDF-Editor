@@ -337,35 +337,19 @@ public class ConfigController {
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
             configData.put("shouldShowUpdate", shouldShowUpdate);
-            configData.put(
-                    "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
-            configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
-            configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
-            configData.put(
-                    "enableDesktopInstallSlide",
-                    applicationProperties.getSystem().getEnableDesktopInstallSlide());
+            configData.put("enableAnalytics", false);
+            configData.put("enableDesktopInstallSlide", false);
             configData.put(
                     "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));
 
-            // Whether this instance can link a Stirling (SaaS) account at all. The account-link
-            // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when
-            // it is off they are absent and /api/v1/account-link/* returns 404. The frontend cannot
-            // tell that 404 apart from "not linked yet", so it needs this told to it explicitly
-            // before it can prompt anyone to link. Read from the environment rather than
-            // AccountLinkProperties because :core must not depend on :proprietary.
-            configData.put(
-                    "accountLinkAvailable",
-                    applicationContext
-                            .getEnvironment()
-                            .getProperty(
-                                    "stirling.billing.account-link.enabled", Boolean.class, false));
+            configData.put("accountLinkAvailable", false);
 
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
-            configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());
+            configData.put("aiEngineEnabled", false);
             // Per-capability flags let the UI hide individual AI tools an admin has turned off.
             ApplicationProperties.AiEngine.Features aiFeatures = aiEngineConfig.getFeatures();
             configData.put(

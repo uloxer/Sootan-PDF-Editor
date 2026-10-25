@@ -32,43 +32,6 @@ class InitialSetupTest {
     }
 
     @Nested
-    @DisplayName("initUUIDKey")
-    class UuidKey {
-
-        @Test
-        @DisplayName("generates and persists a UUID when missing")
-        void generatesWhenMissing() throws Exception {
-            autoGen.setUUID(null);
-            try (MockedStatic<GeneralUtils> util = mockStatic(GeneralUtils.class)) {
-                util.when(() -> GeneralUtils.isValidUUID(null)).thenReturn(false);
-
-                initialSetup.initUUIDKey();
-
-                assertThat(autoGen.getUUID()).isNotBlank();
-                util.verify(
-                        () ->
-                                GeneralUtils.saveKeyToSettings(
-                                        eq("AutomaticallyGenerated.UUID"), any()),
-                        times(1));
-            }
-        }
-
-        @Test
-        @DisplayName("keeps an existing valid UUID")
-        void keepsValid() throws Exception {
-            autoGen.setUUID("existing");
-            try (MockedStatic<GeneralUtils> util = mockStatic(GeneralUtils.class)) {
-                util.when(() -> GeneralUtils.isValidUUID("existing")).thenReturn(true);
-
-                initialSetup.initUUIDKey();
-
-                assertThat(autoGen.getUUID()).isEqualTo("existing");
-                util.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
-            }
-        }
-    }
-
-    @Nested
     @DisplayName("initSecretKey")
     class SecretKey {
 

@@ -835,7 +835,7 @@ description = "Kein Container, kein Anbieterschlüssel, keine Modellauswahl – 
 linkCta = "Diesen Server mit einem Stirling-Konto verbinden"
 notLinked = "Zuerst ein Konto verknüpfen"
 ownerOnly = "Nur der Eigentümer der Organisation kann diesen Server mit einem Stirling-Konto verknüpfen."
-title = "Stirling Cloud-KI verwenden"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.mode.off]
 description = "Keine KI-Tools irgendwo in der App, und nichts verlässt diesen Server."
@@ -958,11 +958,11 @@ sharingOn = "Aktiviert"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud hat geantwortet, diesen Server aber abgelehnt. Die Kontoverknüpfung wurde möglicherweise widerrufen."
-title = "Stirling Cloud lehnt diesen Server ab"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Dieser Server konnte Stirling Cloud nicht erreichen. Prüfen Sie die Kontoverknüpfung und ob dieser Server das Internet erreichen kann."
-title = "Stirling Cloud nicht erreichbar"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud hat diesen Server akzeptiert. Hier muss nichts ausgeführt oder gepatcht werden."
@@ -3222,7 +3222,7 @@ copy = "Nachricht kopieren"
 [chat.dock]
 collapse = "Chat einklappen"
 placeholder = "Stirling Agent fragen"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Chat löschen"
@@ -6420,11 +6420,11 @@ skipTheTour = "Rundgang überspringen"
 
 [onboarding.checklist]
 dismiss = "Ausblenden"
-title = "Stirling PDF einrichten"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.downloadDesktop]
 description = "Stirling nativ auf Ihrem Gerät ausführen"
-title = "Stirling für Desktop herunterladen"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.inviteTeam]
 description = "Mit Ihrem Team zusammenarbeiten"
@@ -6432,7 +6432,7 @@ title = "Teammitglieder einladen"
 
 [onboarding.checklist.setDefaultApp]
 description = "PDF-Dateien in Stirling PDF öffnen"
-title = "Stirling als Standard festlegen"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "In einer kurzen Einführung sehen, wie Stirling funktioniert"
@@ -6477,7 +6477,7 @@ userTitle = "Plan-Übersicht"
 [onboarding.processorIntro]
 body = "Stirling führt jetzt <strong>Richtlinien</strong> aus — automatisierte Regeln, die jedes Dokument beim Eintreffen klassifizieren, schützen und verarbeiten. Richten Sie sie ein und überwachen Sie Ausführungen im <strong>Processor</strong>."
 cta = "Processor ansehen"
-title = "Stirling Processor ansehen"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.freeEditor]
 freeLine = "Der Editor ist jetzt <free>vollständig kostenlos</free>."
@@ -7927,7 +7927,7 @@ loading = "Kontoverbindung wird geprüft"
 notLinked = "Nicht verbunden"
 signedInAs = "Angemeldet bei Stirling Cloud als"
 statusError = "Kontoverbindung konnte nicht geprüft werden"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Diese Instanz trennen"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "Eine Eigentumsübertragung ist ausstehend. Gehen Sie zu Einst
 after = "damit dieser Server die Verbindung abschließen kann, wenn Sie zurückkehren."
 and = "und"
 before = "Legen Sie"
-title = "Stirling-Verbindung nicht konfiguriert"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Der Dialog zum Verknüpfen des Kontos konnte nicht geladen werden."
@@ -9207,7 +9207,7 @@ guide = "{{name}}-Anleitung öffnen"
 openInBrowser = "Stattdessen im Browser öffnen"
 sectionDesktop = "Desktop-App"
 sectionSelfHosted = "Selbst gehostet"
-title = "Stirling PDF Editor installieren"
+title = "Sootan PDF Editor"
 
 [portal.home.download.docker]
 detailBody = "Führen Sie das offizielle Image auf Ihrem Server aus."
@@ -13089,7 +13089,7 @@ settings = "Einstellungen"
 tools = "Tools"
 
 [survey]
-title = "Stirling-PDF Umfrage"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "hier klicken"

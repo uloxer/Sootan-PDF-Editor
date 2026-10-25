@@ -1,4 +1,4 @@
-# Stirling-PDF - Full version (embedded frontend)
+# Sootan PDF Editor - full PDF tools (embedded frontend)
 # Uses pre-built base image for fast builds
 
 ARG BASE_VERSION=1.1.0@sha256:3bcc8e10d5319b7c0550cf41b96f6980e1552c974dc37aba462b74fa17c4b5e4
@@ -48,45 +48,18 @@ COPY buildSrc/build.gradle                 buildSrc/
 COPY buildSrc/src/main/                    buildSrc/src/main/
 COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
-COPY app/proprietary/build.gradle           app/proprietary/
 
 # Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
 RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
-ARG STIRLING_FLAVOR=proprietary
-ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
-# Include the processor (admin portal) in the bundled editor; false leaves it out.
-ARG BUILD_PORTAL=true
-
-# Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
-# bundle; there is no runtime override. Empty keeps the committed frontend .env defaults, which are
-# production Stirling, so a stock image links with no build args. Overriding VITE_SAAS_API_URL
-# also means setting STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL on the container, or the browser
-# and the server link against different SaaS. The publishable key is client-side by design, not a
-# secret. Pass the URL and the key from the same Supabase project or the browser accepts the pair
-# and Supabase rejects it, which surfaces later as "session expired".
-ARG VITE_SUPABASE_URL=""
-ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
-ARG VITE_SAAS_API_URL=""
-
-# Bundle only the JPDFium native for this image's target arch.
+ENV STIRLING_FLAVOR=core
 ARG TARGETARCH
-# Every ARG reaches RUN as an environment variable, empty ones included, and Vite lets any VITE_*
-# in process.env beat the .env files. Unset the empty ones or they blank the committed defaults.
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
-    if [ -z "${VITE_SUPABASE_URL}" ]; then unset VITE_SUPABASE_URL; fi; \
-    if [ -z "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then unset VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY; fi; \
-    if [ -z "${VITE_SAAS_API_URL}" ]; then unset VITE_SAAS_API_URL; fi; \
-    STIRLING_FLAVOR=${STIRLING_FLAVOR} \
-    gradle clean build \
-      -PbuildWithFrontend=true \
-      -PbuildWithPortal=${BUILD_PORTAL} \
-      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
-      -PbundleOnnxRuntime=true \
-      -x spotlessApply -x spotlessCheck -x test -x sonarqube \
-      --no-daemon
+    gradle clean build -PbuildWithFrontend=true -PbuildWithPortal=false \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" -PbundleOnnxRuntime=true \
+      -x spotlessApply -x spotlessCheck -x test -x sonarqube --no-daemon
 
 # Stage 2: Extract Spring Boot Layers
 FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS jar-extract
@@ -104,6 +77,7 @@ RUN apt-get update \
 
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
+ENV STIRLING_FLAVOR=core SERVER_ADDRESS=0.0.0.0
 
 ARG VERSION_TAG
 
@@ -161,9 +135,9 @@ ENV VERSION_TAG=$VERSION_TAG \
     SAL_TMP=/tmp/stirling-pdf/libre
 
 # Metadata labels
-LABEL org.opencontainers.image.title="Stirling-PDF" \
+LABEL org.opencontainers.image.title="Sootan PDF Editor" \
       org.opencontainers.image.description="Full version with Calibre, LibreOffice, Tesseract, OCRmyPDF" \
-      org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
+      org.opencontainers.image.source="https://github.com/uloxer/Sootan-PDF-Editor" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Stirling-Tools" \
       org.opencontainers.image.url="https://www.stirlingpdf.com" \

@@ -48,8 +48,8 @@ function focusIsHotkeys(): boolean {
  * registered tool and would otherwise bury everything above it.
  */
 export default function PreferencesSection({
-  hideAdminBanner = false,
-  hideUpdateSection = false,
+  hideAdminBanner = true,
+  hideUpdateSection = true,
   desktopInstall,
   desktopUpdateMode,
   accountSlot,

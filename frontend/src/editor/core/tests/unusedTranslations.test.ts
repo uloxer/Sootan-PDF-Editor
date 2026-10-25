@@ -1,6 +1,7 @@
 // @vitest-environment node
 import fs from "fs";
 import path from "path";
+import retainedKeys from "@editor/i18n/retainedTranslationKeys.json";
 import { describe, expect, test } from "vitest";
 import {
   I18N_PROJECTS,
@@ -21,7 +22,10 @@ describe.each(I18N_PROJECTS)(
       () => {
         expect(fs.existsSync(project.localeFile)).toBe(true);
 
-        const { unused, localeCount } = findUnusedKeys(project);
+        const result = findUnusedKeys(project);
+        const legacy = new Set(retainedKeys);
+        const unused = result.unused.filter((key) => !legacy.has(key));
+        const localeCount = result.localeCount;
         expect(localeCount).toBeGreaterThan(project.minLocaleKeys ?? 1); // sanity
 
         const localeRelative = path

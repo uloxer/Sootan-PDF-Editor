@@ -958,11 +958,11 @@ sharingOn = "Omogućeno"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud je odgovorio, ali je odbio ovaj server. Veza naloga je možda opozvana."
-title = "Stirling Cloud odbija ovaj server"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Ovaj server nije mogao da pristupi Stirling Cloud. Proverite vezu naloga i da li ovaj server može da pristupi internetu."
-title = "Stirling Cloud nije dostupan"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud je prihvatio ovaj server. Ovde nema ničega za pokretanje ili ažuriranje."
@@ -3222,7 +3222,7 @@ copy = "Kopiraj poruku"
 [chat.dock]
 collapse = "Skupi ćaskanje"
 placeholder = "Pitajte Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Obriši čet"
@@ -13089,7 +13089,7 @@ settings = "Podešavanja"
 tools = "Alati"
 
 [survey]
-title = "Stirling-PDF anketa"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "kliknite ovde"

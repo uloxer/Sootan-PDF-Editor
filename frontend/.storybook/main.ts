@@ -30,7 +30,7 @@ import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
 const editorPathAliases = () =>
   tsconfigPaths({
     projects: [
-      resolve(__dirname, "../tsconfig.proprietary.vite.json"),
+      resolve(__dirname, "../tsconfig.core.vite.json"),
       resolve(__dirname, "../tsconfig.desktop.vite.json"),
     ],
   });

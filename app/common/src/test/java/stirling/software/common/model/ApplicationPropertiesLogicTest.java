@@ -18,20 +18,6 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 class ApplicationPropertiesLogicTest {
 
     @Test
-    void system_isAnalyticsEnabled_null_false_true() {
-        ApplicationProperties.System sys = new ApplicationProperties.System();
-
-        sys.setEnableAnalytics(null);
-        assertFalse(sys.isAnalyticsEnabled());
-
-        sys.setEnableAnalytics(Boolean.FALSE);
-        assertFalse(sys.isAnalyticsEnabled());
-
-        sys.setEnableAnalytics(Boolean.TRUE);
-        assertTrue(sys.isAnalyticsEnabled());
-    }
-
-    @Test
     void storageDefaultsEnableLocalStorageAndSigningWithoutSharingOrEncryption() {
         ApplicationProperties.Storage storage = new ApplicationProperties().getStorage();
 

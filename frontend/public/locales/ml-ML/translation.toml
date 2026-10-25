@@ -793,7 +793,7 @@ label = "സൂചികയാക്കിയ ഡോക്യുമെന്റ�
 
 [admin.settings.ai.general.cloudNote]
 body = "റീസണിംഗ് Stirling-ന്റെ ഇൻഫ്രാസ്ട്രക്ചറിൽ പ്രവർത്തിക്കുന്നു, ഈ server ലിങ്ക് ചെയ്തിരിക്കുന്ന അക്കൗണ്ടിലേക്കാണ് ബിൽ ചെയ്യുന്നത്. ഇവിടെ പ്രവർത്തിപ്പിക്കേണ്ട container ഇല്ല, സൂക്ഷിക്കേണ്ട provider key ഇല്ല. AI വായിക്കുന്നതെല്ലാം നിങ്ങളുടെ സ്വന്തം hardware-ൽ അല്ല, Stirling Cloud ആണ് പ്രോസസ്സ് ചെയ്യുന്നത്."
-title = "Stirling Cloud AI കുറിച്ച്"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.enabled]
 description = "പ്രധാന switch. ഓഫ് ആയിരിക്കുമ്പോൾ AI tools, agents, അല്ലെങ്കിൽ engine calls ഒന്നും ലഭ്യമല്ല."
@@ -835,7 +835,7 @@ description = "Container ഇല്ല, provider key ഇല്ല, model തി�
 linkCta = "ഈ server ഒരു Stirling അക്കൗണ്ടുമായി ബന്ധിപ്പിക്കുക"
 notLinked = "ആദ്യം ഒരു അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
 ownerOnly = "organization owner-ന് മാത്രമേ ഈ server ഒരു Stirling അക്കൗണ്ടുമായി ലിങ്ക് ചെയ്യാൻ കഴിയൂ."
-title = "Stirling Cloud AI ഉപയോഗിക്കുക"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.mode.off]
 description = "ആപ്പിൽ എവിടെയും AI ടൂളുകൾ ഇല്ല, ഈ server വിട്ട് ഒന്നും പുറത്തേക്ക് പോകുന്നില്ല."
@@ -958,15 +958,15 @@ sharingOn = "പ്രവർത്തനക്ഷമം"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud മറുപടി നൽകി, പക്ഷേ ഈ server നിരസിച്ചു. അക്കൗണ്ട് ലിങ്ക് റദ്ദാക്കിയിരിക്കാം."
-title = "Stirling Cloud ഈ server നിരസിക്കുന്നു"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "ഈ server-ന് Stirling Cloud-ലേക്ക് എത്താനായില്ല. അക്കൗണ്ട് ലിങ്കും ഈ server-ന് internet എത്തുമോ എന്നും പരിശോധിക്കുക."
-title = "Stirling Cloud എത്തിച്ചേരാനാകുന്നില്ല"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud ഈ server സ്വീകരിച്ചു. ഇവിടെ പ്രവർത്തിപ്പിക്കാനോ patch ചെയ്യാനോ ഒന്നുമില്ല."
-title = "Stirling Cloud-ൽ പ്രവർത്തിക്കുന്നു"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.degraded]
 body = "health check-ന് മറുപടി നൽകി, പക്ഷേ യഥാർത്ഥ request നിരസിച്ചു. രണ്ട് വശങ്ങളും വ്യത്യസ്ത shared secrets ഉപയോഗിക്കുന്നു."
@@ -1951,7 +1951,7 @@ thai = "തായ്"
 learnMore = "ഞങ്ങളുടെ analytics-നെക്കുറിച്ച് കൂടുതൽ അറിയുക"
 paragraph1 = "ഉൽപ്പന്നം മെച്ചപ്പെടുത്താൻ സഹായിക്കുന്നതിന് Stirling PDF-ൽ opt-in analytics ഉണ്ട്. ഞങ്ങൾ വ്യക്തിഗത വിവരങ്ങളോ ഫയൽ ഉള്ളടക്കങ്ങളോ track ചെയ്യുന്നില്ല."
 paragraph2 = "സ്റ്റെർലിംഗ്-PDF വളരാനും ഞങ്ങളുടെ ഉപയോക്താക്കളെ നന്നായി മനസ്സിലാക്കാനും അനലിറ്റിക്സ് പ്രവർത്തനക്ഷമമാക്കുന്നത് പരിഗണിക്കുക."
-title = "Stirling PDF മെച്ചപ്പെടുത്താൻ സഹായിക്കണോ?"
+title = "Sootan PDF Editor"
 
 [annotate]
 tags = "അനോട്ടേറ്റ്,ഹൈലൈറ്റ്,വരയ്‌ക്കുക,മാർക്കപ്പ്,കമന്റ്,കുറിപ്പുകൾ,റിവ്യൂ,റെഡ്‌ലൈൻ,ഫീഡ്‌ബാക്ക്,മാർക്കപ്പ് ടൂളുകൾ,സ്റ്റിക്കി നോട്ടുകൾ,ആകൃതികൾ,അമ്പുകൾ,ടെക്സ്റ്റ് ബോക്സ്,ഫ്രീഹാൻഡ്"
@@ -3222,7 +3222,7 @@ copy = "സന്ദേശം പകർത്തുക"
 [chat.dock]
 collapse = "ചാറ്റ് ചുരുക്കുക"
 placeholder = "Stirling Agent-നോട് ചോദിക്കുക"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "ചാറ്റ് മായ്ക്കുക"
@@ -6420,7 +6420,7 @@ skipTheTour = "ടൂർ ഒഴിവാക്കുക"
 
 [onboarding.checklist]
 dismiss = "ഒഴിവാക്കുക"
-title = "Stirling PDF സജ്ജീകരിക്കുക"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.downloadDesktop]
 description = "നിങ്ങളുടെ machine-ൽ Stirling native ആയി run ചെയ്യുക"
@@ -6432,7 +6432,7 @@ title = "team members-നെ ക്ഷണിക്കുക"
 
 [onboarding.checklist.setDefaultApp]
 description = "PDF ഫയലുകൾ Stirling PDF-ൽ തുറക്കുക"
-title = "Stirling നിങ്ങളുടെ ഡീഫോൾട്ട് ആക്കുക"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "ഒരു quick walkthrough-ൽ Stirling എങ്ങനെ പ്രവർത്തിക്കുന്നുവെന്ന് കാണുക"
@@ -6447,7 +6447,7 @@ titleWithOs = "{{osLabel}}-ക്കായി ഡൗൺലോഡ്"
 [onboarding.desktopWelcome]
 body = "<strong>Agent Chat</strong>, സ്വയമേവയുള്ള ഡോക്യുമെന്റ് <strong>classification</strong>, കൂടാതെ കൂടുതൽ എന്നിവ ഉൾപ്പെടെ പുതിയ മാറ്റങ്ങൾ അന്വേഷിക്കാൻ ധാരാളം ഉണ്ട്."
 freeLine = "എഡിറ്റർ ഇപ്പോൾ <free>പൂർണ്ണമായും സൗജന്യമാണ്</free>."
-title = "Stirling <product>Desktop</product>ലേക്ക് സ്വാഗതം"
+title = "Sootan PDF Editor"
 
 [onboarding.mfa]
 authenticationCode = "അധികൃതീകരണ കോഡ്"
@@ -6477,12 +6477,12 @@ userTitle = "പ്ലാൻ അവലോകനം"
 [onboarding.processorIntro]
 body = "Stirling ഇപ്പോൾ <strong>Policies</strong> പ്രവർത്തിപ്പിക്കുന്നു — ഓരോ document എത്തുമ്പോഴും classify, secure, process ചെയ്യുന്ന automated rules. അവ setup ചെയ്ത് runs <strong>Processor</strong>-ൽ monitor ചെയ്യുക."
 cta = "Processor പരിശോധിക്കുക"
-title = "Stirling Processor പരിശോധിക്കുക"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.freeEditor]
 freeLine = "എഡിറ്റർ ഇപ്പോൾ <free>പൂർണ്ണമായും സൗജന്യമാണ്</free>."
 premium = "<strong>Policies</strong>, <strong>Agent Chat</strong> എന്നിവ ഉൾപ്പെടെ നിരവധി പുതിയ features ഞങ്ങൾ ചേർത്തിട്ടുണ്ട്."
-title = "Stirling-ലേക്ക് സ്വാഗതം"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.team]
 addButton = "ചേർക്കുക"
@@ -6516,7 +6516,7 @@ title = "ടൂർ അവലോകനം"
 
 [onboarding.welcomeSlide]
 body = "Stirling PDF ഇനി എല്ലാ വലുപ്പത്തിലുള്ള ടീമുകൾക്കുമൊത്ത് തയ്യാറായി. ഈ അപ്‌ഡേറ്റിൽ ഒരു പുതിയ ലേഔട്ട്, ശക്തമായ പുതിയ അഡ്മിൻ കഴിവുകൾ, കൂടാതെ ഏറ്റവും ആവശ്യപ്പെട്ട ഫീച്ചർ - <strong>Edit Text</strong> ഉൾപ്പെടുന്നു."
-title = "Stirling-ിലേക്ക് സ്വാഗതം"
+title = "Sootan PDF Editor"
 
 [onboarding.whatsNew]
 activeFilesView = "തുറന്നിട്ടിരിക്കുന്ന എല്ലാം കാണാനും എന്തിൽ പ്രവർത്തിക്കണമെന്നത് തിരഞ്ഞെടുക്കാനും Active Files ഉപയോഗിക്കുക."
@@ -7927,7 +7927,7 @@ loading = "അക്കൗണ്ട് കണക്ഷൻ പരിശോധി�
 notLinked = "ബന്ധിപ്പിച്ചിട്ടില്ല"
 signedInAs = "Stirling Cloudലേക്ക് സൈൻ ഇൻ ചെയ്തിരിക്കുന്നത്"
 statusError = "അക്കൗണ്ട് കണക്ഷൻ പരിശോധിക്കാനായില്ല"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "ഈ ഇൻസ്റ്റൻസ് വിച്ഛേദിക്കുക"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "ഒരു ഉടമസ്ഥാവകാശ കൈമാറ�
 after = "അങ്ങനെ നിങ്ങൾ തിരികെ വരുമ്പോൾ ഈ സർവറിന് കണക്ഷൻ പൂർത്തിയാക്കാം."
 and = "കൂടാതെ"
 before = "സജ്ജമാക്കുക"
-title = "Stirling കണക്ഷൻ കോൺഫിഗർ ചെയ്തിട്ടില്ല"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "അക്കൗണ്ട് ലിങ്കിംഗ് ഡയലോഗ് ലോഡ് ചെയ്യാനായില്ല."
@@ -9207,7 +9207,7 @@ guide = "{{name}} guide തുറക്കുക"
 openInBrowser = "പകരം browser-ൽ തുറക്കുക"
 sectionDesktop = "Desktop ആപ്പ്"
 sectionSelfHosted = "Self-hosted"
-title = "Stirling PDF Editor install ചെയ്യുക"
+title = "Sootan PDF Editor"
 
 [portal.home.download.docker]
 detailBody = "നിങ്ങളുടെ server-ൽ official image run ചെയ്യുക."
@@ -11619,7 +11619,7 @@ yd = "യാർഡ് (yd)"
 back = "പിന്നിലേക്ക്"
 continue = "തുടരുക"
 subtitle = "ഇത് എവിടെ പ്രവർത്തിക്കണമെന്ന് തിരഞ്ഞെടുക്കുക."
-title = "Stirling എവിടെ പ്രവർത്തിപ്പിക്കണം?"
+title = "Sootan PDF Editor"
 
 [runLocation.choice.browser]
 description = "വെബ് ആപ്പ്."
@@ -12204,7 +12204,7 @@ emptyUsername = "ദയവായി നിങ്ങളുടെ യൂസർന�
 oauthFailed = "OAuth ലോഗിൻ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 
 [setup.saas]
-title = "Stirling-യിൽ സൈൻ ഇൻ ചെയ്യുക"
+title = "Sootan PDF Editor"
 
 [setup.selfhosted]
 changeServerLocked = "നിങ്ങളുടെ സ്ഥാപനo ഈ ആപ്പ് ഒരു പ്രത്യേക സെർവറിലേക്ക് പരിമിതപ്പെടുത്തിയിരിക്കുന്നു"
@@ -13089,7 +13089,7 @@ settings = "ക്രമീകരണങ്ങൾ"
 tools = "ടൂളുകൾ"
 
 [survey]
-title = "Stirling-PDF സർവേ"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "ഇവിടെ ക്ലിക്ക് ചെയ്യുക"

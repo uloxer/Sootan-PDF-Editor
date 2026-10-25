@@ -14,7 +14,6 @@ import org.junit.jupiter.api.io.TempDir;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.service.PostHogService;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
 
@@ -42,7 +41,6 @@ class PipelineDirectoryProcessorOutputPathTest {
                         mock(ApiDocService.class),
                         mock(ToolMetadataService.class),
                         mock(PipelineProcessor.class),
-                        mock(PostHogService.class),
                         mock(FileReadinessChecker.class),
                         paths);
     }

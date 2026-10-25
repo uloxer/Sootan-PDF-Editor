@@ -958,11 +958,11 @@ sharingOn = "Aktiverad"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud svarade men avvisade den här servern. Kontolänken kan ha återkallats."
-title = "Stirling Cloud avvisar den här servern"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Den här servern kunde inte nå Stirling Cloud. Kontrollera kontolänken och att den här servern kan nå internet."
-title = "Stirling Cloud kan inte nås"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud accepterade den här servern. Inget att köra eller patcha här."
@@ -3222,7 +3222,7 @@ copy = "Kopiera meddelande"
 [chat.dock]
 collapse = "Fäll ihop chatten"
 placeholder = "Fråga Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Rensa chatt"
@@ -7927,7 +7927,7 @@ loading = "Kontrollerar kontoanslutning"
 notLinked = "Inte ansluten"
 signedInAs = "Inloggad på Stirling Cloud som"
 statusError = "Kunde inte kontrollera kontoanslutningen"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Koppla från den här instansen"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "En ägarskapsöverföring väntar. Gå till Inställningar �
 after = "så att den här servern kan slutföra anslutningen när du kommer tillbaka."
 and = "och"
 before = "Ange"
-title = "Stirling-anslutningen är inte konfigurerad"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Dialogrutan för kontolänkning kunde inte läsas in."
@@ -13089,7 +13089,7 @@ settings = "Inställningar"
 tools = "Verktyg"
 
 [survey]
-title = "Stirling-PDF-enkät"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "klicka här"

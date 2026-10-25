@@ -958,7 +958,7 @@ sharingOn = "เปิดใช้งาน"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud ตอบกลับแต่ปฏิเสธเซิร์ฟเวอร์นี้ การเชื่อมโยงบัญชีอาจถูกเพิกถอนแล้ว"
-title = "Stirling Cloud กำลังปฏิเสธเซิร์ฟเวอร์นี้"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "เซิร์ฟเวอร์นี้ไม่สามารถเข้าถึง Stirling Cloud ได้ ตรวจสอบการเชื่อมโยงบัญชีและตรวจสอบว่าเซิร์ฟเวอร์นี้เข้าถึงอินเทอร์เน็ตได้"
@@ -3222,7 +3222,7 @@ copy = "คัดลอกข้อความ"
 [chat.dock]
 collapse = "ยุบแชท"
 placeholder = "ถาม Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "ล้างแชต"
@@ -7927,7 +7927,7 @@ loading = "กำลังตรวจสอบการเชื่อมต่
 notLinked = "ยังไม่ได้เชื่อมต่อ"
 signedInAs = "ลงชื่อเข้าใช้ Stirling Cloud ในชื่อ"
 statusError = "ไม่สามารถตรวจสอบการเชื่อมต่อบัญชีได้"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "ตัดการเชื่อมต่อ instance นี้"
 
 [portal.accountLink.card.error]

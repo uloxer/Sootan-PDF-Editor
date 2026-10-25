@@ -22,13 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.PipelineConfig;
-import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
-import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -52,8 +50,6 @@ public class PipelineController {
 
     private final ObjectMapper objectMapper;
 
-    private final PostHogService postHogService;
-
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -75,15 +71,6 @@ public class PipelineController {
         }
         PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
         log.info("Received POST request to /handleData with {} files", files.length);
-
-        List<String> operationNames =
-                config.getOperations().stream().map(PipelineOperation::getOperation).toList();
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("operations", operationNames);
-        properties.put("fileCount", files.length);
-
-        postHogService.captureEvent("pipeline_api_event", properties);
 
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);

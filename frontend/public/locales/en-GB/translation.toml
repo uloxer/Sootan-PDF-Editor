@@ -963,11 +963,11 @@ sharingOn = "Enabled"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud answered but refused this server. The account link may have been revoked."
-title = "Stirling Cloud is refusing this server"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "This server could not reach Stirling Cloud. Check the account link and that this server can reach the internet."
-title = "Stirling Cloud unreachable"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud accepted this server. Nothing to run or patch here."
@@ -12714,7 +12714,7 @@ settings = "Settings"
 tools = "Tools"
 
 [survey]
-title = "Stirling-PDF Survey"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "click here"

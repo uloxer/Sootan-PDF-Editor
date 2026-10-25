@@ -66,7 +66,7 @@ class AppConfigTest {
         @Test
         @DisplayName("StirlingPDFLabel embeds version")
         void stirlingLabel() {
-            assertThat(appConfig.stirlingPDFLabel()).startsWith("Stirling-PDF v");
+            assertThat(appConfig.stirlingPDFLabel()).startsWith("Sootan PDF Editor v");
         }
     }
 
@@ -135,42 +135,6 @@ class AppConfigTest {
             assertThat(appConfig.cookiePolicy()).isEqualTo("cookie");
             assertThat(appConfig.impressum()).isEqualTo("impressum");
             assertThat(appConfig.accessibilityStatement()).isEqualTo("a11y");
-        }
-
-        @Test
-        @DisplayName("analyticsPrompt true when enableAnalytics null")
-        void analyticsPrompt() {
-            applicationProperties.getSystem().setEnableAnalytics(null);
-            assertThat(appConfig.analyticsPrompt()).isTrue();
-            applicationProperties.getSystem().setEnableAnalytics(Boolean.TRUE);
-            assertThat(appConfig.analyticsPrompt()).isFalse();
-        }
-
-        @Test
-        @DisplayName("analyticsEnabled true when premium enabled regardless of system flag")
-        void analyticsEnabledViaPremium() {
-            applicationProperties.getPremium().setEnabled(true);
-            assertThat(appConfig.analyticsEnabled()).isTrue();
-        }
-
-        @Test
-        @DisplayName("analyticsEnabled reflects system flag when premium disabled")
-        void analyticsEnabledViaSystem() {
-            applicationProperties.getPremium().setEnabled(false);
-            applicationProperties.getSystem().setEnableAnalytics(Boolean.TRUE);
-            assertThat(appConfig.analyticsEnabled()).isTrue();
-            applicationProperties.getSystem().setEnableAnalytics(Boolean.FALSE);
-            assertThat(appConfig.analyticsEnabled()).isFalse();
-        }
-
-        @Test
-        @DisplayName("scarf and posthog beans reflect derived flags")
-        void scarfAndPosthog() {
-            applicationProperties.getSystem().setEnableAnalytics(Boolean.TRUE);
-            applicationProperties.getSystem().setEnableScarf(Boolean.TRUE);
-            applicationProperties.getSystem().setEnablePosthog(Boolean.TRUE);
-            assertThat(appConfig.scarfEnabled()).isTrue();
-            assertThat(appConfig.posthogEnabled()).isTrue();
         }
 
         @Test

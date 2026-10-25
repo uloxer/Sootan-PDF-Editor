@@ -793,7 +793,7 @@ label = "Stirling Cloud'un dizine eklenmiş belgeleri saklamasına izin ver"
 
 [admin.settings.ai.general.cloudNote]
 body = "Akıl yürütme Stirling'in altyapısında çalışır ve bu sunucunun bağlı olduğu hesaba ücretlendirilir. Burada çalıştırılacak konteyner veya tutulacak sağlayıcı anahtarı yoktur. AI'ın okuduğu her şey kendi donanımınız yerine Stirling Cloud tarafından işlenir."
-title = "Stirling Cloud AI hakkında"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.enabled]
 description = "Ana anahtar. Kapalıyken hiçbir AI aracı, agent veya engine çağrısı kullanılamaz."
@@ -835,7 +835,7 @@ description = "Konteyner yok, sağlayıcı anahtarı yok, model seçimi yok - i�
 linkCta = "Bu sunucuyu bir Stirling hesabına bağla"
 notLinked = "Önce bir hesap bağlayın"
 ownerOnly = "Yalnızca kuruluş sahibi bu sunucuyu bir Stirling hesabına bağlayabilir."
-title = "Stirling Cloud AI kullan"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.mode.off]
 description = "Uygulamanın hiçbir yerinde AI aracı yoktur ve hiçbir şey bu sunucudan ayrılmaz."
@@ -958,15 +958,15 @@ sharingOn = "Etkin"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud yanıt verdi ancak bu sunucuyu reddetti. Hesap bağlantısı iptal edilmiş olabilir."
-title = "Stirling Cloud bu sunucuyu reddediyor"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Bu sunucu Stirling Cloud'a ulaşamadı. Hesap bağlantısını ve bu sunucunun internete erişebildiğini kontrol edin."
-title = "Stirling Cloud'a ulaşılamıyor"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud bu sunucuyu kabul etti. Burada çalıştırılacak veya yamalanacak bir şey yok."
-title = "Stirling Cloud üzerinde çalışıyor"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.degraded]
 body = "Sağlık kontrolüne yanıt verdi ancak gerçek bir isteği reddetti. İki taraf farklı paylaşılan gizli anahtarlar kullanıyor."
@@ -1951,7 +1951,7 @@ thai = "Tayca"
 learnMore = "Analytics hakkında daha fazla bilgi edinin"
 paragraph1 = "Stirling PDF, ürünü geliştirmemize yardımcı olmak için isteğe bağlı analytics kullanır. Hiçbir kişisel bilgiyi veya dosya içeriğini izlemeyiz."
 paragraph2 = "Stirling PDF’in büyümesine destek olmak ve kullanıcılarımızı daha iyi anlayabilmemiz için analizleri etkinleştirmeyi düşünebilirsiniz."
-title = "Stirling PDF'yi daha iyi hale getirmeye yardımcı olmak ister misiniz?"
+title = "Sootan PDF Editor"
 
 [annotate]
 tags = "açıklama ekle,vurgula,çiz,işaretle,yorum,notlar,incele,düzeltme,geri bildirim,işaretleme araçları,yapışkan notlar,şekiller,oklar,metin kutusu,serbest çizim"
@@ -3222,7 +3222,7 @@ copy = "Mesajı kopyala"
 [chat.dock]
 collapse = "Sohbeti daralt"
 placeholder = "Stirling Agent'a sor"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Sohbeti temizle"
@@ -3592,7 +3592,7 @@ other = "Diğer"
 body = "Downloads klasörünüzdeki en son {{count}} PDF'yi türe göre sınıflandırın ve düzenleyin."
 cta = "Downloads klasörümü işle"
 privacy = "PDF'leriniz bu cihazda kalır. Bağlı sunucunuz işleme kullanımını kaydeder."
-title = "Stirling'in tüm bir klasörle neler yapabileceğini görün"
+title = "Sootan PDF Editor"
 
 [classificationDemo.phase]
 finishing = "Tamamlanıyor..."
@@ -6420,7 +6420,7 @@ skipTheTour = "Turu atla"
 
 [onboarding.checklist]
 dismiss = "Kapat"
-title = "Stirling PDF'yi kurun"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.downloadDesktop]
 description = "Stirling'i makinenizde yerel olarak çalıştırın"
@@ -6432,7 +6432,7 @@ title = "Ekip üyelerini davet et"
 
 [onboarding.checklist.setDefaultApp]
 description = "PDF dosyalarını Stirling PDF ile aç"
-title = "Stirling'i varsayılan yap"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "Kısa bir gezintiyle Stirling'in nasıl çalıştığını görün"
@@ -6447,7 +6447,7 @@ titleWithOs = "{{osLabel}} için indir"
 [onboarding.desktopWelcome]
 body = "<strong>Agent Chat</strong>, otomatik belge <strong>sınıflandırması</strong> ve daha fazlası dahil keşfedilecek pek çok yeni değişiklik var."
 freeLine = "Düzenleyici artık <free>tamamen ücretsiz</free>."
-title = "Stirling <product>Desktop</product>'a hoş geldiniz"
+title = "Sootan PDF Editor"
 
 [onboarding.mfa]
 authenticationCode = "Kimlik doğrulama kodu"
@@ -6477,12 +6477,12 @@ userTitle = "Plan Özeti"
 [onboarding.processorIntro]
 body = "Stirling artık <strong>İlkeler</strong> çalıştırıyor — her belge geldiğinde onu sınıflandıran, güvenceye alan ve işleyen otomatik kurallar. Bunları ayarlayın ve çalışmaları <strong>Processor</strong> içinde izleyin."
 cta = "Processor'ı incele"
-title = "Stirling Processor'ı inceleyin"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.freeEditor]
 freeLine = "Düzenleyici artık <free>tamamen ücretsiz</free>."
 premium = "<strong>Policies</strong> ve <strong>Agent Chat</strong> dahil birçok yeni özellik ekledik."
-title = "Stirling'e hoş geldiniz"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.team]
 addButton = "Ekle"
@@ -6516,7 +6516,7 @@ title = "Tur Genel Bakış"
 
 [onboarding.welcomeSlide]
 body = "Stirling PDF artık her boyuttan ekip için hazır. Bu güncelleme yeni bir düzen, güçlü yeni yönetici yetenekleri ve en çok istenen özelliği içerir - <strong>Metni Düzenle</strong>."
-title = "Stirling'e hoş geldiniz"
+title = "Sootan PDF Editor"
 
 [onboarding.whatsNew]
 activeFilesView = "Açık olan her şeyi görmek ve üzerinde çalışılacak dosyayı seçmek için Aktif Dosyaları kullanın."
@@ -7927,7 +7927,7 @@ loading = "Hesap bağlantısı kontrol ediliyor"
 notLinked = "Bağlı değil"
 signedInAs = "Stirling Cloud'da şu kullanıcı olarak oturum açıldı"
 statusError = "Hesap bağlantısı kontrol edilemedi"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Bu örneğin bağlantısını kes"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "Bekleyen bir sahiplik devri var. Bitirmek veya iptal etmek i�
 after = "böylece geri geldiğinizde bu sunucu bağlantıyı tamamlayabilir."
 and = "ve"
 before = "Ayarla"
-title = "Stirling bağlantısı yapılandırılmamış"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Hesap bağlama iletişim kutusu yüklenemedi."
@@ -8239,7 +8239,7 @@ pdfsUsed_one = "{{count}} PDF işlendi"
 pdfsUsed_other = "{{count}} PDF işlendi"
 period = "Sözleşme dönemi: {{start}} – {{end}}"
 sub = "Air-gapped dağıtım, SCIM, veri yerleşimi, çalışma süresi SLA'ları ve buna uygun bir sözleşme."
-title = "Stirling'i düzenlemeye tabi bir ortamda mı çalıştırıyorsunuz?"
+title = "Sootan PDF Editor"
 trial = "{{days}} günlük deneme · {{date}} tarihinde sona erer"
 usersAgreed = "{{used}} / {{agreed}} kararlaştırılmış kullanıcı"
 usersOver_one = "{{count}} kullanıcı kararlaştırılmış sayının üzerinde"
@@ -9207,7 +9207,7 @@ guide = "{{name}} kılavuzunu aç"
 openInBrowser = "Bunun yerine tarayıcıda aç"
 sectionDesktop = "Masaüstü uygulaması"
 sectionSelfHosted = "Kendi barındırılan"
-title = "Stirling PDF Editor'ı yükleyin"
+title = "Sootan PDF Editor"
 
 [portal.home.download.docker]
 detailBody = "Resmi image'ı sunucunuzda çalıştırın."
@@ -10552,7 +10552,7 @@ title = "Başlamak için hesabınızı bağlayın"
 [portal.procurement.live]
 description = "Aboneliğiniz aktif ve lisansınız verildi. Ekibiniz hazırlandı ve faturalandırma başladı."
 eyebrow = "Canlı"
-title = "Stirling Enterprise'ta yayındasınız"
+title = "Sootan PDF Editor"
 
 [portal.procurement.milestone]
 downloadError = "Teklif PDF'si henüz indirilemedi — lütfen birazdan tekrar deneyin."
@@ -11619,7 +11619,7 @@ yd = "Yarda (yd)"
 back = "Geri"
 continue = "Devam"
 subtitle = "Nerede çalışacağını seçin."
-title = "Stirling'i nerede çalıştırmak istiyorsunuz?"
+title = "Sootan PDF Editor"
 
 [runLocation.choice.browser]
 description = "Web uygulaması."
@@ -11811,7 +11811,7 @@ hideTools = "Kullanılamayan araçları gizle ▴"
 messageNoFallback = "Sunucunuz geri gelene kadar araçlar kullanılamaz."
 messageWithFallback = "Bazı araçlar sunucu bağlantısı gerektirir."
 showTools = "Kullanılamayan araçları görüntüle ▾"
-title = "Stirling-PDF sunucunuza ulaşılamıyor"
+title = "Sootan PDF Editor"
 toolNotAvailableLocally = "Stirling-PDF sunucunuz çevrimdışı ve \"{{endpoint}}\" yerel arka uçta kullanılamıyor."
 
 [session]
@@ -12204,7 +12204,7 @@ emptyUsername = "Lütfen kullanıcı adınızı girin"
 oauthFailed = "OAuth oturumu başarısız oldu. Lütfen tekrar deneyin."
 
 [setup.saas]
-title = "Stirling'de Oturum Açın"
+title = "Sootan PDF Editor"
 
 [setup.selfhosted]
 changeServerLocked = "Kuruluşunuz bu uygulamayı belirli bir sunucuyla sınırlamıştır"
@@ -13089,7 +13089,7 @@ settings = "Ayarlar"
 tools = "Araçlar"
 
 [survey]
-title = "Stirling-PDF Anketi"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "buraya tıklayın"

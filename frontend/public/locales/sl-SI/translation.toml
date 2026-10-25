@@ -958,11 +958,11 @@ sharingOn = "Omogočeno"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud je odgovoril, vendar je zavrnil ta strežnik. Povezava računa je bila morda preklicana."
-title = "Stirling Cloud zavrača ta strežnik"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Ta strežnik ni mogel doseči Stirling Cloud. Preverite povezavo računa in ali lahko ta strežnik dostopa do interneta."
-title = "Stirling Cloud ni dosegljiv"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud je sprejel ta strežnik. Tukaj ni ničesar za zagon ali popravljanje."
@@ -3222,7 +3222,7 @@ copy = "Kopiraj sporočilo"
 [chat.dock]
 collapse = "Strni klepet"
 placeholder = "Vprašajte Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Počisti klepet"
@@ -5588,7 +5588,7 @@ title = "Podpisovanje v poljubnem vrstnem redu"
 dismiss = "Skrij pasico"
 message = "Ustvarite brezplačen račun, da shranite svoje delo, dostopate do več funkcij in podprete projekt."
 signUp = "Registrirajte se brezplačno"
-title = "Stirling PDF uporabljate kot gost!"
+title = "Sootan PDF Editor"
 
 [home.addAttachments]
 desc = "Ogled, dodajanje, izvlečenje, preimenovanje ali brisanje vdelanih PDF prilog"
@@ -7927,7 +7927,7 @@ loading = "Preverjanje povezave računa"
 notLinked = "Ni povezano"
 signedInAs = "Prijavljeni v Stirling Cloud kot"
 statusError = "Povezave računa ni bilo mogoče preveriti"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Prekini povezavo te instance"
 
 [portal.accountLink.card.error]

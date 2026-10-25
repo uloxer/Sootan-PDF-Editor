@@ -958,11 +958,11 @@ sharingOn = "Активирано"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud отговори, но отказа този сървър. Връзката с акаунта може да е била отменена."
-title = "Stirling Cloud отказва този сървър"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Този сървър не можа да достигне Stirling Cloud. Проверете връзката с акаунта и дали този сървър има достъп до интернет."
-title = "Stirling Cloud е недостъпен"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud прие този сървър. Тук няма нищо за стартиране или обновяване."
@@ -3222,7 +3222,7 @@ copy = "Копирайте съобщение"
 [chat.dock]
 collapse = "Свиване на чата"
 placeholder = "Попитайте Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Изчистете чата"
@@ -7927,7 +7927,7 @@ loading = "Проверка на връзката с акаунта"
 notLinked = "Не е свързано"
 signedInAs = "Влезли сте в Stirling Cloud като"
 statusError = "Връзката с акаунта не можа да бъде проверена"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Разкачете тази инстанция"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "Има чакащо прехвърляне на собств�
 after = "за да може този сървър да завърши връзката, когато се върнете."
 and = "и"
 before = "Задайте"
-title = "Stirling връзката не е конфигурирана"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Диалогът за свързване на акаунт не можа да бъде зареден."
@@ -13089,7 +13089,7 @@ settings = "Настройки"
 tools = "Инструменти"
 
 [survey]
-title = "Stirling-PDF анкета"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "щракнете тук"

@@ -189,19 +189,18 @@ public class AppConfig {
     @Bean(name = "analyticsPrompt")
     @Scope("request")
     public boolean analyticsPrompt() {
-        return applicationProperties.getSystem().getEnableAnalytics() == null;
+        return false;
     }
 
     @Bean(name = "analyticsEnabled")
     @Scope("request")
     public boolean analyticsEnabled() {
-        if (applicationProperties.getPremium().isEnabled()) return true;
         return applicationProperties.getSystem().isAnalyticsEnabled();
     }
 
     @Bean(name = "StirlingPDFLabel")
     public String stirlingPDFLabel() {
-        return "Stirling-PDF" + " v" + appVersion();
+        return "Sootan PDF Editor" + " v" + appVersion();
     }
 
     @Bean(name = "UUID")
@@ -250,16 +249,6 @@ public class AppConfig {
     @Profile("default")
     public String licenseType() {
         return "NORMAL";
-    }
-
-    @Bean(name = "scarfEnabled")
-    public boolean scarfEnabled() {
-        return applicationProperties.getSystem().isScarfEnabled();
-    }
-
-    @Bean(name = "posthogEnabled")
-    public boolean posthogEnabled() {
-        return applicationProperties.getSystem().isPosthogEnabled();
     }
 
     @Bean(name = "machineType")

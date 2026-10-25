@@ -17,8 +17,6 @@ export interface AppConfig {
   enableAlphaFunctionality?: boolean;
   stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
-  enablePosthog?: boolean | null;
-  enableScarf?: boolean | null;
   enableDesktopInstallSlide?: boolean;
   /** False strips the hidden novelty features - see useSecretClicks. */
   enableEasterEggs?: boolean;

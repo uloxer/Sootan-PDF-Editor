@@ -1,7 +1,5 @@
 import type { CSSProperties } from "react";
 import { Icon } from "@editor/ui/Icon";
-import wordmarkLightUrl from "@editor/assets/brand/branding-logo/wordmark-light.svg";
-import wordmarkDarkUrl from "@editor/assets/brand/branding-logo/wordmark-dark.svg";
 // The mark takes its two fills from the brand mark's path classes.
 import "@editor/components/shared/BrandMark.css";
 import "@editor/ui/Logo.css";
@@ -38,7 +36,7 @@ export function Logo({
   gap = "0.5rem",
   className,
   style,
-  alt = "Stirling",
+  alt = "Sootan PDF Editor",
 }: LogoProps) {
   const showIcon = variant === "iconOnly" || variant === "iconAndText";
   const showText = variant === "textOnly" || variant === "iconAndText";
@@ -70,24 +68,12 @@ export function Logo({
         />
       )}
       {showText && (
-        <>
-          <img
-            className="sui-logo__wordmark sui-logo__wordmark--light"
-            src={wordmarkLightUrl}
-            alt={alt}
-            width={58}
-            height={21}
-            style={{ height: textHeight }}
-          />
-          <img
-            className="sui-logo__wordmark sui-logo__wordmark--dark"
-            src={wordmarkDarkUrl}
-            alt={alt}
-            width={58}
-            height={21}
-            style={{ height: textHeight }}
-          />
-        </>
+        <span
+          aria-label={alt}
+          style={{ fontSize: textHeight, fontWeight: 600 }}
+        >
+          Sootan PDF Editor
+        </span>
       )}
     </span>
   );

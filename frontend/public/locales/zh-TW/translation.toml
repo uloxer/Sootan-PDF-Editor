@@ -958,7 +958,7 @@ sharingOn = "已啟用"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud 已回應，但拒絕此伺服器。帳戶連結可能已被撤銷。"
-title = "Stirling Cloud 正在拒絕此伺服器"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "此伺服器無法連線至 Stirling Cloud。請檢查帳戶連結，以及此伺服器是否可以連上網際網路。"
@@ -3222,7 +3222,7 @@ copy = "複製訊息"
 [chat.dock]
 collapse = "收合聊天"
 placeholder = "詢問 Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "清除聊天"
@@ -7927,7 +7927,7 @@ loading = "正在檢查帳戶連線"
 notLinked = "未連線"
 signedInAs = "登入 Stirling Cloud 的身分："
 statusError = "無法檢查帳戶連線"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "中斷此執行個體的連線"
 
 [portal.accountLink.card.error]
@@ -13089,7 +13089,7 @@ settings = "設定"
 tools = "工具"
 
 [survey]
-title = "Stirling-PDF 問卷"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "點選這裡"

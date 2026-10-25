@@ -793,7 +793,7 @@ label = "Stirling Cloud にインデックス付きドキュメントの保持�
 
 [admin.settings.ai.general.cloudNote]
 body = "推論は Stirling のインフラストラクチャ上で実行され、このサーバーにリンクされたアカウントに課金されます。ここで実行するコンテナーも、保持するプロバイダーキーもありません。AI が読み取るものはすべて、お使いのハードウェアではなく Stirling Cloud によって処理されます。"
-title = "Stirling Cloud AI について"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.enabled]
 description = "マスタースイッチ。オフの場合、AI ツール、エージェント、エンジン呼び出しは利用できません。"
@@ -835,7 +835,7 @@ description = "コンテナーなし、プロバイダーキーなし、モデ�
 linkCta = "このサーバーを Stirling アカウントに接続"
 notLinked = "まずアカウントをリンクしてください"
 ownerOnly = "組織のオーナーのみが、このサーバーを Stirling アカウントにリンクできます。"
-title = "Stirling Cloud AI を使用"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.mode.off]
 description = "アプリ内のどこにも AI ツールはなく、このサーバーから何も送信されません。"
@@ -958,15 +958,15 @@ sharingOn = "有効"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud は応答しましたが、このサーバーを拒否しました。アカウントリンクが取り消された可能性があります。"
-title = "Stirling Cloud がこのサーバーを拒否しています"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "このサーバーは Stirling Cloud に到達できませんでした。アカウントリンクと、このサーバーがインターネットに接続できることを確認してください。"
-title = "Stirling Cloud に到達できません"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud はこのサーバーを受け入れました。ここで実行またはパッチ適用するものはありません。"
-title = "Stirling Cloud 上で実行中"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.degraded]
 body = "ヘルスチェックには応答しましたが、実際のリクエストは拒否しました。双方で異なる共有シークレットが使用されています。"
@@ -1951,7 +1951,7 @@ thai = "タイ語"
 learnMore = "分析について詳しく見る"
 paragraph1 = "Stirling PDF には、製品改善に役立てるためのオプトイン分析があります。個人情報やファイル内容は追跡しません。"
 paragraph2 = "Stirling-PDFの成長を支援しユーザーをより深く理解できるように分析を有効にすることを検討してください。"
-title = "Stirling PDF の改善にご協力いただけますか？"
+title = "Sootan PDF Editor"
 
 [annotate]
 tags = "注釈,ハイライト,描画,マークアップ,コメント,メモ,レビュー,赤入れ,フィードバック,マークアップツール,付箋,図形,矢印,テキストボックス,フリーハンド"
@@ -3222,7 +3222,7 @@ copy = "メッセージをコピー"
 [chat.dock]
 collapse = "チャットを折りたたむ"
 placeholder = "Stirling Agent に質問"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "チャットをクリア"
@@ -6420,7 +6420,7 @@ skipTheTour = "ツアーをスキップ"
 
 [onboarding.checklist]
 dismiss = "閉じる"
-title = "Stirling PDF をセットアップ"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.downloadDesktop]
 description = "お使いのマシンで Stirling をネイティブ実行"
@@ -6432,7 +6432,7 @@ title = "チームメンバーを招待"
 
 [onboarding.checklist.setDefaultApp]
 description = "PDF ファイルを Stirling PDF で開く"
-title = "Stirling をデフォルトに設定"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "簡単な案内で Stirling の動作を確認"
@@ -6447,7 +6447,7 @@ titleWithOs = "{{osLabel}} 用をダウンロード"
 [onboarding.desktopWelcome]
 body = "<strong>Agent Chat</strong>、ドキュメントの自動<strong>分類</strong>など、探索できる新しい変更が多数あります。"
 freeLine = "エディターは現在<free>完全無料</free>です。"
-title = "Stirling <product>Desktop</product> へようこそ"
+title = "Sootan PDF Editor"
 
 [onboarding.mfa]
 authenticationCode = "認証コード"
@@ -6477,12 +6477,12 @@ userTitle = "プラン概要"
 [onboarding.processorIntro]
 body = "Stirling は到着した各ドキュメントを分類、保護、処理する自動ルールである <strong>Policies</strong> を実行するようになりました。<strong>Processor</strong> で設定し、実行状況を監視できます。"
 cta = "Processor を確認"
-title = "Stirling Processor を確認"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.freeEditor]
 freeLine = "エディターは現在<free>完全無料</free>です。"
 premium = "<strong>ポリシー</strong>や<strong>Agent Chat</strong>など、多数の新機能を追加しました。"
-title = "Stirlingへようこそ"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.team]
 addButton = "追加"
@@ -6516,7 +6516,7 @@ title = "ツアーの概要"
 
 [onboarding.welcomeSlide]
 body = "Stirling PDF はあらゆる規模のチームで使えるようになりました。このアップデートには新しいレイアウト、強力な管理機能、そして最も要望の多かった機能 - <strong>テキスト編集</strong> が含まれます。"
-title = "Stirling へようこそ"
+title = "Sootan PDF Editor"
 
 [onboarding.whatsNew]
 activeFilesView = "アクティブファイルで開いているすべてを確認し、作業対象を選択できます。"
@@ -7927,7 +7927,7 @@ loading = "アカウント接続を確認しています"
 notLinked = "未接続"
 signedInAs = "Stirling Cloud にサインイン中:"
 statusError = "アカウント接続を確認できませんでした"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "このインスタンスの接続を解除"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "所有権の移転が保留中です。設定 → ユーザ�
 after = "戻ってきたときに、このサーバーが接続を完了できるようにします。"
 and = "および"
 before = "設定"
-title = "Stirling接続が設定されていません"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "アカウント連携ダイアログを読み込めませんでした。"
@@ -9207,7 +9207,7 @@ guide = "{{name}} ガイドを開く"
 openInBrowser = "代わりにブラウザーで開く"
 sectionDesktop = "デスクトップアプリ"
 sectionSelfHosted = "セルフホスト"
-title = "Stirling PDF Editor をインストール"
+title = "Sootan PDF Editor"
 
 [portal.home.download.docker]
 detailBody = "公式イメージをサーバーで実行します。"
@@ -10552,7 +10552,7 @@ title = "開始するにはアカウントをリンク"
 [portal.procurement.live]
 description = "サブスクリプションがアクティブで、ライセンスが発行されています。チームはプロビジョニング済みで、請求も開始されています。"
 eyebrow = "本番稼働"
-title = "Stirling Enterprise で利用開始済みです"
+title = "Sootan PDF Editor"
 
 [portal.procurement.milestone]
 downloadError = "見積もり PDF をまだダウンロードできませんでした。しばらくしてからもう一度お試しください。"
@@ -11619,7 +11619,7 @@ yd = "ヤード (yd)"
 back = "戻る"
 continue = "続行"
 subtitle = "実行場所を選択してください。"
-title = "Stirlingをどこで実行しますか？"
+title = "Sootan PDF Editor"
 
 [runLocation.choice.browser]
 description = "Webアプリ。"
@@ -11811,7 +11811,7 @@ hideTools = "利用不可のツールを非表示 ▴"
 messageNoFallback = "サーバーがオンラインに戻るまでツールは使用できません。"
 messageWithFallback = "一部のツールにはサーバー接続が必要です。"
 showTools = "利用不可のツールを表示 ▾"
-title = "Stirling-PDF サーバーに到達できません"
+title = "Sootan PDF Editor"
 toolNotAvailableLocally = "Stirling-PDF サーバーがオフラインで、ローカルバックエンドでは「{{endpoint}}」を利用できません。"
 
 [session]
@@ -12204,7 +12204,7 @@ emptyUsername = "ユーザー名を入力してください"
 oauthFailed = "OAuth ログインに失敗しました。もう一度お試しください。"
 
 [setup.saas]
-title = "Stirling にサインイン"
+title = "Sootan PDF Editor"
 
 [setup.selfhosted]
 changeServerLocked = "あなたの組織はこのアプリを特定のサーバーに制限しています"
@@ -13089,7 +13089,7 @@ settings = "設定"
 tools = "ツール"
 
 [survey]
-title = "Stirling-PDF アンケート"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "ここをクリック"

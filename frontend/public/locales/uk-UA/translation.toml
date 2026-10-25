@@ -958,11 +958,11 @@ sharingOn = "Увімкнено"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud відповів, але відхилив цей сервер. Можливо, прив’язку облікового запису було відкликано."
-title = "Stirling Cloud відхиляє цей сервер"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Цей сервер не зміг зв’язатися зі Stirling Cloud. Перевірте прив’язку облікового запису та чи може цей сервер підключатися до інтернету."
-title = "Stirling Cloud недоступний"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud прийняв цей сервер. Тут нічого не потрібно запускати або виправляти."
@@ -3222,7 +3222,7 @@ copy = "Копіювати повідомлення"
 [chat.dock]
 collapse = "Згорнути чат"
 placeholder = "Запитайте Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Очистити чат"
@@ -7927,7 +7927,7 @@ loading = "Перевірка підключення облікового зап
 notLinked = "Не підключено"
 signedInAs = "Виконано вхід у Stirling Cloud як"
 statusError = "Не вдалося перевірити підключення облікового запису"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Від’єднати цей екземпляр"
 
 [portal.accountLink.card.error]

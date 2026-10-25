@@ -958,7 +958,7 @@ sharingOn = "Đã bật"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud đã phản hồi nhưng từ chối máy chủ này. Liên kết tài khoản có thể đã bị thu hồi."
-title = "Stirling Cloud đang từ chối máy chủ này"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Máy chủ này không thể kết nối tới Stirling Cloud. Hãy kiểm tra liên kết tài khoản và đảm bảo máy chủ này có thể truy cập internet."
@@ -3222,7 +3222,7 @@ copy = "Sao chép tin nhắn"
 [chat.dock]
 collapse = "Thu gọn chat"
 placeholder = "Hỏi Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Xóa trò chuyện"
@@ -7927,7 +7927,7 @@ loading = "Đang kiểm tra kết nối tài khoản"
 notLinked = "Chưa kết nối"
 signedInAs = "Đã đăng nhập vào Stirling Cloud với tư cách"
 statusError = "Không thể kiểm tra kết nối tài khoản"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Ngắt kết nối instance này"
 
 [portal.accountLink.card.error]

@@ -958,11 +958,11 @@ sharingOn = "Aktivert"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud svarte, men avviste denne serveren. Kontokoblingen kan ha blitt tilbakekalt."
-title = "Stirling Cloud avviser denne serveren"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Denne serveren kunne ikke nå Stirling Cloud. Kontroller kontokoblingen og at denne serveren kan nå internett."
-title = "Stirling Cloud er utilgjengelig"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud godtok denne serveren. Ingenting å kjøre eller oppdatere her."
@@ -3222,7 +3222,7 @@ copy = "Kopier melding"
 [chat.dock]
 collapse = "Skjul chat"
 placeholder = "Spør Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Tøm chat"
@@ -7927,7 +7927,7 @@ loading = "Kontrollerer kontotilkobling"
 notLinked = "Ikke tilkoblet"
 signedInAs = "Logget på Stirling Cloud som"
 statusError = "Kunne ikke kontrollere kontotilkoblingen"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Koble fra denne instansen"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "En eierskapsoverføring venter. Gå til Innstillinger → Bru
 after = "slik at denne serveren kan fullføre tilkoblingen når du kommer tilbake."
 and = "og"
 before = "Angi"
-title = "Stirling-tilkobling ikke konfigurert"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Dialogen for kontokobling kunne ikke lastes inn."
@@ -11811,7 +11811,7 @@ hideTools = "Skjul utilgjengelige verktøy ▴"
 messageNoFallback = "Verktøy er utilgjengelige til serveren din er tilbake på nett."
 messageWithFallback = "Noen verktøy krever servertilkobling."
 showTools = "Vis utilgjengelige verktøy ▾"
-title = "Stirling-PDF-serveren din kan ikke nås"
+title = "Sootan PDF Editor"
 toolNotAvailableLocally = "Stirling-PDF-serveren din er frakoblet og \"{{endpoint}}\" er ikke tilgjengelig på det lokale backend."
 
 [session]
@@ -13089,7 +13089,7 @@ settings = "Innstillinger"
 tools = "Verktøy"
 
 [survey]
-title = "Stirling-PDF-undersøkelse"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "klikk her"

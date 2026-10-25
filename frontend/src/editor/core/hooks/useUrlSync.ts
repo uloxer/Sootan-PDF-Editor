@@ -11,7 +11,6 @@ import {
   editorHomeRoute,
 } from "@editor/utils/urlRouting";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
-import { firePixel } from "@editor/utils/scarfTracking";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 /**
@@ -75,7 +74,6 @@ export function useNavigationUrlSync(
     if (hasInitialized.current) return;
 
     // Fire pixel for initial page load
-    firePixel(window.location.pathname);
 
     lastReadLocation.current = here.current;
     const route = parseToolRoute(registry, here.current);
@@ -115,7 +113,6 @@ export function useNavigationUrlSync(
 
     if (countedPath.current !== pathname) {
       countedPath.current = pathname;
-      firePixel(window.location.pathname);
     }
 
     const route = parseToolRoute(registry, here.current);

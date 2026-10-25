@@ -958,7 +958,7 @@ sharingOn = "已启用"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud 已响应，但拒绝了此服务器。账户关联可能已被撤销。"
-title = "Stirling Cloud 正在拒绝此服务器"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "此服务器无法访问 Stirling Cloud。请检查账户关联，以及此服务器是否可以访问互联网。"
@@ -3222,7 +3222,7 @@ copy = "复制消息"
 [chat.dock]
 collapse = "折叠聊天"
 placeholder = "询问 Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "清空聊天"
@@ -7927,7 +7927,7 @@ loading = "正在检查账户连接"
 notLinked = "未连接"
 signedInAs = "已登录 Stirling Cloud，身份为"
 statusError = "无法检查账户连接"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "断开此实例连接"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "有一个所有权转移待处理。请前往设置 → 用�
 after = "以便此服务器在您回来时完成连接。"
 and = "和"
 before = "设置"
-title = "Stirling 连接未配置"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "无法加载账户关联对话框。"
@@ -13089,7 +13089,7 @@ settings = "设置"
 tools = "工具"
 
 [survey]
-title = "Stirling-PDF 调查"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "点击此处"

@@ -958,11 +958,11 @@ sharingOn = "Enabled"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud answered but refused this server. The account link may have been revoked."
-title = "Stirling Cloud is refusing this server"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "This server could not reach Stirling Cloud. Check the account link and that this server can reach the internet."
-title = "Stirling Cloud unreachable"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud accepted this server. Nothing to run or patch here."
@@ -3216,7 +3216,7 @@ copy = "Copy message"
 [chat.dock]
 collapse = "Collapse chat"
 placeholder = "Ask Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Clear chat"
@@ -7923,7 +7923,7 @@ loading = "Checking account connection"
 notLinked = "Not connected"
 signedInAs = "Signed in to Stirling Cloud as"
 statusError = "Couldn’t check the account connection"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Disconnect this instance"
 
 [portal.accountLink.card.error]
@@ -8039,7 +8039,7 @@ transferPending = "An ownership transfer is pending. Go to Settings → Users to
 after = "so this server can finish the connection when you come back."
 and = "and"
 before = "Set"
-title = "Stirling connection not configured"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "The account linking dialog could not be loaded."
@@ -13095,7 +13095,7 @@ settings = "Settings"
 tools = "Tools"
 
 [survey]
-title = "Stirling-PDF Survey"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "click here"

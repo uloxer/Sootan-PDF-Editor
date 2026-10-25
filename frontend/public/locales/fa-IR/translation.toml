@@ -958,11 +958,11 @@ sharingOn = "فعال"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud پاسخ داد اما این سرور را رد کرد. ممکن است اتصال حساب لغو شده باشد."
-title = "Stirling Cloud این سرور را رد می‌کند"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "این سرور نتوانست به Stirling Cloud دسترسی پیدا کند. اتصال حساب و دسترسی این سرور به اینترنت را بررسی کنید."
-title = "Stirling Cloud در دسترس نیست"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud این سرور را پذیرفت. اینجا چیزی برای اجرا یا وصله‌کردن وجود ندارد."
@@ -3222,7 +3222,7 @@ copy = "کپی پیام"
 [chat.dock]
 collapse = "جمع کردن چت"
 placeholder = "از Stirling Agent بپرسید"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "پاک‌کردن چت"
@@ -6432,7 +6432,7 @@ title = "دعوت از اعضای تیم"
 
 [onboarding.checklist.setDefaultApp]
 description = "باز کردن فایل‌های PDF در Stirling PDF"
-title = "Stirling را پیش‌فرض خود کنید"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "در یک مرور سریع ببینید Stirling چگونه کار می‌کند"
@@ -7927,7 +7927,7 @@ loading = "در حال بررسی اتصال حساب"
 notLinked = "متصل نیست"
 signedInAs = "وارد Stirling Cloud شده‌اید به‌عنوان"
 statusError = "اتصال حساب بررسی نشد"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "قطع اتصال این نمونه"
 
 [portal.accountLink.card.error]
@@ -8239,7 +8239,7 @@ pdfsUsed_one = "{{count}} PDF پردازش شد"
 pdfsUsed_other = "{{count}} PDF پردازش شد"
 period = "دوره قرارداد: {{start}} – {{end}}"
 sub = "استقرار air-gapped، SCIM، محل نگهداری داده، SLAهای زمان‌کارکرد، و توافقی متناسب."
-title = "Stirling را در محیطی تحت مقررات اجرا می‌کنید؟"
+title = "Sootan PDF Editor"
 trial = "آزمایش {{days}} روزه · پایان {{date}}"
 usersAgreed = "{{used}} / {{agreed}} کاربر توافق‌شده"
 usersOver_one = "{{count}} کاربر بیش از تعداد توافق‌شده"

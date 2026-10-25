@@ -958,11 +958,11 @@ sharingOn = "Включено"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud ответил, но отклонил этот сервер. Привязка аккаунта могла быть отозвана."
-title = "Stirling Cloud отклоняет этот сервер"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Этот сервер не смог подключиться к Stirling Cloud. Проверьте привязку аккаунта и доступ этого сервера к интернету."
-title = "Stirling Cloud недоступен"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud принял этот сервер. Здесь ничего не нужно запускать или исправлять."
@@ -3222,7 +3222,7 @@ copy = "Копировать сообщение"
 [chat.dock]
 collapse = "Свернуть чат"
 placeholder = "Спросите Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Очистить чат"
@@ -7927,7 +7927,7 @@ loading = "Проверка подключения учетной записи"
 notLinked = "Не подключено"
 signedInAs = "Выполнен вход в Stirling Cloud как"
 statusError = "Не удалось проверить подключение учетной записи"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Отключить этот экземпляр"
 
 [portal.accountLink.card.error]
@@ -10552,7 +10552,7 @@ title = "Привяжите аккаунт, чтобы начать"
 [portal.procurement.live]
 description = "Ваша подписка активна, и лицензия выдана. Ваша команда подготовлена, биллинг начался."
 eyebrow = "Запущено"
-title = "Stirling Enterprise уже работает у вас"
+title = "Sootan PDF Editor"
 
 [portal.procurement.milestone]
 downloadError = "Пока не удалось скачать PDF с предложением — повторите попытку через минуту."

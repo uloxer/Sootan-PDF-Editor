@@ -793,7 +793,7 @@ label = "Stirling Cloud-un indekslənmiş sənədləri saxlamasına icazə ver"
 
 [admin.settings.ai.general.cloudNote]
 body = "Məntiqi emal Stirling-in infrastrukturunda işləyir və bu serverin bağlandığı hesaba hesablanır. Burada işlədiləcək konteyner və saxlanılacaq provayder açarı yoxdur. AI-nin oxuduğu hər şey öz avadanlığınızda deyil, Stirling Cloud tərəfindən emal olunur."
-title = "Stirling Cloud AI haqqında"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.enabled]
 description = "Əsas açar. Söndürülü olduqda heç bir AI aləti, agenti və ya mühərrik çağırışı əlçatan deyil."
@@ -835,7 +835,7 @@ description = "Konteyner yoxdur, provayder açarı yoxdur, model seçimi yoxdur 
 linkCta = "Bu serveri Stirling hesabına qoş"
 notLinked = "Əvvəlcə hesabı əlaqələndirin"
 ownerOnly = "Yalnız təşkilat sahibi bu serveri Stirling hesabına qoşa bilər."
-title = "Stirling Cloud AI istifadə et"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.mode.off]
 description = "Tətbiqin heç bir yerində AI alətləri yoxdur və heç nə bu serverdən çıxmır."
@@ -958,15 +958,15 @@ sharingOn = "Aktiv edilib"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud cavab verdi, lakin bu serveri rədd etdi. Hesab bağlantısı ləğv edilmiş ola bilər."
-title = "Stirling Cloud bu serveri rədd edir"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Bu server Stirling Cloud-a çata bilmədi. Hesab bağlantısını və bu serverin internetə çıxışının olub-olmadığını yoxlayın."
-title = "Stirling Cloud əlçatmazdır"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud bu serveri qəbul etdi. Burada işlədiləcək və ya yenilənəcək heç nə yoxdur."
-title = "Stirling Cloud-da işləyir"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.degraded]
 body = "Sağlamlıq yoxlamasına cavab verdi, lakin real sorğunu rədd etdi. İki tərəf fərqli paylaşılan sirrlərdən istifadə edir."
@@ -1951,7 +1951,7 @@ thai = "Tay"
 learnMore = "Analitikamız haqqında ətraflı öyrənin"
 paragraph1 = "Stirling PDF məhsulu yaxşılaşdırmaq üçün opt-in analitikaya malikdir. Heç bir şəxsi məlumatı və ya fayl məzmununu izləmirik."
 paragraph2 = "Zəhmət olmasa, Stringling-PDF-ə inkişaf etməkdə və istifadəçilərimizi daha yaxşı anlamaqda yardım etmək üçün analitikanı aktivləşdirməyi nəzərə alın."
-title = "Stirling PDF-i daha yaxşı etməyimizə kömək etmək istəyirsiniz?"
+title = "Sootan PDF Editor"
 
 [annotate]
 tags = "annotasiya,vurğula,çək,işarələmə,şərh,qeydlər,nəzərdən keçir,redline,geribildirim,işarələmə alətləri,yapışqan qeydlər,fiqurlar,oxlar,mətn qutusu,sərbəst əl"
@@ -3222,7 +3222,7 @@ copy = "Mesajı kopyala"
 [chat.dock]
 collapse = "Çatı yığ"
 placeholder = "Stirling Agent-dən soruşun"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Söhbəti təmizlə"
@@ -3592,7 +3592,7 @@ other = "Digər"
 body = "Yükləmələr qovluğunuzdakı ən son {{count}} PDF-i növə görə təsnif edin və təşkil edin."
 cta = "Yükləmələr qovluğumu emal et"
 privacy = "PDF-ləriniz bu cihazda qalır. Qoşulmuş serveriniz emal istifadəsini qeyd edir."
-title = "Stirling-in bütöv qovluqla nə edə biləcəyinə baxın"
+title = "Sootan PDF Editor"
 
 [classificationDemo.phase]
 finishing = "Tamamlanır..."
@@ -6420,11 +6420,11 @@ skipTheTour = "Turu keç"
 
 [onboarding.checklist]
 dismiss = "Bağla"
-title = "Stirling PDF-i qurun"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.downloadDesktop]
 description = "Stirling-i kompüterinizdə yerli olaraq işlədin"
-title = "Stirling for Desktop yüklə"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.inviteTeam]
 description = "Komandanızla əməkdaşlıq edin"
@@ -6432,7 +6432,7 @@ title = "Komanda üzvlərini dəvət et"
 
 [onboarding.checklist.setDefaultApp]
 description = "PDF fayllarını Stirling PDF-də açın"
-title = "Stirling-i standart edin"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "Qısa bələdçi ilə Stirling-in necə işlədiyini görün"
@@ -6447,7 +6447,7 @@ titleWithOs = "{{osLabel}} üçün yüklə"
 [onboarding.desktopWelcome]
 body = "Kəşf ediləcək bir çox yeni dəyişiklik var, o cümlədən <strong>Agent Chat</strong>, avtomatik sənəd <strong>təsnifatı</strong> və daha çoxu."
 freeLine = "Redaktor indi <free>tamamilə pulsuzdur</free>."
-title = "Stirling <product>Desktop</product>-a xoş gəlmisiniz"
+title = "Sootan PDF Editor"
 
 [onboarding.mfa]
 authenticationCode = "Təsdiqləmə kodu"
@@ -6477,12 +6477,12 @@ userTitle = "Plan icmalı"
 [onboarding.processorIntro]
 body = "Stirling indi <strong>Siyasətlər</strong> işlədir — hər sənəd daxil olduqda onu təsnif edən, qoruyan və emal edən avtomatlaşdırılmış qaydalar. Onları qurun və icraları <strong>Processor</strong>-də izləyin."
 cta = "Processor-ə baxın"
-title = "Stirling Processor-ə baxın"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.freeEditor]
 freeLine = "Redaktor indi <free>tamamilə pulsuzdur</free>."
 premium = "Biz <strong>Siyasətlər</strong> və <strong>Agent Chat</strong> daxil olmaqla çoxlu yeni funksiyalar əlavə etdik."
-title = "Stirling-ə xoş gəlmisiniz"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.team]
 addButton = "Əlavə et"
@@ -6516,7 +6516,7 @@ title = "Tur icmalı"
 
 [onboarding.welcomeSlide]
 body = "Stirling PDF artıq hər ölçüdə komanda üçün hazırdır. Bu yeniləmə yeni düzən, güclü admin imkanları və ən çox tələb olunan xüsusiyyətimizi ehtiva edir - <strong>Mətni redaktə et</strong>."
-title = "Stirling-ə xoş gəlmisiniz"
+title = "Sootan PDF Editor"
 
 [onboarding.whatsNew]
 activeFilesView = "Açıq olan hər şeyə baxmaq və işləyəcəyinizi seçmək üçün Aktiv Fayllardan istifadə edin."
@@ -7927,7 +7927,7 @@ loading = "Hesab bağlantısı yoxlanılır"
 notLinked = "Qoşulmayıb"
 signedInAs = "Stirling Cloud-a belə daxil olmusunuz"
 statusError = "Hesab bağlantısını yoxlamaq mümkün olmadı"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Bu instansiyanı ayır"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "Sahiblik ötürməsi gözləyir. Bitirmək və ya ləğv etm�
 after = "beləliklə siz qayıdanda bu server bağlantını tamamlaya bilsin."
 and = "və"
 before = "Ayarla"
-title = "Stirling bağlantısı konfiqurasiya edilməyib"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Hesab əlaqələndirmə dialoqu yüklənə bilmədi."
@@ -8239,7 +8239,7 @@ pdfsUsed_one = "{{count}} PDF emal edildi"
 pdfsUsed_other = "{{count}} PDF emal edildi"
 period = "Müqavilə müddəti: {{start}} – {{end}}"
 sub = "Air-gapped yerləşdirmə, SCIM, məlumat rezidentliyi, uptime SLA-ları və buna uyğun müqavilə."
-title = "Stirling-i tənzimlənən mühitdə işlədirsiniz?"
+title = "Sootan PDF Editor"
 trial = "{{days}} günlük sınaq · {{date}} tarixində bitir"
 usersAgreed = "{{used}} / {{agreed}} razılaşdırılmış istifadəçi"
 usersOver_one = "{{count}} istifadəçi razılaşdırılmış miqdardan artıqdır"
@@ -9207,7 +9207,7 @@ guide = "{{name}} bələdçisini aç"
 openInBrowser = "Əvəzinə brauzerdə aç"
 sectionDesktop = "Desktop tətbiqi"
 sectionSelfHosted = "Öz serverində"
-title = "Stirling PDF Editor quraşdır"
+title = "Sootan PDF Editor"
 
 [portal.home.download.docker]
 detailBody = "Rəsmi image-i serverinizdə işlədin."
@@ -10552,7 +10552,7 @@ title = "Başlamaq üçün hesabınızı əlaqələndirin"
 [portal.procurement.live]
 description = "Abunəliyiniz aktivdir və lisenziyanız verilib. Komandanız təmin edilib və hesablaşma başlayıb."
 eyebrow = "Canlı"
-title = "Stirling Enterprise-də canlıdasınız"
+title = "Sootan PDF Editor"
 
 [portal.procurement.milestone]
 downloadError = "Təklif PDF-ini hələ endirmək mümkün olmadı — lütfən, bir azdan yenidən cəhd edin."
@@ -11619,7 +11619,7 @@ yd = "Yard (yd)"
 back = "Geri"
 continue = "Davam et"
 subtitle = "Harada işləyəcəyini seçin."
-title = "Stirling-i harada işlətmək istəyirsiniz?"
+title = "Sootan PDF Editor"
 
 [runLocation.choice.browser]
 description = "Veb tətbiq."
@@ -12204,7 +12204,7 @@ emptyUsername = "Zəhmət olmasa istifadəçi adınızı daxil edin"
 oauthFailed = "OAuth girişi uğursuz oldu. Yenidən cəhd edin."
 
 [setup.saas]
-title = "Stirling-ə daxil olun"
+title = "Sootan PDF Editor"
 
 [setup.selfhosted]
 changeServerLocked = "Təşkilatınız bu tətbiqi konkret serverlə məhdudlaşdırıb"
@@ -13089,7 +13089,7 @@ settings = "Parametrlər"
 tools = "Alətlər"
 
 [survey]
-title = "Stirling-PDF Sorğusu"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "buraya klikləyin"

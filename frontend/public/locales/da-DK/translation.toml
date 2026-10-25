@@ -958,11 +958,11 @@ sharingOn = "Aktiveret"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud svarede, men afviste denne server. Kontotilknytningen kan være blevet tilbagekaldt."
-title = "Stirling Cloud afviser denne server"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Denne server kunne ikke nå Stirling Cloud. Kontrollér kontotilknytningen, og at denne server kan nå internettet."
-title = "Stirling Cloud kan ikke nås"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud accepterede denne server. Der er intet at køre eller opdatere her."
@@ -3222,7 +3222,7 @@ copy = "Kopiér besked"
 [chat.dock]
 collapse = "Skjul chat"
 placeholder = "Spørg Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Ryd chat"
@@ -7927,7 +7927,7 @@ loading = "Kontrollerer kontoforbindelse"
 notLinked = "Ikke forbundet"
 signedInAs = "Logget ind på Stirling Cloud som"
 statusError = "Kunne ikke kontrollere kontoforbindelsen"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Afbryd forbindelsen til denne instans"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "En ejerskabsoverførsel afventer. Gå til Indstillinger → B
 after = "så denne server kan fuldføre forbindelsen, når du kommer tilbage."
 and = "og"
 before = "Indstil"
-title = "Stirling-forbindelse ikke konfigureret"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Dialogen til kontotilknytning kunne ikke indlæses."
@@ -13089,7 +13089,7 @@ settings = "Indstillinger"
 tools = "Værktøjer"
 
 [survey]
-title = "Stirling-PDF-undersøgelse"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "klik her"

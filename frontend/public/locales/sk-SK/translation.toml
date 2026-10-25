@@ -958,11 +958,11 @@ sharingOn = "Povolené"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud odpovedal, ale odmietol tento server. Prepojenie účtu mohlo byť zrušené."
-title = "Stirling Cloud odmieta tento server"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Tento server sa nemohol spojiť so Stirling Cloud. Skontrolujte prepojenie účtu a či má tento server prístup na internet."
-title = "Stirling Cloud je nedostupný"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud prijal tento server. Tu netreba nič spúšťať ani aktualizovať."
@@ -3222,7 +3222,7 @@ copy = "Kopírovať správu"
 [chat.dock]
 collapse = "Zbaliť chat"
 placeholder = "Opýtajte sa Stirling Agent"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Vyčistiť chat"
@@ -7927,7 +7927,7 @@ loading = "Kontroluje sa pripojenie účtu"
 notLinked = "Nepripojené"
 signedInAs = "Prihlásený do Stirling Cloud ako"
 statusError = "Nepodarilo sa skontrolovať pripojenie účtu"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Odpojiť túto inštanciu"
 
 [portal.accountLink.card.error]

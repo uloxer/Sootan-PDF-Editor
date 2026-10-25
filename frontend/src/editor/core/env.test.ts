@@ -53,22 +53,7 @@ function findViteEnvVars(srcDir: string): Set<string> {
 describe("env vars", () => {
   it("every VITE_ var used in source is present in an example env file", () => {
     const baseEnv = readFileSync(join(frontendRoot, ".env"), "utf-8");
-    const proprietaryEnv = readFileSync(
-      join(frontendRoot, ".env.proprietary"),
-      "utf-8",
-    );
-    const desktopEnv = readFileSync(
-      join(frontendRoot, ".env.desktop"),
-      "utf-8",
-    );
-    const saasEnv = readFileSync(join(frontendRoot, ".env.saas"), "utf-8");
-
-    const declaredKeys = new Set([
-      ...parseEnvKeys(baseEnv),
-      ...parseEnvKeys(proprietaryEnv),
-      ...parseEnvKeys(desktopEnv),
-      ...parseEnvKeys(saasEnv),
-    ]);
+    const declaredKeys = parseEnvKeys(baseEnv);
     const sourceVars = findViteEnvVars(join(frontendRoot, "src"));
 
     const missing = [...sourceVars].filter((v) => !declaredKeys.has(v));

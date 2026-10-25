@@ -50,7 +50,6 @@ import {
 import { createNewStirlingFileStub } from "@editor/types/fileContext";
 import { ToolOperation } from "@editor/types/file";
 import { ensureBackendReady } from "@editor/services/backendReadinessGuard";
-import { trackEditorOperation } from "@editor/services/analytics";
 import { notifyToolCompleted } from "@editor/services/toolUsageTracker";
 import { useWillUseCloud } from "@editor/hooks/useWillUseCloud";
 import { useCreditCheck } from "@editor/hooks/useCreditCheck";
@@ -568,10 +567,7 @@ export const useToolOperation = <TParams>(
 
         if (processedFiles.length > 0) {
           assertFilesNotBlocked(policyIds);
-          trackEditorOperation(
-            config.operationType,
-            successSourceIds.length || validFiles.length,
-          );
+
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently

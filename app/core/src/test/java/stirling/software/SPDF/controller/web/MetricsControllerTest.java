@@ -18,7 +18,6 @@ import io.micrometer.core.instrument.search.Search;
 
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.SPDF.config.StartupApplicationListener;
-import stirling.software.SPDF.service.WeeklyActiveUsersService;
 import stirling.software.common.model.ApplicationProperties;
 
 class MetricsControllerTest {
@@ -39,10 +38,9 @@ class MetricsControllerTest {
         when(applicationProperties.getMetrics()).thenReturn(metrics);
     }
 
-    private MetricsController createController(Optional<WeeklyActiveUsersService> wauService) {
+    private MetricsController createController() {
         MetricsController ctrl =
-                new MetricsController(
-                        applicationProperties, meterRegistry, endpointInspector, wauService);
+                new MetricsController(applicationProperties, meterRegistry, endpointInspector);
         ctrl.init();
         return ctrl;
     }
@@ -52,7 +50,7 @@ class MetricsControllerTest {
     @Test
     void getStatus_returnsUpAndVersion() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getStatus();
 
@@ -68,7 +66,7 @@ class MetricsControllerTest {
     @Test
     void getHealth_returnsUpAndVersion() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getHealth();
 
@@ -84,7 +82,7 @@ class MetricsControllerTest {
     @Test
     void getPageLoads_metricsDisabled_returnsForbidden() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getPageLoads(Optional.empty());
 
@@ -95,7 +93,7 @@ class MetricsControllerTest {
     @Test
     void getTotalRequests_metricsDisabled_returnsForbidden() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getTotalRequests(Optional.empty());
 
@@ -105,7 +103,7 @@ class MetricsControllerTest {
     @Test
     void getUptime_metricsDisabled_returnsForbidden() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getUptime();
 
@@ -115,7 +113,7 @@ class MetricsControllerTest {
     @Test
     void getUniquePageLoads_metricsDisabled_returnsForbidden() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getUniquePageLoads(Optional.empty());
 
@@ -125,7 +123,7 @@ class MetricsControllerTest {
     @Test
     void getAllEndpointLoads_metricsDisabled_returnsForbidden() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getAllEndpointLoads();
 
@@ -135,7 +133,7 @@ class MetricsControllerTest {
     @Test
     void getAllUniqueEndpointLoads_metricsDisabled_returnsForbidden() {
         when(metrics.isEnabled()).thenReturn(false);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         ResponseEntity<?> response = controller.getAllUniqueEndpointLoads();
 
@@ -147,7 +145,7 @@ class MetricsControllerTest {
     @Test
     void getPageLoads_metricsEnabled_returnsCount() {
         when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         Search search = mock(Search.class);
         Search taggedSearch = mock(Search.class);
@@ -167,7 +165,7 @@ class MetricsControllerTest {
     @Test
     void getPageLoads_withSpecificEndpoint_filtersCorrectly() {
         when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         Search search = mock(Search.class);
         Search taggedSearch = mock(Search.class);
@@ -188,7 +186,7 @@ class MetricsControllerTest {
     @Test
     void getTotalRequests_metricsEnabled_returnsPostCount() {
         when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         Search search = mock(Search.class);
         Search taggedSearch = mock(Search.class);
@@ -207,7 +205,7 @@ class MetricsControllerTest {
     @Test
     void getTotalRequests_postWithoutApiV1_isFiltered() {
         when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         Search search = mock(Search.class);
         Search taggedSearch = mock(Search.class);
@@ -226,7 +224,7 @@ class MetricsControllerTest {
     @Test
     void getPageLoads_txtEndpoint_isFiltered() {
         when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         Search search = mock(Search.class);
         Search taggedSearch = mock(Search.class);
@@ -248,7 +246,7 @@ class MetricsControllerTest {
     @Test
     void getUptime_metricsEnabled_returnsFormattedDuration() {
         when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
+        controller = createController();
 
         StartupApplicationListener.startTime = LocalDateTime.now().minusHours(2).minusMinutes(30);
 
@@ -261,48 +259,6 @@ class MetricsControllerTest {
     }
 
     // --- WAU ---
-
-    @Test
-    void getWeeklyActiveUsers_serviceEmpty_returnsNotFound() {
-        when(metrics.isEnabled()).thenReturn(true);
-        controller = createController(Optional.empty());
-
-        ResponseEntity<?> response = controller.getWeeklyActiveUsers();
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    void getWeeklyActiveUsers_servicePresent_returnsStats() {
-        when(metrics.isEnabled()).thenReturn(true);
-        WeeklyActiveUsersService wauService = mock(WeeklyActiveUsersService.class);
-        when(wauService.getWeeklyActiveUsers()).thenReturn(42L);
-        when(wauService.getTotalUniqueBrowsers()).thenReturn(100L);
-        when(wauService.getDaysOnline()).thenReturn(7L);
-        when(wauService.getStartTime()).thenReturn(java.time.Instant.parse("2025-01-01T00:00:00Z"));
-        controller = createController(Optional.of(wauService));
-
-        ResponseEntity<?> response = controller.getWeeklyActiveUsers();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) response.getBody();
-        assertNotNull(body);
-        assertEquals(42L, body.get("weeklyActiveUsers"));
-        assertEquals(100L, body.get("totalUniqueBrowsers"));
-        assertEquals(7L, body.get("daysOnline"));
-    }
-
-    @Test
-    void getWeeklyActiveUsers_metricsDisabled_returnsForbidden() {
-        when(metrics.isEnabled()).thenReturn(false);
-        WeeklyActiveUsersService wauService = mock(WeeklyActiveUsersService.class);
-        controller = createController(Optional.of(wauService));
-
-        ResponseEntity<?> response = controller.getWeeklyActiveUsers();
-
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-    }
 
     // --- EndpointCount ---
 

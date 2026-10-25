@@ -793,7 +793,7 @@ label = "Utzi Stirling Cloud-i dokumentu indexatuak gordetzen"
 
 [admin.settings.ai.general.cloudNote]
 body = "Arrazonamendua Stirling-en azpiegituran exekutatzen da, zerbitzari hau lotuta dagoen kontuan fakturatuta. Ez dago exekutatu beharreko edukiontzirik, ezta hemen gordetzeko hornitzaile-gakorik ere. AI-k irakurtzen duen guztia Stirling Cloud-ek prozesatzen du, ez zure hardware propioan."
-title = "Stirling Cloud AI-ri buruz"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.enabled]
 description = "Etengailu nagusia. Desaktibatuta dagoenean, ez dago AI tresnarik, agenterik edo motor-deirik erabilgarri."
@@ -958,15 +958,15 @@ sharingOn = "Gaituta"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud-ek erantzun du, baina zerbitzari hau baztertu du. Baliteke kontu-lotura baliogabetu izana."
-title = "Stirling Cloud-ek zerbitzari hau baztertzen ari da"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "Zerbitzari honek ezin izan du Stirling Cloud-era iritsi. Egiaztatu kontu-lotura eta zerbitzari honek internetera irits daitekeela."
-title = "Stirling Cloud ez dago eskuragarri"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud-ek zerbitzari hau onartu du. Ez dago hemen exekutatu edo adabakia jarri beharreko ezer."
-title = "Stirling Cloud-en exekutatzen"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.degraded]
 body = "Osasun-egiaztapenari erantzun dio, baina benetako eskaera bat baztertu du. Bi aldeek sekretu partekatu desberdinak erabiltzen dituzte."
@@ -1951,7 +1951,7 @@ thai = "Thailandiera"
 learnMore = "Ikasi gehiago gure analitikari buruz"
 paragraph1 = "Stirling PDF-ek aukerazko analitika du produktua hobetzen laguntzeko. Ez dugu informazio pertsonalik edo fitxategien edukirik jarraitzen."
 paragraph2 = "Mesedez, kontuan hartu analitikak gaitzea Stirling-PDF hazten laguntzeko eta gure erabiltzaileak hobeto ulertzeko."
-title = "Stirling PDF hobetzen lagundu nahi duzu?"
+title = "Sootan PDF Editor"
 
 [annotate]
 tags = "oharrak gehitu,nabarmendu,marraztu,markatu,iruzkina,oharrak,berrikusi,redline,feedback,markatze-tresnak,ohar itsaskorrak,formak,geziak,testu-koadroa,esku hutsez"
@@ -3222,7 +3222,7 @@ copy = "Kopiatu mezua"
 [chat.dock]
 collapse = "Tolestu txata"
 placeholder = "Galdetu Stirling Agent-i"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "Garbitu txata"
@@ -5588,7 +5588,7 @@ title = "Edozein ordenatan sinatzea"
 dismiss = "Baztertu pankarta"
 message = "Sortu doako kontu bat zure lana gordetzeko, ezaugarri gehiago eskuratzeko eta proiektua babesteko."
 signUp = "Izena eman doan"
-title = "Stirling PDF gonbidatu gisa erabiltzen ari zara!"
+title = "Sootan PDF Editor"
 
 [home.addAttachments]
 desc = "Ikusi, gehitu, atera, berrizendatu edo ezabatu PDF eranskin txertatuak"
@@ -7927,7 +7927,7 @@ loading = "Kontu-konexioa egiaztatzen"
 notLinked = "Konektatu gabe"
 signedInAs = "Stirling Cloud-en saioa hasita honela"
 statusError = "Ezin izan da kontu-konexioa egiaztatu"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "Deskonektatu instantzia hau"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "Jabetza-transferentzia bat zain dago. Joan Ezarpenak → Erab
 after = "zerbitzari honek itzultzen zarenean konexioa amaitu dezan."
 and = "eta"
 before = "Ezarri"
-title = "Stirling konexioa ez dago konfiguratuta"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "Ezin izan da kontua lotzeko elkarrizketa-koadroa kargatu."
@@ -8239,7 +8239,7 @@ pdfsUsed_one = "{{count}} PDF prozesatuta"
 pdfsUsed_other = "{{count}} PDF prozesatu dira"
 period = "Akordioaren epea: {{start}} – {{end}}"
 sub = "Air-gapped inplementazioa, SCIM, datuen egoitza, funtzionamendu-denboraren SLAak eta horri egokitutako akordioa."
-title = "Stirling ingurune arautu batean exekutatzen ari zara?"
+title = "Sootan PDF Editor"
 trial = "{{days}} eguneko proba · amaiera: {{date}}"
 usersAgreed = "{{used}} / {{agreed}} hitzartutako erabiltzaile"
 usersOver_one = "Hitzartutako kopurua baino {{count}} erabiltzaile gehiago"
@@ -10552,7 +10552,7 @@ title = "Lotu zure kontua hasteko"
 [portal.procurement.live]
 description = "Zure harpidetza aktibo dago eta zure lizentzia jaulkita dago. Zure taldea hornituta dago eta fakturazioa hasi da."
 eyebrow = "Martxan"
-title = "Stirling Enterprise-n martxan zaude"
+title = "Sootan PDF Editor"
 
 [portal.procurement.milestone]
 downloadError = "Oraindik ezin izan da aurrekontuaren PDFa deskargatu — saiatu berriro une batean."
@@ -13089,7 +13089,7 @@ settings = "Ezarpenak"
 tools = "Tresnak"
 
 [survey]
-title = "Stirling-PDF inkesta"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "egin klik hemen"

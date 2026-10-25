@@ -793,7 +793,7 @@ label = "Stirling Cloud ལ་སྟོན་བྱང་བཟོས་པའ�
 
 [admin.settings.ai.general.cloudNote]
 body = "རྒྱུ་མཚན་དཔྱད་པ་ནི Stirling གི་རྨང་གཞི་སྟེང་འགྲོ་སྐྱོད་བྱེད་ཅིང་། ཞབས་ཞུ་ཆས་འདི་འབྲེལ་ཡོད་པའི་རྩིས་ཁྲ་ལ་རིན་རྩིས་བྱེད། འདིར་འགྲོ་སྐྱོད་བྱ་དགོས་པའི container མེད་ལ provider key ཉར་དགོས་པའང་མེད། AI གང་ཀློག་པ་ཚང་མ་རང་གི hardware སྟེང་མ་ཡིན་པར Stirling Cloud གིས་བཅོས་སྒྲིག་བྱེད།"
-title = "Stirling Cloud AI སྐོར།"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.enabled]
 description = "སྤྱིའི་སྒོ་འབྱེད། སྒོ་བརྒྱབ་སྐབས AI tools, agents, ཡང་ན engine calls གང་ཡང་མི་རུང་།"
@@ -835,7 +835,7 @@ description = "container མེད། provider key མེད། model འདེ�
 linkCta = "ཞབས་ཞུ་ཆས་འདི Stirling རྩིས་ཁྲ་ལ་མཐུད།"
 notLinked = "སྔོན་ལ་རྩིས་ཁྲ་ཞིག་མཐུད།"
 ownerOnly = "ཚོགས་པའི་བདག་པོ་ཁོ་ནས་ཞབས་ཞུ་ཆས་འདི Stirling རྩིས་ཁྲ་ལ་མཐུད་ཐུབ།"
-title = "Stirling Cloud AI སྤྱོད།"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.general.mode.off]
 description = "ཉེར་སྤྱོད་གང་དུའང AI ལག་ཆ་མེད། འདི་ནས་གང་ཡང་ཕྱིར་མི་འགྲོ"
@@ -958,15 +958,15 @@ sharingOn = "སྤྱོད་བཞིན།"
 
 [admin.settings.ai.status.cloud.degraded]
 body = "Stirling Cloud གིས་ལན་བཏབ་ཀྱང་ཞབས་ཞུ་ཆས་འདི་དང་ལེན་མ་བྱས། རྩིས་ཁྲའི་འབྲེལ་མཐུད་ཕྱིར་འཐེན་བྱས་ཡོད་སྲིད།"
-title = "Stirling Cloud གིས་ཞབས་ཞུ་ཆས་འདི་དང་ལེན་མི་བྱེད།"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.down]
 body = "ཞབས་ཞུ་ཆས་འདིས Stirling Cloud ལ་འབྲེལ་མ་ཐུབ། རྩིས་ཁྲའི་འབྲེལ་མཐུད་དང་ཞབས་ཞུ་ཆས་འདིས་དྲ་རྒྱ་ལ་འབྲེལ་ཐུབ་མིན་ཞིབ་བཤེར་བྱོས།"
-title = "Stirling Cloud ལ་འབྲེལ་མི་ཐུབ།"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.cloud.ok]
 body = "Stirling Cloud གིས་ཞབས་ཞུ་ཆས་འདི་དང་ལེན་བྱས། འདིར་འགྲོ་སྐྱོད་ཡང་ན patch བྱ་དགོས་པ་མེད།"
-title = "Stirling Cloud སྟེང་འགྲོ་སྐྱོད་བྱེད་བཞིན།"
+title = "Sootan PDF Editor"
 
 [admin.settings.ai.status.degraded]
 body = "དེས་བདེ་ཐང་ཞིབ་བཤེར་ལ་ལན་བཏབ་ཀྱང་དངོས་ཀྱི་རེ་ཞུ་ཞིག་དང་ལེན་མ་བྱས། ཕྱོགས་གཉིས་ཀྱིས་མཉམ་སྤྱོད་གསང་བ་མི་འདྲ་བ་སྤྱོད་བཞིན་ཡོད།"
@@ -3222,7 +3222,7 @@ copy = "འཕྲིན་དོན་འདྲ་བཤུས"
 [chat.dock]
 collapse = "Chat སྐུང་།"
 placeholder = "Stirling Agent ལ་དྲིས།"
-title = "Stirling Agent"
+title = "Sootan PDF Editor"
 
 [chat.header]
 clearChat = "གླེང་མོལ་བཤོལ"
@@ -6420,7 +6420,7 @@ skipTheTour = "སྐོར་སྐྱོད་ལ་བསྐྱོད་པ�
 
 [onboarding.checklist]
 dismiss = "སེལ"
-title = "Stirling PDF སྒྲིག"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.downloadDesktop]
 description = "Stirling ཁྱེད་ཀྱི་འཕྲུལ་ཆས་ཐོག་ཐད་ཀར་སྤེལ"
@@ -6432,7 +6432,7 @@ title = "ཚོགས་ཆུང་ཁོངས་མི་གདན་འད�
 
 [onboarding.checklist.setDefaultApp]
 description = "PDF ཡིག་ཆ Stirling PDF ནང་ཁ་འབྱེད"
-title = "Stirling ཁྱེད་ཀྱི་སྔོན་སྒྲིག་བཟོ"
+title = "Sootan PDF Editor"
 
 [onboarding.checklist.takeTour]
 description = "མགྱོགས་པོའི་སྟོན་སྐོར་ནང Stirling ཇི་ལྟར་ལས་ཀ་བྱེད་པ་ལྟ"
@@ -6447,7 +6447,7 @@ titleWithOs = "{{osLabel}} ལ་ཕབ་ལེན།"
 [onboarding.desktopWelcome]
 body = "ཞིབ་བཤེར་བྱ་རྒྱུའི་འགྱུར་བ་གསར་པ་མང་པོ་ཡོད། <strong>Agent Chat</strong>, ཡིག་ཆ་རང་འགུལ <strong>classification</strong> དང་གཞན་མང་པོ་ཚུད།"
 freeLine = "རྩོམ་སྒྲིག་ཆས་ད་ལྟ <free>རིན་མེད་ཡོངས་རྫོགས</free> ཡིན།"
-title = "Stirling <product>Desktop</product> ལ་དགའ་བསུ"
+title = "Sootan PDF Editor"
 
 [onboarding.mfa]
 authenticationCode = "ར་སྤྲོད་ཨང་རྟགས"
@@ -6477,12 +6477,12 @@ userTitle = "འཆར་གཞིའི་སྤྱི་བསྡོམས།"
 [onboarding.processorIntro]
 body = "Stirling ད་ལྟ <strong>སྲིད་ཇུས</strong> སྤེལ་བཞིན་ཡོད — ཡིག་ཆ་རེ་རེ་འབྱོར་སྐབས་དེ་དག་རིགས་དབྱེ། བདེ་འཇགས་སྲུང་སྐྱོབ། དང་ལས་སྣོན་བྱེད་པའི་རང་འགུལ་སྒྲིག་སྲོལ་ཡིན། དེ་དག་སྒྲིག་ནས <strong>ལས་སྣོན་ཆས</strong> ནང་སྤེལ་བ་ལྟ་ཞིབ་བྱེད།"
 cta = "ལས་སྣོན་ཆས་ལ་ལྟ"
-title = "Stirling Processor ལ་ལྟ"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.freeEditor]
 freeLine = "རྩོམ་སྒྲིག་ཆས་ད་ལྟ <free>རིན་མེད་ཡོངས་རྫོགས</free> ཡིན།"
 premium = "ང་ཚོས་ཁྱད་ཆོས་གསར་པ་མང་པོ་ཁ་སྣོན་བྱས་ཡོད། <strong>Policies</strong> དང <strong>Agent Chat</strong> ཚུད།"
-title = "Stirling ལ་དགའ་བསུ"
+title = "Sootan PDF Editor"
 
 [onboarding.saas.team]
 addButton = "ཁ་སྣོན"
@@ -7927,7 +7927,7 @@ loading = "རྩིས་ཐོའི་སྦྲེལ་མཐུད་ཞི
 notLinked = "སྦྲེལ་མཐུད་མེད"
 signedInAs = "Stirling Cloud ལ་ནང་འཛུལ་བྱས་པ"
 statusError = "རྩིས་ཐོའི་སྦྲེལ་མཐུད་ཞིབ་བཤེར་བྱ་མ་ཐུབ"
-title = "Stirling Cloud"
+title = "Sootan PDF Editor"
 unlink = "instance འདི་སྦྲེལ་བ་གཅོད་པ"
 
 [portal.accountLink.card.error]
@@ -8043,7 +8043,7 @@ transferPending = "བདག་དབང་སྤོ་སྒྱུར་ཞི�
 after = "ཁྱེད་ཕྱིར་ཡོང་སྐབས server འདིས་སྦྲེལ་མཐུད་མཇུག་སྒྲིལ་ཐུབ་པའི་ཆེད།"
 and = "དང"
 before = "སྒྲིག"
-title = "Stirling སྦྲེལ་མཐུད་སྒྲིག་མེད"
+title = "Sootan PDF Editor"
 
 [portal.accountLink.notice]
 loadFailed = "རྩིས་ཐོ་སྦྲེལ་བའི་གླེང་སྒྲོམ་འཇུག་མ་ཐུབ།"
@@ -9207,7 +9207,7 @@ guide = "{{name}} ལམ་སྟོན་ཁ་ཕྱེ"
 openInBrowser = "དེའི་ཚབ་ཏུ་བཤེར་ཆས་ནང་ཁ་ཕྱེ"
 sectionDesktop = "ཅོག་ངོས་ཉེར་སྤྱོད"
 sectionSelfHosted = "རང་གིས་གནས་སྡོད"
-title = "Stirling PDF Editor སྒྲིག་འཇུག"
+title = "Sootan PDF Editor"
 
 [portal.home.download.docker]
 detailBody = "ཁྱེད་ཀྱི server ཐོག་དངོས་སུ་འགྲེམས་པའི image འཁོར་སྐྱོད་བྱོས།"
@@ -13089,7 +13089,7 @@ settings = "སྒྲིག་འགོད"
 tools = "ལག་ཆ"
 
 [survey]
-title = "Stirling-PDF བསམ་འཆར་ཞིབ་འཇུག"
+title = "Sootan PDF Editor"
 
 [swagger]
 clickHere = "འདིར་གནོན"

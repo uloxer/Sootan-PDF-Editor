@@ -32,21 +32,10 @@ public class InitialSetup {
 
     @PostConstruct
     public void init() throws IOException {
-        initUUIDKey();
         initSecretKey();
         initLegalUrls();
         initSetAppVersion();
         GeneralUtils.extractPipeline();
-    }
-
-    public void initUUIDKey() throws IOException {
-        String uuid = applicationProperties.getAutomaticallyGenerated().getUUID();
-        if (!GeneralUtils.isValidUUID(uuid)) {
-            // Generating a random UUID as the secret key
-            uuid = UUID.randomUUID().toString();
-            GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.UUID", uuid);
-            applicationProperties.getAutomaticallyGenerated().setUUID(uuid);
-        }
     }
 
     public void initSecretKey() throws IOException {
