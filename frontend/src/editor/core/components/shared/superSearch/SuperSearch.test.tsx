@@ -9,6 +9,19 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
+const translatedPlaceholder = vi.hoisted(() => ({
+  value: null as string | null,
+}));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) =>
+      key === "superSearch.placeholder" && translatedPlaceholder.value !== null
+        ? translatedPlaceholder.value
+        : key,
+  }),
+}));
+
 vi.mock("@editor/hooks/useSuperSearch", () => ({
   useSuperSearch: vi.fn(() => ({
     groups: [],
@@ -100,6 +113,7 @@ function renderSearch(
 
 describe("SuperSearch", () => {
   beforeEach(() => {
+    translatedPlaceholder.value = null;
     vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
       x: 0,
       y: 0,
@@ -121,6 +135,19 @@ describe("SuperSearch", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it.each([
+    ["Search Stirling", "Search Sootan PDF Editor"],
+    ["Search Stirling PDF", "Search Sootan PDF Editor"],
+    ["Stirling durchsuchen", "Sootan PDF Editor durchsuchen"],
+  ])("rebrands inherited search copy: %s", (translation, expected) => {
+    translatedPlaceholder.value = translation;
+    renderSearch();
+    expect(screen.getByRole("combobox")).toHaveAttribute(
+      "placeholder",
+      expected,
+    );
   });
 
   it("opens from Ctrl+K based on e.code and exposes combobox wiring", async () => {

@@ -48,6 +48,12 @@ Headless installed Chrome opened the actual application, waited 18 seconds beyon
 
 Local evidence retained in ignored `.tooling`: `frontend-check3.log`, `backend-check2.log`, `test-summary.json`, `bundled-build.log`, `final-package.log`, `runtime-smoke.json`, `signature-smoke.json`, `browser-smoke.json`, `editor-smoke.png`, and `runtime.log`. JUnit XML/HTML reports are under `app/{common,core}/build/{test-results,reports/tests}/test`. The temporary server was stopped after verification.
 
+## Integration follow-up
+
+The remaining desktop search placeholder now replaces the inherited Stirling name at render time while preserving localized wording; no locale files changed. The obsolete account-link property/comment was removed. Typechecking, oxlint, theme/icon/CSS lint and format checks passed; the focused SuperSearch suite passed **13/13**, including three inherited-translation regression cases. The task runner ignored a requested test-file override, so its unintended broad test run was stopped and the explicit focused Vitest command was used. The previously recorded full-suite results remain separate.
+
+A complete bundled rebuild passed in **3m 34s**. Installed Chrome against that rebuilt executable confirmed the actual placeholder **Search Sootan PDF Editor**; `.tooling/editor-placeholder.png` and `.tooling/placeholder-browser.json` record the result. The temporary server was stopped. Follow-up logs: `.tooling/placeholder-check2.log`, `.tooling/placeholder-test.log`, `.tooling/placeholder-build.log`.
+
 ## Measurements
 
 The source measurement uses Git blob lengths for both the pinned baseline and staged final tree, excluding Git history, generated output, ignored dependencies and downloaded tooling. `python scripts/measure-core.py` reproduces it after staging edits. Primary code means Java/TypeScript/Python/Rust under app main Java, frontend/src, engine/src and frontend/src-tauri/src; frontend colocated tests are included. The all-language denominator includes tests and tooling anywhere in the tree.
@@ -55,10 +61,10 @@ The source measurement uses Git blob lengths for both the pinned baseline and st
 | Measure | Upstream baseline | Core | Reduction |
 | --- | ---: | ---: | ---: |
 | Versioned files | 8,371 | 4,789 | 42.8% |
-| Versioned bytes | 209,944,276 | 187,842,516 | 10.5% |
-| Primary code bytes | 29,873,330 | 17,055,650 | 42.9% |
-| All primary-language bytes, including tests | 41,211,293 | 22,686,728 | 45.0% |
-| Executable JAR bytes | Not built | 306,828,788 | Not established |
-| Frontend dist bytes | Not built | 154,460,657 | Not established |
+| Versioned bytes | 209,944,276 | 187,844,124 | 10.5% |
+| Primary code bytes | 29,873,330 | 17,056,558 | 42.9% |
+| All primary-language bytes, including tests | 41,211,293 | 22,687,636 | 44.9% |
+| Executable JAR bytes | Not built | 306,789,091 | Not established |
+| Frontend dist bytes | Not built | 154,249,375 | Not established |
 
 Frontend output includes local WASM, fonts, translations and compressed variants; its directory size is not JavaScript size. JAR and frontend numbers are after-only measurements. Baseline executable/bundle, Docker image size, cold/idle benchmark comparisons, complex-document rendering/conversion performance and native OCR/Office smoke measurements were not established. Docker is unavailable on this host; the supplied full-tools image recipe has not been built here. No image-size, startup improvement, idle-memory improvement or processing-speed improvement is claimed.

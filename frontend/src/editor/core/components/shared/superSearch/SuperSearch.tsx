@@ -649,7 +649,10 @@ export default function SuperSearch({
           placeholder={
             isMobile
               ? t("superSearch.placeholderShort", "Search")
-              : t("superSearch.placeholder", "Search Stirling")
+              : t(
+                  "superSearch.placeholder",
+                  "Search Sootan PDF Editor",
+                ).replace(/Stirling(?:\s*PDF)?/g, "Sootan PDF Editor")
           }
           icon={<Icon name="search" size="1.1rem" />}
           autoComplete="off"
