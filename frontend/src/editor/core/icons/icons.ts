@@ -380,7 +380,7 @@ import ReplaceText from "@editor/icons/svg/stirling/replace-text.svg?react";
 import SelectAll from "@editor/icons/svg/stirling/select-all.svg?react";
 import Sftp from "@editor/icons/svg/stirling/sftp.svg?react";
 import SinglePage from "@editor/icons/svg/stirling/single-page.svg?react";
-import StirlingMark from "@editor/icons/svg/stirling/stirling-mark.svg?react";
+import StirlingMark from "@editor/icons/svg/stirling/sootan-mark.svg?react";
 import StirlingMarkThinking from "@editor/icons/svg/stirling/stirling-mark-thinking.svg?react";
 import StirlingTile from "@editor/icons/svg/stirling/stirling-tile.svg?react";
 import UsersPlus from "@editor/icons/svg/stirling/users-plus.svg?react";
@@ -813,6 +813,7 @@ export const ICONS = {
   sftp: { Component: Sftp, kind: "stirling" },
   "single-page": { Component: SinglePage, kind: "stirling" },
   // Brand: they paint with their own fills and CSS classes, so <Icon> must not restroke them.
+  "sootan-mark": { Component: StirlingMark, kind: "brand" },
   "stirling-mark": { Component: StirlingMark, kind: "brand" },
   "stirling-mark-thinking": { Component: StirlingMarkThinking, kind: "brand" },
   "stirling-tile": { Component: StirlingTile, kind: "brand" },

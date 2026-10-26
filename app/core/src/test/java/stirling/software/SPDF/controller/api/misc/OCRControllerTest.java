@@ -64,13 +64,18 @@ class OCRControllerTest {
 
         tempFileManager = new TempFileManager(new TempFileRegistry(), applicationProperties);
 
+        var helpers =
+                org.mockito.Mockito.mock(stirling.software.SPDF.config.ExternalAppDepConfig.class);
+        org.mockito.Mockito.lenient().when(helpers.isUnpaperAvailable()).thenReturn(true);
+        org.mockito.Mockito.lenient().when(helpers.isGhostscriptAvailable()).thenReturn(true);
         ocrController =
                 new OCRController(
                         applicationProperties,
                         pdfDocumentFactory,
                         tempFileManager,
                         endpointConfiguration,
-                        runtimePathConfig);
+                        runtimePathConfig,
+                        helpers);
     }
 
     /** Build a minimal request with sensible defaults the caller can override. */

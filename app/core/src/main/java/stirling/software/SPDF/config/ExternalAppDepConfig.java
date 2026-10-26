@@ -29,6 +29,8 @@ import stirling.software.common.util.RegexPatternUtils;
 @Configuration
 @Slf4j
 public class ExternalAppDepConfig {
+    private boolean unpaperAvailable;
+    private boolean ghostscriptAvailable;
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
     private static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+){0,2})");
@@ -79,6 +81,14 @@ public class ExternalAppDepConfig {
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 
+    public boolean isUnpaperAvailable() {
+        return unpaperAvailable;
+    }
+
+    public boolean isGhostscriptAvailable() {
+        return ghostscriptAvailable;
+    }
+
     public boolean isDependenciesChecked() {
         return dependenciesChecked;
     }
@@ -101,6 +111,8 @@ public class ExternalAppDepConfig {
             // Python / OpenCV special handling
             checkPythonAndOpenCV();
 
+            unpaperAvailable = isCommandAvailable("unpaper");
+            ghostscriptAvailable = isCommandAvailable("gs");
             dependenciesChecked = true;
         } finally {
             endpointConfiguration.logDisabledEndpointsSummary();

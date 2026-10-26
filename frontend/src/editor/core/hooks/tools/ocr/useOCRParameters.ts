@@ -16,7 +16,7 @@ export type OCRParametersHook = BaseParametersHook<OCRParameters>;
 export const defaultParameters: OCRParameters = {
   languages: [],
   ocrType: "skip-text",
-  ocrRenderType: "hocr",
+  ocrRenderType: "auto",
   additionalOptions: [],
 };
 

@@ -433,3 +433,24 @@ html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="
   --c-border: var(--p-c-28282d);
   --c-border-subtle: var(--p-zinc-700);
 }
+
+:root,
+html[data-app-theme="custom"] {
+  --c-primary: var(--p-sootan-green);
+  --c-primary-hover: var(--p-green-800);
+  --c-accent-text: var(--p-green-800);
+  --c-accent-fg: var(--p-sootan-green);
+  --c-brand: var(--p-sootan-green);
+  --c-brand-hover: var(--p-green-800);
+  --c-brand-mark: var(--p-sootan-green);
+  --c-brand-mark-soft: var(--p-sootan-slate);
+  --c-brand-slate: var(--p-sootan-slate);
+}
+:root[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
+  --c-primary: var(--p-sootan-green);
+  --c-primary-hover: var(--p-green-800);
+  --c-accent-text: var(--p-green-200);
+  --c-accent-fg: var(--p-sootan-green-light);
+  --c-brand-mark: var(--p-sootan-green-light);
+  --c-brand-slate: var(--p-sootan-slate-light);
+}

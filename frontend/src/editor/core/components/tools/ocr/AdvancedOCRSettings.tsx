@@ -1,4 +1,5 @@
 import React from "react";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { Stack, Text, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { OCRParameters } from "@editor/hooks/tools/ocr/useOCRParameters";
@@ -25,11 +26,12 @@ interface AdvancedOCRSettingsProps {
 
 const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
   advancedOptions,
-  ocrRenderType = "hocr",
+  ocrRenderType = "auto",
   onParameterChange,
   disabled = false,
 }) => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
 
   // Define the advanced options available
   const advancedOptionsData: AdvancedOption[] = [
@@ -67,7 +69,7 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
     if (option?.isSpecial) {
       // Handle special options (like compatibility mode) differently
       if (optionValue === "compatibilityMode") {
-        onParameterChange("ocrRenderType", checked ? "sandwich" : "hocr");
+        onParameterChange("ocrRenderType", checked ? "sandwich" : "auto");
       }
     } else {
       // Handle regular advanced options
@@ -106,7 +108,17 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
                 handleCheckboxChange(option.value, event.currentTarget.checked)
               }
               label={option.label}
-              disabled={disabled}
+              description={
+                config?.ocrCleanAvailable === false &&
+                ["clean", "cleanFinal"].includes(option.value)
+                  ? "Requires optional unpaper (not included)"
+                  : undefined
+              }
+              disabled={
+                disabled ||
+                (config?.ocrCleanAvailable === false &&
+                  ["clean", "cleanFinal"].includes(option.value))
+              }
               size="sm"
             />
           ))}

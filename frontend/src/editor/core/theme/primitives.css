@@ -1,6 +1,10 @@
 /* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css and compat.css reference these. */
 
 :root {
+  --p-sootan-green: #286447;
+  --p-sootan-green-light: #69ae87;
+  --p-sootan-slate: #727d88;
+  --p-sootan-slate-light: #a2adb8;
   --p-white: #ffffff;
   --p-black: #000000;
   --p-gray-50: #f9fafb;

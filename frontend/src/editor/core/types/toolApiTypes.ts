@@ -1092,7 +1092,7 @@ export interface ProcessPdfWithOcrRequest {
   /**
    * Specify the OCR render type, either 'hocr' or 'sandwich'
    */
-  ocrRenderType?: "hocr" | "sandwich";
+  ocrRenderType?: "auto" | "fpdf2" | "hocr" | "sandwich";
   /**
    * Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
    */

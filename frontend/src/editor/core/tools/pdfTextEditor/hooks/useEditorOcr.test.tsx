@@ -213,7 +213,7 @@ describe("editor inline OCR", () => {
     expect(config).toMatchObject({ responseType: "blob", timeout: 0 });
     expect(body.getAll("languages")).toEqual(["deu"]);
     expect(body.get("ocrType")).toBe("skip-text");
-    expect(body.get("ocrRenderType")).toBe("hocr");
+    expect(body.get("ocrRenderType")).toBe("auto");
     expect(body.get("sidecar")).toBe("false");
     expect(body.get("removeImagesAfter")).toBe("false");
     const uploaded = body.get("fileInput") as File;

@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.ExternalAppDepConfig;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
@@ -69,6 +70,7 @@ public class OCRController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
     private final RuntimePathConfig runtimePathConfig;
+    private final ExternalAppDepConfig externalAppDepConfig;
 
     private boolean isOcrMyPdfEnabled() {
         return endpointConfiguration.isGroupEnabled("OCRmyPDF");
@@ -128,8 +130,30 @@ public class OCRController {
             throw ExceptionUtils.createOcrLanguageRequiredException();
         }
 
-        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
+        if (ocrRenderType == null
+                || !List.of("auto", "fpdf2", "hocr", "sandwich").contains(ocrRenderType)) {
             throw ExceptionUtils.createOcrInvalidRenderTypeException();
+        }
+
+        if ((Boolean.TRUE.equals(clean) || Boolean.TRUE.equals(cleanFinal))
+                && !externalAppDepConfig.isUnpaperAvailable()) {
+            throw new IllegalArgumentException(
+                    "OCR cleaning requires the optional unpaper helper, which is not installed.");
+        }
+        if (Boolean.TRUE.equals(removeImagesAfter)
+                && !externalAppDepConfig.isGhostscriptAvailable()) {
+            throw new IllegalArgumentException(
+                    "Removing images after OCR requires the optional Ghostscript helper, which is not installed.");
+        }
+        if ((sidecar
+                        || Boolean.TRUE.equals(deskew)
+                        || Boolean.TRUE.equals(rotatePages)
+                        || Boolean.TRUE.equals(clean)
+                        || Boolean.TRUE.equals(cleanFinal)
+                        || Boolean.TRUE.equals(removeImagesAfter))
+                && !isOcrMyPdfEnabled()) {
+            throw new IllegalArgumentException(
+                    "These OCR options require OCRmyPDF; the Tesseract-only path cannot apply them.");
         }
 
         // Get available Tesseract languages

@@ -88,13 +88,18 @@ class OCRControllerMoreTest {
         Path fakeBinary = Files.createTempFile(baseTmpDir, "ocrmypdf", ".bin");
         lenient().when(runtimePathConfig.getOcrMyPdfPath()).thenReturn(fakeBinary.toString());
 
+        var helpers =
+                org.mockito.Mockito.mock(stirling.software.SPDF.config.ExternalAppDepConfig.class);
+        org.mockito.Mockito.lenient().when(helpers.isUnpaperAvailable()).thenReturn(true);
+        org.mockito.Mockito.lenient().when(helpers.isGhostscriptAvailable()).thenReturn(true);
         ocrController =
                 new OCRController(
                         applicationProperties,
                         pdfDocumentFactory,
                         tempFileManager,
                         endpointConfiguration,
-                        runtimePathConfig);
+                        runtimePathConfig,
+                        helpers);
     }
 
     /** Build a tiny single-page in-memory PDF as a MockMultipartFile. */

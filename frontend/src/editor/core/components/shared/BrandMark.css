@@ -110,3 +110,10 @@
     animation: none;
   }
 }
+
+.sootan-mark__grass {
+  fill: var(--c-brand-mark);
+}
+.sootan-mark__cliff {
+  fill: var(--c-brand-slate);
+}

@@ -1,4 +1,6 @@
 export interface AppConfig {
+  ocrCleanAvailable?: boolean;
+  ocrRemoveImagesAvailable?: boolean;
   baseUrl?: string;
   contextPath?: string;
   serverPort?: number;

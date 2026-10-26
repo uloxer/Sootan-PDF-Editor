@@ -326,6 +326,10 @@ public class ConfigController {
             }
             configData.put("isNewUser", isNewUser);
 
+            configData.put("ocrCleanAvailable", externalAppDepConfig.isUnpaperAvailable());
+            configData.put(
+                    "ocrRemoveImagesAvailable", externalAppDepConfig.isGhostscriptAvailable());
+
             // System settings
             configData.put(
                     "enableAlphaFunctionality",

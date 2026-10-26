@@ -61,7 +61,7 @@ export function Logo({
     <span className={cls} style={{ ...layoutStyle, ...style }}>
       {showIcon && (
         <Icon
-          name="stirling-mark"
+          name="sootan-mark"
           className="sui-logo__mark"
           size={iconHeight}
           title={showText ? undefined : alt}

@@ -43,11 +43,11 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
     private String ocrType;
 
     @Schema(
-            description = "Specify the OCR render type, either 'hocr' or 'sandwich'",
+            description = "Specify the OCR render type, auto, fpdf2, hocr or sandwich",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {"hocr", "sandwich"},
-            defaultValue = "hocr")
-    private String ocrRenderType = "hocr";
+            allowableValues = {"auto", "fpdf2", "hocr", "sandwich"},
+            defaultValue = "auto")
+    private String ocrRenderType = "auto";
 
     @Schema(description = "Remove images from the output PDF if set to true")
     private boolean removeImagesAfter;
