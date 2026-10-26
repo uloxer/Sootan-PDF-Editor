@@ -171,6 +171,10 @@ def main():
     classes = WORK / "classes"
     classes.mkdir()
     run([jdk / "bin/javac.exe", "-d", classes, SPEC / "SootanLauncher.java"])
+    test_classes = WORK / "test-classes"
+    test_classes.mkdir()
+    run([jdk / "bin/javac.exe", "-cp", classes, "-d", test_classes, SPEC / "tests/SootanLauncherPathTest.java"])
+    run([jdk / "bin/java.exe", "-cp", str(classes) + os.pathsep + str(test_classes), "SootanLauncherPathTest"])
     run([jdk / "bin/jar.exe", "--create", "--file", inputs / "launcher.jar", "--main-class", "SootanLauncher", "-C", classes, "."])
     shutil.copy2(SPEC / "assets/sootan.png", inputs / "sootan.png")
     shutil.copy2(ROOT / "LICENSE", inputs / "LICENSE.txt")
@@ -187,12 +191,12 @@ def main():
             shutil.copy2(source, helpers / "python" / name)
     stop = WORK / "stop.properties"
     stop.write_text("arguments=--stop\nicon=" + (SPEC / "assets/sootan.ico").as_posix() + "\n")
-    run([jdk / "bin/jpackage.exe", "--type", "app-image", "--name", "Sootan PDF Editor", "--app-version", "3.2.2", "--vendor", "Sootan PDF Editor", "--input", inputs, "--main-jar", "launcher.jar", "--main-class", "SootanLauncher", "--runtime-image", runtime, "--icon", SPEC / "assets/sootan.ico", "--dest", OUT, "--add-launcher", "Stop Sootan PDF Editor=" + str(stop)])
+    run([jdk / "bin/jpackage.exe", "--type", "app-image", "--name", "Sootan PDF Editor", "--app-version", "3.2.4", "--vendor", "Sootan PDF Editor", "--input", inputs, "--main-jar", "launcher.jar", "--main-class", "SootanLauncher", "--runtime-image", runtime, "--icon", SPEC / "assets/sootan.ico", "--dest", OUT, "--add-launcher", "Stop Sootan PDF Editor=" + str(stop)])
     env = os.environ.copy()
     env["PATH"] = str(CACHE / "wix") + os.pathsep + env["PATH"]
     installer = OUT / "installer"
     installer.mkdir()
-    run([jdk / "bin/jpackage.exe", "--type", "exe", "--app-image", OUT / "Sootan PDF Editor", "--name", "Sootan PDF Editor", "--app-version", "3.2.2", "--vendor", "Sootan PDF Editor", "--dest", installer, "--win-per-user-install", "--win-upgrade-uuid", "adcbdd25-309f-43c7-81cd-557cd7601674", "--win-menu", "--win-shortcut", "--install-dir", "Sootan PDF Editor", "--license-file", ROOT / "LICENSE", "--temp", WORK / "installer"], env=env)
+    run([jdk / "bin/jpackage.exe", "--type", "exe", "--app-image", OUT / "Sootan PDF Editor", "--name", "Sootan PDF Editor", "--app-version", "3.2.4", "--vendor", "Sootan PDF Editor", "--dest", installer, "--win-per-user-install", "--win-upgrade-uuid", "adcbdd25-309f-43c7-81cd-557cd7601674", "--win-menu", "--win-menu-group", "Sootan PDF Editor", "--win-shortcut", "--install-dir", "Sootan PDF Editor", "--license-file", ROOT / "LICENSE", "--temp", WORK / "installer"], env=env)
     report = {"jar_bytes": jars[0].stat().st_size, "runtime_bytes": footprint(runtime), "helpers_bytes": footprint(helpers), "installed_image_bytes": footprint(OUT / "Sootan PDF Editor"), "installer_bytes": {p.name: p.stat().st_size for p in installer.glob("*.exe")}, "java_modules": modules.split(","), "tesseract_files": sorted(seen)}
     (OUT / "sizes.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))

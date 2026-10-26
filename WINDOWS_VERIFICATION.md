@@ -1,5 +1,7 @@
 # Windows package verification — 26 October 2026
 
+Historical 3.2.2 build measurements. The current 3.2.4 installed upgrade and OCR readiness fix are recorded in [INSTALLED_VERIFICATION.md](INSTALLED_VERIFICATION.md).
+
 Windows x64 per-user editor with private Java and English OCR, version3.2.2. This report supersedes the historical Docker installation guidance; previous broad-suite results remain in VERIFICATION.md. The unsigned installer was built locally, not installed into the real user profile or published. Binary redistribution is not cleared: exact MSYS2 corresponding-source/build revisions for the pinned Tesseract DLL payload still need matching. See packaging/windows/THIRD-PARTY.md.
 
 ## Artifacts and actual sizes

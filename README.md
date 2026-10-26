@@ -12,7 +12,7 @@ Build the unsigned per-user installer from this checkout:
 task windows:package
 ```
 
-Run the resulting `Sootan PDF Editor-3.2.2.exe` installer as your normal user. The Start launcher opens your browser on a random loopback port. Use the tray menu **Quit**, or **Stop Sootan PDF Editor**, to stop the server; closing the browser alone leaves the tray app running. Private Java, Python and English OCR are included. Docker is not required. Optional Office and other external conversion helpers are not bundled. See [Windows packaging](packaging/windows/README.md) for build/install/uninstall instructions and limitations. This local-use binary has not been cleared for redistribution; see [third-party notices](packaging/windows/THIRD-PARTY.md).
+Run the resulting `Sootan PDF Editor-3.2.4.exe` installer as your normal user. The Start launcher opens your browser on a random loopback port. Use the tray menu **Quit**, or **Stop Sootan PDF Editor**, to stop the server; closing the browser alone leaves the tray app running. Private Java, Python and English OCR are included. Docker is not required. Optional Office and other external conversion helpers are not bundled. Writable data is stored separately in `%LOCALAPPDATA%/Sootan PDF Editor Data`. See [Windows packaging](packaging/windows/README.md) for build/install/uninstall instructions and limitations, and [installed verification](INSTALLED_VERIFICATION.md) for the tested update/recovery results. This local-use binary has not been cleared for redistribution; see [third-party notices](packaging/windows/THIRD-PARTY.md).
 
 ## Build from source
 

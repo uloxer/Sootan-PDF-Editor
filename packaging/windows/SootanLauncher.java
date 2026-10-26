@@ -36,10 +36,14 @@ public class SootanLauncher {
         }
     }
 
+    static Path defaultDataPath(Path localAppData) {
+        return localAppData.resolve("Sootan PDF Editor Data");
+    }
+
     private static void run(String[] args) throws Exception {
         Path app = Path.of(SootanLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         Path home = app.getParent();
-        Path data = Path.of(System.getenv("LOCALAPPDATA"), "Sootan PDF Editor");
+        Path data = defaultDataPath(Path.of(System.getenv("LOCALAPPDATA")));
         String override = System.getenv("SOOTAN_USER_DATA");
         if (override != null && !override.isBlank()) data = Path.of(override).toAbsolutePath();
         Files.createDirectories(data);
