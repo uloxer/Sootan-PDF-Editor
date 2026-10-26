@@ -33,6 +33,10 @@ public class ExternalAppDepConfig {
     private boolean ghostscriptAvailable;
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
+    // A private Python OCR stack can take longer on its first Windows launch.
+    private static final Duration OCR_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration DEPENDENCY_BATCH_TIMEOUT =
+            DEFAULT_TIMEOUT.plus(OCR_TIMEOUT).plusSeconds(3);
     private static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+){0,2})");
 
     private final EndpointConfiguration endpointConfiguration;
@@ -106,7 +110,7 @@ public class ExternalAppDepConfig {
                                                 return null;
                                             })
                             .toList();
-            invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
+            invokeAllWithTimeout(tasks, DEPENDENCY_BATCH_TIMEOUT);
 
             // Python / OpenCV special handling
             checkPythonAndOpenCV();
@@ -277,7 +281,8 @@ public class ExternalAppDepConfig {
         if (res.exitCode() == 0) return true;
 
         // Fallback: try `--version` when helpful (covers py-launcher shims on Windows etc.)
-        ProbeResult ver = runAndWait(List.of(command, "--version"), DEFAULT_TIMEOUT);
+        Duration timeout = Objects.equals(command, ocrMyPdfPath) ? OCR_TIMEOUT : DEFAULT_TIMEOUT;
+        ProbeResult ver = runAndWait(List.of(command, "--version"), timeout);
         return ver.exitCode() == 0;
     }
 
@@ -300,7 +305,10 @@ public class ExternalAppDepConfig {
             for (Future<Void> f : futures) {
                 try {
                     f.get();
-                } catch (Exception ignored) {
+                } catch (CancellationException e) {
+                    log.warn("Dependency probe batch exceeded {} seconds", timeout.toSeconds());
+                } catch (ExecutionException e) {
+                    log.warn("Dependency probe failed", e.getCause());
                 }
             }
         } catch (InterruptedException e) {
@@ -315,6 +323,10 @@ public class ExternalAppDepConfig {
             boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 p.destroyForcibly();
+                log.warn(
+                        "Dependency probe timed out after {} seconds: {}",
+                        timeout.toSeconds(),
+                        String.join(" ", cmd));
                 return new ProbeResult(124, "", "timeout");
             }
             String out = readStream(p.getInputStream());
