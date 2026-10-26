@@ -1,9 +1,3 @@
-import java.awt.Desktop;
-import java.awt.Image;
-import java.awt.MenuItem;
-import java.awt.PopupMenu;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URI;
@@ -19,14 +13,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
-/** Owns the per-user backend process, browser entry and tray exit. */
+/** Owns one private backend and its desktop window; window exit stops the server. */
 public class SootanLauncher {
     private static Process backend;
     private static URI address;
-    private static TrayIcon tray;
 
     public static void main(String[] args) {
         try { run(args); }
@@ -48,23 +40,25 @@ public class SootanLauncher {
         if (override != null && !override.isBlank()) data = Path.of(override).toAbsolutePath();
         Files.createDirectories(data);
         Path state = data.resolve("running.txt");
+        Path host = app.resolve("SootanHost.exe");
         if (List.of(args).contains("--stop")) {
-            if (Files.exists(state)) {
-                List<String> values = Files.readAllLines(state);
-                long pid = Long.parseLong(values.get(1));
-                ProcessHandle.of(pid).filter(p -> p.info().command().map(Path::of).map(path -> path.equals(home.resolve("runtime/bin/java.exe"))).orElse(false)).ifPresent(ProcessHandle::destroy);
-            }
+            if (Files.exists(state)) new ProcessBuilder(host.toString(), "--stop", data.toString()).start().waitFor();
             return;
         }
         try (FileChannel channel = FileChannel.open(data.resolve("launcher.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
             FileLock lock = channel.tryLock();
             if (lock == null) {
-                if (Files.exists(state)) Desktop.getDesktop().browse(URI.create(Files.readAllLines(state).get(0)));
+                List<String> activate = new ArrayList<>(List.of(host.toString(), "--activate", data.toString()));
+                activate.addAll(List.of(args));
+                new ProcessBuilder(activate).start().waitFor();
                 return;
             }
             try (lock) {
                 int port;
-                try (ServerSocket socket = new ServerSocket(0, 0, InetAddress.getByName("127.0.0.1"))) { port = socket.getLocalPort(); }
+                Path portFile = data.resolve("port.txt");
+                int preferred = Files.exists(portFile) ? Integer.parseInt(Files.readString(portFile).trim()) : 0;
+                try (ServerSocket socket = new ServerSocket(preferred, 0, InetAddress.getByName("127.0.0.1"))) { port = socket.getLocalPort(); }
+                Files.writeString(portFile, String.valueOf(port));
                 address = URI.create("http://127.0.0.1:" + port + "/");
                 Path temp = data.resolve("temp"); Files.createDirectories(temp);
                 List<String> command = new ArrayList<>(List.of(home.resolve("runtime/bin/java.exe").toString(),
@@ -84,6 +78,7 @@ public class SootanLauncher {
                 backend = process.start();
                 Files.writeString(state, address + "\n" + backend.pid() + "\n");
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    backend.descendants().forEach(ProcessHandle::destroy);
                     backend.destroy();
                     try { backend.waitFor(8, TimeUnit.SECONDS); Files.deleteIfExists(state); }
                     catch (Exception ignored) { }
@@ -99,25 +94,16 @@ public class SootanLauncher {
                     TimeUnit.MILLISECONDS.sleep(200);
                 }
                 if (!ready) throw new IllegalStateException("The local PDF server did not start. See " + data.resolve("application.log"));
-                installTray(app);
-                if (!"true".equalsIgnoreCase(env.get("SOOTAN_NO_BROWSER"))) Desktop.getDesktop().browse(address);
-                backend.waitFor();
-                if (tray != null) SystemTray.getSystemTray().remove(tray);
+                List<String> desktop = new ArrayList<>(List.of(host.toString(), address.toString(), data.toString(), String.valueOf(backend.pid())));
+                desktop.addAll(List.of(args));
+                Process window = new ProcessBuilder(desktop).start();
+                window.waitFor();
+                backend.descendants().forEach(ProcessHandle::destroy);
+                backend.destroy();
+                if (!backend.waitFor(8, TimeUnit.SECONDS)) backend.destroyForcibly();
                 Files.deleteIfExists(state);
             }
         }
     }
 
-    private static void installTray(Path app) throws Exception {
-        if (!SystemTray.isSupported()) return;
-        Image image = ImageIO.read(app.resolve("sootan.png").toFile());
-        PopupMenu menu = new PopupMenu();
-        MenuItem open = new MenuItem("Open Sootan PDF Editor");
-        open.addActionListener(event -> { try { Desktop.getDesktop().browse(address); } catch (Exception ignored) { } });
-        MenuItem quit = new MenuItem("Quit Sootan PDF Editor");
-        quit.addActionListener(event -> backend.destroy());
-        menu.add(open); menu.addSeparator(); menu.add(quit);
-        tray = new TrayIcon(image, "Sootan PDF Editor", menu); tray.setImageAutoSize(true);
-        SystemTray.getSystemTray().add(tray);
-    }
 }

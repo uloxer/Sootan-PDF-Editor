@@ -15,6 +15,8 @@ import { VIEWER_SUPPORTED_EXTENSIONS } from "@editor/utils/fileUtils";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import styles from "@editor/components/layout/Workbench.module.css";
 
+import { DocumentTabs } from "@editor/components/layout/DocumentTabs";
+import { DesktopBridge } from "@editor/components/layout/DesktopBridge";
 import WorkbenchBar from "@editor/components/shared/WorkbenchBar";
 import { useWorkbenchTakeover } from "@editor/components/layout/WorkbenchTakeover";
 import {
@@ -240,6 +242,8 @@ export default function Workbench() {
         </div>
       )}
 
+      <DesktopBridge />
+      {!takeover && !readerMode && <DocumentTabs />}
       {showWorkbenchBar && (
         <div className={styles.workbenchBarShell}>
           <div className={styles.workbenchBarWrapper}>

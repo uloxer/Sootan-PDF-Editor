@@ -86,6 +86,7 @@ def footprint(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-build", action="store_true", help="Reuse the already verified Windows JAR")
+    parser.add_argument("--image-only", action="store_true", help="Build the test app-image before creating an installer")
     args = parser.parse_args()
     if os.name != "nt":
         raise SystemExit("Build this package on Windows x64")
@@ -167,6 +168,18 @@ def main():
     binary_dir = helpers / "bin"
     binary_dir.mkdir()
     csc = Path(os.environ["WINDIR"]) / "Microsoft.NET/Framework64/v4.0.30319/csc.exe"
+    extract(CACHE / "webview2.nupkg", CACHE / "webview2")
+    sdk = CACHE / "webview2"
+    for name in ["Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll"]:
+        shutil.copy2(sdk / "lib/net462" / name, inputs / name)
+    shutil.copy2(sdk / "runtimes/win-x64/native/WebView2Loader.dll", inputs / "WebView2Loader.dll")
+    shutil.copy2(SPEC / "assets/sootan.ico", inputs / "sootan.ico")
+    for name in ["LICENSE.txt", "NOTICE.txt"]:
+        shutil.copy2(sdk / name, inputs / ("WEBVIEW2-" + name))
+    run([csc, "/nologo", "/codepage:65001", "/target:winexe", "/platform:x64", "/out:" + str(inputs / "SootanHost.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs"])
+    run([csc, "/nologo", "/codepage:65001", "/target:exe", "/platform:x64", "/main:SootanHostTests", "/out:" + str(inputs / "SootanHostTests.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "tests/SootanHostTests.cs"])
+    run([inputs / "SootanHostTests.exe"])
+    (inputs / "SootanHostTests.exe").unlink()
     run([csc, "/nologo", "/target:exe", "/out:" + str(binary_dir / "ocrmypdf.exe"), SPEC / "OcrHelper.cs"])
     classes = WORK / "classes"
     classes.mkdir()
@@ -191,12 +204,13 @@ def main():
             shutil.copy2(source, helpers / "python" / name)
     stop = WORK / "stop.properties"
     stop.write_text("arguments=--stop\nicon=" + (SPEC / "assets/sootan.ico").as_posix() + "\n")
-    run([jdk / "bin/jpackage.exe", "--type", "app-image", "--name", "Sootan PDF Editor", "--app-version", "3.2.4", "--vendor", "Sootan PDF Editor", "--input", inputs, "--main-jar", "launcher.jar", "--main-class", "SootanLauncher", "--runtime-image", runtime, "--icon", SPEC / "assets/sootan.ico", "--dest", OUT, "--add-launcher", "Stop Sootan PDF Editor=" + str(stop)])
+    run([jdk / "bin/jpackage.exe", "--type", "app-image", "--name", "Sootan PDF Editor", "--app-version", "3.2.5", "--vendor", "Sootan PDF Editor", "--input", inputs, "--main-jar", "launcher.jar", "--main-class", "SootanLauncher", "--runtime-image", runtime, "--icon", SPEC / "assets/sootan.ico", "--dest", OUT, "--add-launcher", "Stop Sootan PDF Editor=" + str(stop)])
     env = os.environ.copy()
     env["PATH"] = str(CACHE / "wix") + os.pathsep + env["PATH"]
     installer = OUT / "installer"
     installer.mkdir()
-    run([jdk / "bin/jpackage.exe", "--type", "exe", "--app-image", OUT / "Sootan PDF Editor", "--name", "Sootan PDF Editor", "--app-version", "3.2.4", "--vendor", "Sootan PDF Editor", "--dest", installer, "--win-per-user-install", "--win-upgrade-uuid", "adcbdd25-309f-43c7-81cd-557cd7601674", "--win-menu", "--win-menu-group", "Sootan PDF Editor", "--win-shortcut", "--install-dir", "Sootan PDF Editor", "--license-file", ROOT / "LICENSE", "--temp", WORK / "installer"], env=env)
+    if not args.image_only:
+        run([jdk / "bin/jpackage.exe", "--type", "exe", "--app-image", OUT / "Sootan PDF Editor", "--name", "Sootan PDF Editor", "--app-version", "3.2.5", "--vendor", "Sootan PDF Editor", "--dest", installer, "--win-per-user-install", "--win-upgrade-uuid", "adcbdd25-309f-43c7-81cd-557cd7601674", "--win-menu", "--win-menu-group", "Sootan PDF Editor", "--win-shortcut", "--install-dir", "Sootan PDF Editor", "--license-file", ROOT / "LICENSE", "--temp", WORK / "installer"], env=env)
     report = {"jar_bytes": jars[0].stat().st_size, "runtime_bytes": footprint(runtime), "helpers_bytes": footprint(helpers), "installed_image_bytes": footprint(OUT / "Sootan PDF Editor"), "installer_bytes": {p.name: p.stat().st_size for p in installer.glob("*.exe")}, "java_modules": modules.split(","), "tesseract_files": sorted(seen)}
     (OUT / "sizes.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
