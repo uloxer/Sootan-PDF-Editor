@@ -509,6 +509,7 @@ export default defineConfig(async ({ mode, command }) => {
     throw new Error("Sootan PDF Editor supports only core mode");
   }
   const effectiveMode: BuildMode = "core";
+  const windowsPackage = process.env.SOOTAN_WINDOWS_PACKAGE === "true";
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   // Subpath the app is served under (base becomes "/<runSubpath>/"). Empty = root.
@@ -578,7 +579,7 @@ export default defineConfig(async ({ mode, command }) => {
       // compresses every asset itself and never negotiates encodings, so the
       // .br/.gz siblings would only add their full size (tens of MB) to the
       // bundle. Web flavours keep both encodings for the HTTP server.
-      ...(effectiveMode === "desktop"
+      ...(effectiveMode === "desktop" || windowsPackage
         ? []
         : [
             compression({
@@ -647,10 +648,12 @@ export default defineConfig(async ({ mode, command }) => {
               ]),
         ],
       }),
-      ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
+      ...(effectiveMode === "desktop" || windowsPackage
+        ? []
+        : [compressStaticCopyPlugin()]),
       prerenderOgPlugin({
         isSaas: effectiveMode === "saas",
-        precompress: effectiveMode !== "desktop",
+        precompress: effectiveMode !== "desktop" && !windowsPackage,
       }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,

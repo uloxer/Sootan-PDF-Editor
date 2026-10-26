@@ -23,6 +23,6 @@ Locally supported PDF tools use local resources; fonts, PDF engines and translat
 
 ## Size choices
 
-Whole separately licensed modules were removed first. Existing lazy tool loading, minification, chunk splitting and compressed web resources remain. Native imaging, OCR/Office dependencies and large CJK fonts were deliberately retained: removing them would reduce fidelity or supported tools. The full-tools container is consequently larger than a viewer-only image. Runtime tuning beyond removal of background tracking must be justified by measured data.
+Whole separately licensed modules were removed first. Existing lazy tool loading, minification, chunk splitting and compressed web resources remain. Native imaging, OCR/Office dependencies and large CJK fonts were deliberately retained: removing them would reduce fidelity or supported tools. The Windows package includes English OCR and a private Java runtime; optional Office/native conversions still use separately installed tools. Windows packaging excludes only precompressed static siblings and the Linux PDFium native archive, retaining original fonts/assets. Runtime tuning beyond removal of background tracking must be justified by measured data.
 
 The translation audit retains a snapshot of inherited unused English keys after removing licensed layers; new unused keys are still rejected, and missing-key checks remain active. This preserves existing locale resources while avoiding a broad translation rewrite.

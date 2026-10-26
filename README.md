@@ -2,18 +2,17 @@
 
 A local-use, MIT-licensed core fork of Stirling-PDF, based on upstream commit `684608d143779bf3a8ffc67639f077a1202c62ff`. The familiar editor and open-source PDF processing APIs are retained. Separately licensed application layers, accounts, commercial cloud integration, and analytics have been removed.
 
-**This build has no login, accounts, MFA, API keys, or application access-control filter.** Run it on your own computer. The Java server binds to `127.0.0.1` by default; the compose example publishes only `127.0.0.1:8080`. Core's existing CORS behavior is retained and is not a substitute for authentication. Do not expose this application directly to an untrusted network. Existing PDF sanitization, encryption, redaction, signature verification, temporary-file management, and file-handling protections remain.
+**This build has no login, accounts, MFA, API keys, or application access-control filter.** Run it on your own computer. The Java server binds to `127.0.0.1` by default; the Windows launcher also enforces loopback binding. Core's existing CORS behavior is retained and is not a substitute for authentication. Do not expose this application directly to an untrusted network. Existing PDF sanitization, encryption, redaction, signature verification, temporary-file management, and file-handling protections remain.
 
-## Install with Docker
+## Windows x64 per-user installation
 
-Docker Engine with Compose is required. From this checkout:
+Build the unsigned per-user installer from this checkout:
 
-```sh
-docker compose build
-docker compose up -d
+```powershell
+task windows:package
 ```
 
-Open http://127.0.0.1:8080. Stop with `docker compose down`. Named volumes preserve settings and local document storage. The recipe uses the upstream pinned full-tools base (including OCR and Office tooling), rather than removing document-processing features for a smaller image. Image size and container runtime have not been verified on the Windows implementation host because Docker is unavailable.
+Run the resulting `Sootan PDF Editor-3.2.2.exe` installer as your normal user. The Start launcher opens your browser on a random loopback port. Use the tray menu **Quit**, or **Stop Sootan PDF Editor**, to stop the server; closing the browser alone leaves the tray app running. Private Java, Python and English OCR are included. Docker is not required. Optional Office and other external conversion helpers are not bundled. See [Windows packaging](packaging/windows/README.md) for build/install/uninstall instructions and limitations. This local-use binary has not been cleared for redistribution; see [third-party notices](packaging/windows/THIRD-PARTY.md).
 
 ## Build from source
 
@@ -34,7 +33,7 @@ $env:STIRLING_FLAVOR = 'core'
 .\gradlew.bat :stirling-pdf:bootJar -PbuildWithFrontend=true
 ```
 
-On Linux/macOS use `./gradlew` instead. Native PDFium libraries are bundled for the build host; use `-PjpdfiumPlatforms=linux-x64` or the matching target for a different platform. OCR and conversions need the existing external tools (qpdf, Ghostscript, Tesseract/OCRmyPDF, LibreOffice/unoserver, ImageMagick, and related tools); the container supplies these. A bare Java installation does not provide all native conversions. Keep the bundled font and translation resources for non-Latin documents.
+On Linux/macOS use `./gradlew` instead. Native PDFium libraries are bundled for the build host; use `-PjpdfiumPlatforms=linux-x64` or the matching target for a different platform. OCR and conversions need the existing external tools (qpdf, Ghostscript, Tesseract/OCRmyPDF, LibreOffice/unoserver, ImageMagick, and related tools); the Windows package supplies English OCR only. A bare Java installation does not provide all native conversions. Keep the bundled font and translation resources for non-Latin documents.
 
 ## Features and limitations
 

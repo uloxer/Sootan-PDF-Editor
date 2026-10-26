@@ -374,7 +374,7 @@ tasks:
       COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
     cmds:
       - >
-        npx vitest run --root .{{.VITEST_JOBS}}
+        npx vitest run --root .{{.VITEST_JOBS}}{{if .TEST_FILES}} {{.TEST_FILES}}{{end}}
         {{if eq .COVERAGE "true"}}--coverage
         --coverage.provider=v8
         --coverage.reporter=text-summary

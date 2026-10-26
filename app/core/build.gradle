@@ -2,6 +2,12 @@ apply plugin: 'org.springframework.boot'
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
+if (project.hasProperty('windowsPackage')) {
+    configurations.configureEach {
+        exclude group: 'com.stirling', module: 'jpdfium-natives-linux-x64'
+    }
+}
+
 configurations {
     developmentOnly
     runtimeClasspath {
@@ -128,6 +134,9 @@ bootJar {
 
     // Exclude source maps from production JAR, dev-only debugging artifacts, not needed at runtime
     exclude 'static/**/*.map'
+    if (project.hasProperty('windowsPackage')) {
+        exclude '**/static/**/*.gz', '**/static/**/*.br'
+    }
 
     manifest {
         attributes(
@@ -243,6 +252,7 @@ tasks.register('npmBuild', Exec) {
     // Override VITE_API_BASE_URL to use relative paths for production builds
     // This ensures JARs work regardless of how they're deployed (direct, proxied, etc.)
     environment 'VITE_API_BASE_URL', '/'
+    environment 'SOOTAN_WINDOWS_PACKAGE', project.hasProperty('windowsPackage') ? 'true' : 'false'
     // Include the admin portal's lazy route/chunk in the editor build when requested.
     environment 'VITE_INCLUDE_PORTAL', (buildWithPortal ? 'true' : 'false')
 

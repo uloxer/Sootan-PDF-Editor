@@ -1,0 +1,6 @@
+version: '3'
+tasks:
+  package:
+    desc: Build the per-user Windows editor and English OCR installer
+    cmds:
+      - python3.11 packaging/windows/build.py

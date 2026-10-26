@@ -56,9 +56,9 @@ tasks:
   test:
     desc: "Run backend tests"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat test{{.MAXW}}"
+      - cmd: cmd /c ".\gradlew.bat test{{.MAXW}}{{if .TEST_ARGS}} {{.TEST_ARGS}}{{end}}"
         platforms: [windows]
-      - cmd: ./gradlew test{{.MAXW}}
+      - cmd: ./gradlew test{{.MAXW}}{{if .TEST_ARGS}} {{.TEST_ARGS}}{{end}}
         platforms: [linux, darwin]
 
   test:force:

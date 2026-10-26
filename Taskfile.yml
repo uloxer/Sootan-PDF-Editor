@@ -8,8 +8,8 @@ includes:
   frontend:
     taskfile: .taskfiles/frontend.yml
     dir: frontend
-  docker:
-    taskfile: .taskfiles/docker.yml
+  windows:
+    taskfile: .taskfiles/windows.yml
     dir: .
 tasks:
   default:
