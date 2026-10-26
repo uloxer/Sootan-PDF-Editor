@@ -20,6 +20,22 @@ beforeEach(() => {
 });
 
 describe("workbench session record", () => {
+  it("retains the native workspace across a window session without sharing browser tabs", () => {
+    localStorage.clear();
+    vi.stubGlobal("chrome", { webview: {} });
+    try {
+      writeWorkbenchSession({ fileIds: ["native-pdf"], selectedFileIds: [] });
+      sessionStorage.clear();
+      expect(readWorkbenchSession()?.fileIds).toEqual(["native-pdf"]);
+      clearWorkbenchSession();
+      expect(localStorage.getItem(SESSION_KEY)).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+      localStorage.clear();
+    }
+    expect(readWorkbenchSession()).toBeNull();
+  });
+
   it("round-trips the open files and selection", () => {
     writeWorkbenchSession({ fileIds: ["a", "b"], selectedFileIds: ["b"] });
     expect(readWorkbenchSession()).toMatchObject({

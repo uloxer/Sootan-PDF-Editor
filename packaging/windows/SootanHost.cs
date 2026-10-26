@@ -83,7 +83,7 @@ internal sealed class SootanHost : Form {
                     var deferral=d.GetDeferral();
                     BeginInvoke(new Action(()=> {
                         try {
-                            using(var dialog=new SaveFileDialog {FileName=Path.GetFileName(d.ResultFilePath),Filter="PDF documents (*.pdf)|*.pdf|All files (*.*)|*.*",OverwritePrompt=true}) {
+                            using(var dialog=new SaveFileDialog {FileName=Path.GetFileName(d.ResultFilePath),Filter=DownloadFilter(d.ResultFilePath),DefaultExt=Path.GetExtension(d.ResultFilePath).TrimStart('.'),OverwritePrompt=true}) {
                                 if(dialog.ShowDialog(this)==DialogResult.OK)d.ResultFilePath=dialog.FileName;else d.Cancel=true;
                             }
                         }finally{deferral.Complete();}
@@ -97,6 +97,12 @@ internal sealed class SootanHost : Form {
             if(ready&&!approvedClose){e.Cancel=true;web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"close\"}");}
         };
         FormClosed+=(sender,e)=>{foreach(var stream in streams.Values)stream.Dispose();web.Dispose();backend.Dispose();};
+    }
+    internal static string DownloadFilter(string path) {
+        string extension=Path.GetExtension(path).ToLowerInvariant();
+        if(extension==".pdf")return "PDF documents (*.pdf)|*.pdf|All files (*.*)|*.*";
+        if(extension==".zip")return "ZIP archives (*.zip)|*.zip|All files (*.*)|*.*";
+        return "All files (*.*)|*.*";
     }
     internal static bool IsTrustedOrigin(string address, string expected) {
         Uri uri;return Uri.TryCreate(address,UriKind.Absolute,out uri)&&uri.GetLeftPart(UriPartial.Authority)==expected;

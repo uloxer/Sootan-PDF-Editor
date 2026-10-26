@@ -1,5 +1,5 @@
 // The tab's last editor session (open files, selection, view), so a processor switch or reload
-// does not cost the user their workbench. sessionStorage on purpose: per-tab, tabs never clobber.
+// does not cost the user their workbench. Browser tabs stay isolated; the single native window persists.
 
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { stripBasePath } from "@editor/constants/app";
@@ -10,6 +10,12 @@ const SESSION_KEY = "stirling.workbench.session";
  *  would otherwise look like they belonged to an anonymous session forever. */
 const SESSION_VERSION = 2;
 const RETURN_PATH_KEY = "stirling.workbench.editorReturnPath";
+
+function workspaceStorage(): Storage {
+  const native = (window as unknown as { chrome?: { webview?: unknown } })
+    .chrome?.webview;
+  return native ? localStorage : sessionStorage;
+}
 
 // All ids are ORIGINAL file ids - a file's stable identity across versions.
 export interface WorkbenchSession {
@@ -30,7 +36,7 @@ export function originalIdOf(stub: StirlingFileStub): string {
 
 export function readWorkbenchSession(): WorkbenchSession | null {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = workspaceStorage().getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<WorkbenchSession> & {
       v?: number;
@@ -79,7 +85,7 @@ export function writeWorkbenchSession(session: WorkbenchSession): void {
     // in next or lose it for the person it belongs to. Keeping the owner leaves the restore's
     // ownership check to decide, which it does with a settled identity.
     const owner = session.userId ?? readWorkbenchSession()?.userId ?? null;
-    sessionStorage.setItem(
+    workspaceStorage().setItem(
       SESSION_KEY,
       JSON.stringify({ ...session, userId: owner, v: SESSION_VERSION }),
     );
@@ -119,7 +125,7 @@ export async function fingerprintOwner(userId: string): Promise<string> {
 /** Drop the record: on sign-out, and whenever it would otherwise be restored for the wrong person. */
 export function clearWorkbenchSession(): void {
   try {
-    sessionStorage.removeItem(SESSION_KEY);
+    workspaceStorage().removeItem(SESSION_KEY);
   } catch {
     // A record we cannot remove is also one we cannot read.
   }

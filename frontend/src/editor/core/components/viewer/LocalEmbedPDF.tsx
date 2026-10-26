@@ -1132,7 +1132,10 @@ export function LocalEmbedPDF({
       sourceKey &&
       openedPermissionOverrideRef.current === permissionOverride &&
       (openedContentKeyRef.current === sourceKey ||
-        (file && shouldSkipBytes?.(sourceKey)))
+        // A keyed remount must load bytes even when the previous viewer saved them.
+        (initialDocumentOpenedRef.current &&
+          file &&
+          shouldSkipBytes?.(sourceKey)))
     ) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
