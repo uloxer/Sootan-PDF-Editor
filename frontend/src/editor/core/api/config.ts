@@ -2,11 +2,17 @@ import apiClient from "@editor/services/apiClient";
 import { getSimulatedAppConfig } from "@editor/testing/serverExperienceSimulations";
 import type { AppConfig } from "@editor/types/appConfig";
 import type { EndpointAvailabilityDetails } from "@editor/types/endpointAvailability";
+import {
+  getRuntime,
+  OFFLINE_APP_CONFIG,
+  supportsLocalEndpoint,
+} from "@editor/runtime/runtime";
 
 /** Unauthenticated and unreachable both mean "assume login is on". */
 export const DEFAULT_APP_CONFIG: AppConfig = { enableLogin: true };
 
 export async function fetchAppConfig(): Promise<AppConfig> {
+  if (!getRuntime().serverOperations) return OFFLINE_APP_CONFIG;
   const simulated = getSimulatedAppConfig();
   if (simulated) return simulated;
 
@@ -34,6 +40,7 @@ export type EndpointAvailabilityMap = Record<
  * login redirect. Callers treat a failure as "assume enabled".
  */
 export async function fetchEndpointsAvailability(): Promise<EndpointAvailabilityMap> {
+  if (!getRuntime().serverOperations) return {};
   const response = await apiClient.get<EndpointAvailabilityMap>(
     "/api/v1/config/endpoints-availability",
     { suppressErrorToast: true, skipAuthRedirect: true },
@@ -47,6 +54,7 @@ export async function fetchEndpointsAvailability(): Promise<EndpointAvailability
 }
 
 export async function fetchEndpointEnabled(endpoint: string): Promise<boolean> {
+  if (!getRuntime().serverOperations) return supportsLocalEndpoint(endpoint);
   const response = await apiClient.get<boolean>(
     `/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`,
   );
@@ -64,6 +72,7 @@ export interface FooterInfo {
 
 /** Public — no authentication required. */
 export async function fetchFooterInfo(): Promise<FooterInfo> {
+  if (!getRuntime().serverOperations) return {};
   try {
     const response = await apiClient.get<FooterInfo>(
       "/api/v1/ui-data/footer-info",
@@ -78,6 +87,7 @@ export async function fetchFooterInfo(): Promise<FooterInfo> {
 }
 
 export async function fetchGroupEnabled(group: string): Promise<boolean> {
+  if (!getRuntime().serverOperations) return false;
   const response = await apiClient.get<boolean>(
     `/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`,
   );

@@ -9,6 +9,7 @@ import i18n from "i18next";
 import { CONFIG_STALE_TIME } from "@editor/query/staleTime";
 import { useJwtConfigSync } from "@editor/hooks/useJwtConfigSync";
 import type { EndpointAvailabilityDetails } from "@editor/types/endpointAvailability";
+import { getRuntime, supportsLocalEndpoint } from "@editor/runtime/runtime";
 
 const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
 
@@ -87,7 +88,14 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     const details: Record<string, EndpointAvailabilityDetails> = {};
     if (!data && !error) return { status, details };
     for (const endpoint of key ? key.split(",") : []) {
-      const detail = data?.[endpoint] ?? OPTIMISTIC;
+      const detail: EndpointAvailabilityDetails = getRuntime().serverOperations
+        ? (data?.[endpoint] ?? OPTIMISTIC)
+        : {
+            enabled: supportsLocalEndpoint(endpoint),
+            reason: supportsLocalEndpoint(endpoint)
+              ? null
+              : "NOT_SUPPORTED_LOCALLY",
+          };
       status[endpoint] = detail.enabled;
       details[endpoint] = detail;
     }

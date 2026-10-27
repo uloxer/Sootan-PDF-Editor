@@ -1,0 +1,9 @@
+[
+ {"name":"text","path":"frontend/src/editor/core/tests/test-fixtures/annotation-text-sample.pdf"},
+ {"name":"scan","path":".tooling/OCR Test With Spaces/scanned English.pdf"},
+ {"name":"long","path":"frontend/src/editor/core/tests/test-fixtures/many-pages-sample.pdf"},
+ {"name":"vector","path":"frontend/src/editor/core/tests/test-fixtures/pattern-fill-sample.pdf"},
+ {"name":"fonts","path":"frontend/src/editor/core/tests/test-fixtures/type3-sample.pdf"},
+ {"name":"forms","path":"frontend/src/editor/core/tests/test-fixtures/form-fields-sample.pdf"},
+ {"name":"encrypted","path":".tooling/desktop-installed-evidence/encrypted.pdf","password":"Sootan-test"}
+]

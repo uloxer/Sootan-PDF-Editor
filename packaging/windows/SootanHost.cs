@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Web.Script.Serialization;
+using System.Runtime.InteropServices;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -24,6 +25,10 @@ internal sealed class SootanHost : Form {
     private bool ready, approvedClose;
     private CoreWebView2Environment environment;
     private Process backend;
+    private readonly string bundle;
+
+    [DllImport("user32.dll")] private static extern bool SetProcessDpiAwarenessContext(IntPtr context);
+    internal static void ConfigureDpi() { SetProcessDpiAwarenessContext(new IntPtr(-4)); }
 
     [STAThread] public static int Main(string[] args) {
         try {
@@ -39,9 +44,12 @@ internal sealed class SootanHost : Form {
             }
             string version = CoreWebView2Environment.GetAvailableBrowserVersionString();
             if (args[0] == "--runtime-version") { Console.WriteLine(version); return 0; }
+            ConfigureDpi();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new SootanHost(args[0],data,int.Parse(args[2]),args.Skip(3).ToArray()));
+            Application.Run(args[0]=="--offline"
+                ? new SootanHost("https://sootan.local",data,0,args.Skip(3).ToArray(),args[2])
+                : new SootanHost(args[0],data,int.Parse(args[2]),args.Skip(3).ToArray()));
             return 0;
         } catch(Exception ex) {
             MessageBox.Show("Sootan PDF Editor could not start.\n\n"+ex.Message,"Sootan PDF Editor",MessageBoxButtons.OK,MessageBoxIcon.Error);
@@ -52,19 +60,21 @@ internal sealed class SootanHost : Form {
         using(var hash=System.Security.Cryptography.SHA256.Create())
             return "SootanPDF-"+BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(directory.ToUpperInvariant()))).Replace("-","").Substring(0,24);
     }
-    private SootanHost(string url,string directory,int backendPid,string[] files) {
+    private SootanHost(string url,string directory,int backendPid,string[] files,string bundlePath=null) {
+        bundle=bundlePath==null?null:Path.GetFullPath(bundlePath);
         origin=new Uri(url).GetLeftPart(UriPartial.Authority);
-        if(new Uri(origin).Host!="127.0.0.1") throw new InvalidOperationException("Only the private loopback editor is allowed.");
+        if(bundle==null&&new Uri(origin).Host!="127.0.0.1") throw new InvalidOperationException("Only the private loopback editor is allowed.");
         data=directory;pipeName=PipeName(data);
+        Directory.CreateDirectory(data);
+        AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;
         Text="Sootan PDF Editor";Width=1440;Height=960;MinimumSize=new Size(960,640);
         Icon=new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"sootan.ico"));
         web.Dock=DockStyle.Fill;Controls.Add(web);
-        var menu=new MenuStrip();var file=new ToolStripMenuItem("&File");
-        var open=new ToolStripMenuItem("&Open PDFs…",null,(sender,e)=>OpenFiles());open.ShortcutKeys=Keys.Control|Keys.O;
-        file.DropDownItems.Add(open);file.DropDownItems.Add(new ToolStripMenuItem("E&xit",null,(sender,e)=>Close()));menu.Items.Add(file);Controls.Add(menu);MainMenuStrip=menu;
         pending.AddRange(files);
-        backend=Process.GetProcessById(backendPid);backend.EnableRaisingEvents=true;
-        backend.Exited+=(sender,e)=> { if(IsHandleCreated) BeginInvoke(new Action(()=>{approvedClose=true;Close();})); };
+        if(backendPid>0) {
+            backend=Process.GetProcessById(backendPid);backend.EnableRaisingEvents=true;
+            backend.Exited+=(sender,e)=> { if(IsHandleCreated) BeginInvoke(new Action(()=>{approvedClose=true;Close();})); };
+        }
         Shown+=async(sender,e)=> {
             try {
                 string debug=Environment.GetEnvironmentVariable("SOOTAN_DESKTOP_DEBUG_PORT");int debugPort;
@@ -76,6 +86,11 @@ internal sealed class SootanHost : Form {
                 core.NewWindowRequested+=(s,n)=> {n.Handled=true;if(n.IsUserInitiated&&External(n.Uri))Process.Start(n.Uri);};
                 core.PermissionRequested+=(s,p)=>p.State=CoreWebView2PermissionState.Deny;
                 core.WebMessageReceived+=Message;
+                if(bundle!=null) {
+                    await core.AddScriptToExecuteOnDocumentCreatedAsync("window.__SOOTAN_RUNTIME__={kind:'offline-desktop',serverOperations:false,nativeFileDialogs:true,renderer:'wasm'};");
+                    core.AddWebResourceRequestedFilter("*",CoreWebView2WebResourceContext.All);
+                    core.WebResourceRequested+=BundledResource;
+                }
                 core.AddWebResourceRequestedFilter(origin+"/__sootan_selected/*",CoreWebView2WebResourceContext.All);
                 core.WebResourceRequested+=SelectedResource;
                 core.DownloadStarting+=(s,d)=> {
@@ -96,7 +111,42 @@ internal sealed class SootanHost : Form {
         FormClosing+=(sender,e)=> {
             if(ready&&!approvedClose){e.Cancel=true;web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"close\"}");}
         };
-        FormClosed+=(sender,e)=>{foreach(var stream in streams.Values)stream.Dispose();web.Dispose();backend.Dispose();};
+        FormClosed+=(sender,e)=>{foreach(var stream in streams.Values)stream.Dispose();web.Dispose();if(backend!=null)backend.Dispose();};
+    }
+    protected override bool ProcessCmdKey(ref System.Windows.Forms.Message message,Keys keys) {
+        if(keys==(Keys.Control|Keys.O)){OpenFiles();return true;}
+        return base.ProcessCmdKey(ref message,keys);
+    }
+    internal static string BundledPath(string root,string address) {
+        var uri=new Uri(address);
+        if(uri.GetLeftPart(UriPartial.Authority)!="https://sootan.local")return null;
+        string relative=Uri.UnescapeDataString(uri.AbsolutePath).TrimStart('/').Replace('/',Path.DirectorySeparatorChar);
+        if(relative.Contains(":"))return null;
+        string prefix=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+        string result=Path.GetFullPath(Path.Combine(prefix,relative));
+        if(!result.StartsWith(prefix,StringComparison.OrdinalIgnoreCase))return null;
+        if(File.Exists(result))return result;
+        return Path.HasExtension(relative)?null:Path.Combine(prefix,"index.html");
+    }
+    private static string ContentType(string path) {
+        switch(Path.GetExtension(path).ToLowerInvariant()) {
+            case ".html":return "text/html; charset=utf-8";case ".js":case ".mjs":return "text/javascript";
+            case ".css":return "text/css";case ".json":return "application/json";case ".wasm":return "application/wasm";
+            case ".svg":return "image/svg+xml";case ".png":return "image/png";case ".jpg":case ".jpeg":return "image/jpeg";
+            case ".woff2":return "font/woff2";case ".woff":return "font/woff";default:return "application/octet-stream";
+        }
+    }
+    private void BundledResource(object sender,CoreWebView2WebResourceRequestedEventArgs e) {
+        if(Trusted(e.Request.Uri)&&new Uri(e.Request.Uri).AbsolutePath.StartsWith("/__sootan_selected/"))return;
+        string path=BundledPath(bundle,e.Request.Uri);
+        if(path==null||e.Request.Method!="GET"||new Uri(e.Request.Uri).AbsolutePath.StartsWith("/api/")) {
+            e.Response=environment.CreateWebResourceResponse(null,404,"Offline resource unavailable","");return;
+        }
+        try {
+            var stream=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
+            e.Response=environment.CreateWebResourceResponse(stream,200,"OK","Content-Type: "+ContentType(path)+"\r\nCache-Control: no-cache\r\n");
+        }
+        catch(IOException){e.Response=environment.CreateWebResourceResponse(null,404,"Not Found","");}
     }
     internal static string DownloadFilter(string path) {
         string extension=Path.GetExtension(path).ToLowerInvariant();
@@ -140,7 +190,9 @@ internal sealed class SootanHost : Form {
         }catch(Exception ex){File.AppendAllText(Path.Combine(data,"desktop.log"),ex.Message+Environment.NewLine);}
     }
     private void SelectedResource(object sender,CoreWebView2WebResourceRequestedEventArgs e) {
-        string token=new Uri(e.Request.Uri).AbsolutePath.Substring("/__sootan_selected/".Length);string path;
+        string resourcePath=new Uri(e.Request.Uri).AbsolutePath;
+        if(!Trusted(e.Request.Uri)||!resourcePath.StartsWith("/__sootan_selected/",StringComparison.Ordinal))return;
+        string token=resourcePath.Substring("/__sootan_selected/".Length);string path;
         if(e.Request.Method!="GET"||!grants.TryGetValue(token,out path)||streams.ContainsKey(token)) {
             e.Response=environment.CreateWebResourceResponse(null,404,"Not Found","");return;
         }

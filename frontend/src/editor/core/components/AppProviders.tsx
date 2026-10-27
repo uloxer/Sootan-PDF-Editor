@@ -38,6 +38,7 @@ import { FolderProvider } from "@editor/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@editor/components/session/WorkbenchSessionPersistence";
 import { retireLegacyFolderWorker } from "@editor/services/retireLegacyFolderWorker";
 import type { UserPreferences } from "@editor/services/preferencesService";
+import { getRuntime, OFFLINE_APP_CONFIG } from "@editor/runtime/runtime";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -131,6 +132,13 @@ export function AppProviders({
   appConfigProviderProps,
 }: AppProvidersProps) {
   const [queryClient] = useState(createAppQueryClient);
+  const runtimeConfig = getRuntime().serverOperations
+    ? appConfigProviderProps
+    : {
+        initialConfig: OFFLINE_APP_CONFIG,
+        autoFetch: false,
+        bootstrapMode: "non-blocking" as const,
+      };
   return (
     <QueryClientProvider client={queryClient}>
       <PreferencesProvider>
@@ -139,7 +147,7 @@ export function AppProviders({
             <BannerProvider>
               <AppConfigProvider
                 retryOptions={appConfigRetryOptions}
-                {...appConfigProviderProps}
+                {...runtimeConfig}
               >
                 <AppConfigLoader />
                 <ServerDefaultsSync />
