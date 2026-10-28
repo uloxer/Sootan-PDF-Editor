@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,11 +18,16 @@ import java.util.zip.ZipOutputStream;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import stirling.software.pdf.PdfCertificates;
+import stirling.software.pdf.PdfForms;
+import stirling.software.pdf.PdfMetadataEditor;
+import stirling.software.pdf.PdfPageFlattener;
 import stirling.software.pdf.PdfProtection;
 import stirling.software.pdf.PdfSanitizer;
 
@@ -38,7 +44,10 @@ public final class WorkerMain {
                     "decrypt",
                     "ocr",
                     "cert-sign-invisible",
-                    "signature-integrity");
+                    "signature-integrity",
+                    "metadata-update",
+                    "forms-unlock",
+                    "flatten");
 
     private WorkerMain() {}
 
@@ -176,6 +185,22 @@ public final class WorkerMain {
                                     "ocrType");
                     case "cert-sign-invisible" ->
                             Set.of("certType", "password", "reason", "showSignature");
+                    case "metadata-update" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "deleteAll",
+                                    "author",
+                                    "creationDate",
+                                    "creator",
+                                    "keywords",
+                                    "modificationDate",
+                                    "producer",
+                                    "subject",
+                                    "title",
+                                    "trapped",
+                                    "allRequestParams");
+                    case "forms-unlock" -> Set.of("sourcePassword");
+                    case "flatten" -> Set.of("sourcePassword", "flattenOnlyForms", "renderDpi");
                     case "signature-integrity" -> Set.of();
                     default -> Set.of();
                 };
@@ -212,6 +237,73 @@ public final class WorkerMain {
                 Loader.loadPDF(input.toFile(), text(options, "sourcePassword", ""))) {
             PdfProtection.requireOwner(document);
             switch (operation) {
+                case "metadata-update" -> {
+                    Map<String, String> custom = new HashMap<>();
+                    if (options.has("allRequestParams")) {
+                        var values = options.getAsJsonObject("allRequestParams");
+                        for (var item : values.entrySet()) {
+                            if (!item.getValue().isJsonPrimitive()
+                                    || !item.getValue().getAsJsonPrimitive().isString())
+                                throw new IOException("Custom metadata must contain strings.");
+                            custom.put(item.getKey(), item.getValue().getAsString());
+                        }
+                    }
+                    PdfMetadataEditor.update(
+                            document,
+                            flag(options, "deleteAll"),
+                            text(options, "author", null),
+                            text(options, "creationDate", null),
+                            text(options, "creator", null),
+                            text(options, "keywords", null),
+                            text(options, "modificationDate", null),
+                            text(options, "producer", null),
+                            text(options, "subject", null),
+                            text(options, "title", null),
+                            text(options, "trapped", null),
+                            custom);
+                }
+                case "forms-unlock" -> PdfForms.unlock(document);
+                case "flatten" -> {
+                    if (flag(options, "flattenOnlyForms")) {
+                        var form = document.getDocumentCatalog().getAcroForm();
+                        if (form != null && form.hasXFA())
+                            throw new IOException(
+                                    "XFA flattening is not connected; choose explicit full-page flattening.");
+                        PdfForms.flatten(document);
+                    } else {
+                        int dpi =
+                                options.has("renderDpi")
+                                        ? Math.max(
+                                                72,
+                                                Math.min(300, options.get("renderDpi").getAsInt()))
+                                        : 300;
+                        try (PDDocument raster = new PDDocument()) {
+                            raster.setDocumentInformation(document.getDocumentInformation());
+                            PDFRenderer renderer = new PDFRenderer(document);
+                            renderer.setSubsamplingAllowed(true);
+                            for (int page = 0; page < document.getNumberOfPages(); page++) {
+                                var box = document.getPage(page).getMediaBox();
+                                double width = box.getWidth() / 72d * dpi,
+                                        height = box.getHeight() / 72d * dpi;
+                                if (!Double.isFinite(width * height)
+                                        || width <= 0
+                                        || height <= 0
+                                        || width * height > 100_000_000d)
+                                    throw new IOException(
+                                            "The requested raster page exceeds the private worker pixel limit.");
+                                var image = renderer.renderImageWithDPI(page, dpi, ImageType.RGB);
+                                try {
+                                    PdfPageFlattener.appendRenderedPage(
+                                            raster, document.getPage(page), image);
+                                } finally {
+                                    image.flush();
+                                }
+                            }
+                            raster.save(output.toFile());
+                        }
+                        return output;
+                    }
+                }
                 case "sanitize" -> {
                     if (flag(options, "removeJavaScript"))
                         PdfSanitizer.sanitizeJavaScript(document);

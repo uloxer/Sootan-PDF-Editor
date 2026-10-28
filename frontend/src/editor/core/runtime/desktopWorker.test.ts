@@ -1,3 +1,5 @@
+import { buildChangeMetadataFormData } from "@editor/hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { defaultParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   requestDesktopWorker,
@@ -89,6 +91,37 @@ describe("private desktop worker boundary", () => {
       requestDesktopWorker("/api/v1/security/validate-signature", form),
     ).rejects.toMatchObject({ code: "UNSUPPORTED_OPTION" });
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("dispatches the real metadata hook's paired custom map without losing scalar options", async () => {
+    native();
+    vi.stubGlobal("__SOOTAN_RUNTIME__", {
+      kind: "offline-desktop",
+      advancedOperations: ["metadata-update", "forms-unlock", "flatten"],
+    });
+    const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+      ok: true,
+      headers: new Headers(),
+      blob: async () => new Blob(["pdf"]),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const form = buildChangeMetadataFormData(
+      {
+        ...defaultParameters,
+        title: "Swona",
+        customMetadata: [{ id: "test", key: "Island", value: "Swona" }],
+      },
+      request().get("fileInput") as File,
+    );
+    await requestDesktopWorker("/api/v1/misc/update-metadata", form);
+    const message = JSON.parse(String(fetch.mock.calls[1][1]?.body));
+    expect(message.operation).toBe("metadata-update");
+    expect(message.options).toMatchObject({
+      title: "Swona",
+      allRequestParams: { customKey1: "Island", customValue1: "Swona" },
+    });
+    expect(supportsWorkerEndpoint("flatten")).toBe(true);
+    expect(supportsWorkerEndpoint("unlock-pdf-forms")).toBe(true);
+    expect(supportsWorkerEndpoint("add-watermark")).toBe(false);
   });
   it("cancels an active response and still releases its native job", async () => {
     native();

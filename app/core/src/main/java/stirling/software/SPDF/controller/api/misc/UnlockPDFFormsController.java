@@ -1,15 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
-import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +20,9 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.pdf.PdfForms;
 
 @MiscApi
 @Slf4j
@@ -56,72 +47,7 @@ public class UnlockPDFFormsController {
             description = "Removing read-only property from form fields making them fillable")
     public ResponseEntity<Resource> unlockPDFForms(@ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
-            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
-
-            if (acroForm != null) {
-                acroForm.setNeedAppearances(true);
-
-                for (PDField field : acroForm.getFieldTree()) {
-                    COSDictionary dict = field.getCOSObject();
-                    if (dict.containsKey(COSName.getPDFName("Lock"))) {
-                        dict.removeItem(COSName.getPDFName("Lock"));
-                    }
-                    int currentFlags = field.getFieldFlags();
-                    if ((currentFlags & 1) == 1) {
-                        int newFlags = currentFlags & ~1;
-                        field.setFieldFlags(newFlags);
-                    }
-                }
-
-                COSBase xfaBase = acroForm.getCOSObject().getDictionaryObject(COSName.XFA);
-                if (xfaBase != null) {
-                    try {
-                        var accessReadOnlyPattern =
-                                RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
-                        if (xfaBase instanceof COSStream xfaStream) {
-                            InputStream is = xfaStream.createInputStream();
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            is.transferTo(baos);
-                            String xml = baos.toString(StandardCharsets.UTF_8);
-
-                            xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
-
-                            PDStream newStream =
-                                    new PDStream(
-                                            document,
-                                            new ByteArrayInputStream(
-                                                    xml.getBytes(StandardCharsets.UTF_8)));
-                            acroForm.getCOSObject().setItem(COSName.XFA, newStream.getCOSObject());
-                        } else if (xfaBase instanceof COSArray xfaArray) {
-                            for (int i = 0; i < xfaArray.size(); i += 2) {
-                                COSBase namePart = xfaArray.getObject(i);
-                                COSBase streamPart = xfaArray.getObject(i + 1);
-                                if (namePart instanceof COSString
-                                        && streamPart instanceof COSStream stream) {
-                                    InputStream is = stream.createInputStream();
-                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                    is.transferTo(baos);
-                                    String xml = baos.toString(StandardCharsets.UTF_8);
-
-                                    xml =
-                                            accessReadOnlyPattern
-                                                    .matcher(xml)
-                                                    .replaceAll("access=\"open\"");
-
-                                    PDStream newStream =
-                                            new PDStream(
-                                                    document,
-                                                    new ByteArrayInputStream(
-                                                            xml.getBytes(StandardCharsets.UTF_8)));
-                                    xfaArray.set(i + 1, newStream.getCOSObject());
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        log.error("exception", e);
-                    }
-                }
-            }
+            PdfForms.unlock(document);
             String mergedFileName =
                     GeneralUtils.generateFilename(
                             file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");

@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"sanitize","aes-encrypt","decrypt","cert-sign-invisible","signature-integrity","ocr"};
+    internal static readonly string[] Operations={"sanitize","aes-encrypt","decrypt","cert-sign-invisible","signature-integrity","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal Task Work;
         public void Dispose() {

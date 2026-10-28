@@ -28,9 +28,16 @@ export async function requestDesktopWorker(
   const input = form.get("fileInput");
   if (!(input instanceof File) || form.getAll("fileInput").length !== 1)
     throw new CorePdfError("INVALID_INPUT", "Select exactly one PDF.");
-  const options: Record<string, string> = {};
-  for (const [key, value] of form)
-    if (typeof value === "string") options[key] = value;
+  const options: Record<string, string | Record<string, string>> = {};
+  const metadata: Record<string, string> = {};
+  for (const [key, value] of form) {
+    if (typeof value !== "string") continue;
+    const custom =
+      name === "update-metadata" && /^allRequestParams\[([^\]]+)\]$/.exec(key);
+    if (custom) metadata[custom[1]] = value;
+    else options[key] = value;
+  }
+  if (Object.keys(metadata).length) options.allRequestParams = metadata;
   if (form.getAll("languages").length > 1)
     options.languages = form.getAll("languages").join("+");
   if (name === "validate-signature" && form.get("certFile") instanceof File)
@@ -40,7 +47,7 @@ export async function requestDesktopWorker(
     );
   if (
     name === "cert-sign" &&
-    (!["PKCS12", "PFX"].includes(options.certType) ||
+    (!["PKCS12", "PFX"].includes(String(options.certType)) ||
       options.showSignature === "true")
   )
     throw new CorePdfError(

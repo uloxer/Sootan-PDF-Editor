@@ -63,6 +63,9 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  "update-metadata": "metadata-update",
+  "unlock-pdf-forms": "forms-unlock",
+  flatten: "flatten",
   "sanitize-pdf": "sanitize",
   "add-password": "aes-encrypt",
   "remove-password": "decrypt",

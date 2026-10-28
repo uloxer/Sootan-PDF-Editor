@@ -4,11 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
@@ -36,6 +31,8 @@ import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.pdf.PdfForms;
+import stirling.software.pdf.PdfPageFlattener;
 
 @MiscApi
 @Slf4j
@@ -67,10 +64,7 @@ public class FlattenController {
             Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
             if (Boolean.TRUE.equals(flattenOnlyForms)) {
-                PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
-                if (acroForm != null) {
-                    acroForm.flatten();
-                }
+                PdfForms.flatten(document);
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         Filenames.toSimpleFileName(file.getOriginalFilename()),
@@ -125,24 +119,8 @@ public class FlattenController {
                                                     pdfRenderer.renderImageWithDPI(
                                                             pageIndex, renderDpi, ImageType.RGB));
 
-                            PDPage page = new PDPage();
-                            page.setMediaBox(document.getPage(i).getMediaBox());
-                            newDocument.addPage(page);
-                            // resetContext=true: Ensure clean graphics state when overwriting.
-                            try (PDPageContentStream contentStream =
-                                    new PDPageContentStream(
-                                            newDocument,
-                                            page,
-                                            PDPageContentStream.AppendMode.OVERWRITE,
-                                            true,
-                                            true)) {
-                                PDImageXObject pdImage =
-                                        JPEGFactory.createFromImage(newDocument, image);
-                                float pageWidth = page.getMediaBox().getWidth();
-                                float pageHeight = page.getMediaBox().getHeight();
-
-                                contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
-                            }
+                            PdfPageFlattener.appendRenderedPage(
+                                    newDocument, document.getPage(i), image);
                         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
                             // Re-throw OutOfMemoryDpiException to be handled by
                             // GlobalExceptionHandler
