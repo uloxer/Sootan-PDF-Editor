@@ -194,6 +194,21 @@ tasks.register('writeVersion', WriteProperties) {
 }
 
 subprojects {
+    if (project.name in ['pdf-services', 'worker']) {
+        apply plugin: 'java-library'
+        apply plugin: 'com.diffplug.spotless'
+        apply from: rootProject.file('gradle/spotless.gradle')
+        java { toolchain { languageVersion = buildJavaLanguageVersion } }
+        repositories { mavenCentral() }
+        dependencies {
+            testImplementation platform('org.junit:junit-bom:6.0.3')
+            testImplementation 'org.junit.jupiter:junit-jupiter'
+            testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        }
+        tasks.withType(Test).configureEach { useJUnitPlatform() }
+        tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+        return
+    }
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'com.diffplug.spotless'

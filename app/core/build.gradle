@@ -16,6 +16,7 @@ configurations {
 }
 
 dependencies {
+    implementation project(':pdf-services')
     if (!gradle.ext.disableAdditional) {
         implementation project(':proprietary')
     }

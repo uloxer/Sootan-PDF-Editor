@@ -30,6 +30,8 @@ if (flavor != 'core') {
 }
 gradle.ext.disableAdditional = true
 gradle.ext.enableSaas = false
-include 'stirling-pdf', 'common'
+include 'stirling-pdf', 'common', 'pdf-services', 'worker'
+project(':pdf-services').projectDir = file('app/pdf-services')
+project(':worker').projectDir = file('app/worker')
 project(':stirling-pdf').projectDir = file('app/core')
 project(':common').projectDir = file('app/common')

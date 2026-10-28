@@ -1,0 +1,328 @@
+package stirling.software.worker;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import stirling.software.pdf.PdfCertificates;
+import stirling.software.pdf.PdfProtection;
+import stirling.software.pdf.PdfSanitizer;
+
+/**
+ * One private job per process. Stdio carries bounded JSON metadata; files stay inside its granted
+ * job directory.
+ */
+public final class WorkerMain {
+    private static final Gson JSON = new Gson();
+    private static final Set<String> OPERATIONS =
+            Set.of(
+                    "sanitize",
+                    "aes-encrypt",
+                    "decrypt",
+                    "ocr",
+                    "cert-sign-invisible",
+                    "signature-integrity");
+
+    private WorkerMain() {}
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 1 && args[0].equals("--capabilities")) {
+            emit(Map.of("protocol", 1, "operations", capabilities()));
+            return;
+        }
+        if (args.length != 1) throw new IllegalArgumentException("One job directory is required.");
+        var root = Path.of(args[0]).toRealPath();
+        var reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+        StringBuilder line = new StringBuilder();
+        int c;
+        while ((c = reader.read()) != -1 && c != '\n') {
+            if (line.length() >= 65536) throw new IOException("Request header too large.");
+            line.append((char) c);
+        }
+        String id = "";
+        try {
+            var request = JSON.fromJson(line.toString(), JsonObject.class);
+            id = request.get("requestId").getAsString();
+            if (!id.matches("[a-zA-Z0-9-]{1,80}")) throw new IOException("Invalid request ID.");
+            String operation = request.get("operation").getAsString();
+            if (!capabilities().contains(operation))
+                throw new IOException("Operation unavailable.");
+            var input = selected(root, request.get("input").getAsString());
+            var options = request.getAsJsonObject("options");
+            if (options == null) options = new JsonObject();
+            emit(Map.of("requestId", id, "type", "progress", "done", 0, "total", 1));
+            var result = process(operation, root, input, options);
+            emit(
+                    Map.of(
+                            "requestId",
+                            id,
+                            "type",
+                            "result",
+                            "file",
+                            result.getFileName().toString(),
+                            "bytes",
+                            Files.size(result),
+                            "contentType",
+                            result.toString().endsWith(".zip")
+                                    ? "application/zip"
+                                    : result.toString().endsWith(".json")
+                                            ? "application/json"
+                                            : "application/pdf"));
+        } catch (Exception failure) {
+            System.err.println("Worker failure type: " + failure.getClass().getSimpleName());
+            // Requests can contain credentials; neither their text nor exception messages belong in
+            // logs.
+            emit(
+                    Map.of(
+                            "requestId",
+                            id,
+                            "type",
+                            "error",
+                            "code",
+                            "PROCESSING_FAILED",
+                            "message",
+                            "The selected operation could not complete. Check its options, document permissions and private helper availability."));
+            System.exit(1);
+        }
+    }
+
+    private static List<String> capabilities() {
+        return OPERATIONS.stream()
+                .filter(operation -> !operation.equals("ocr") || helper() != null)
+                .sorted()
+                .toList();
+    }
+
+    private static Path selected(Path root, String name) throws IOException {
+        if (!name.matches("input-[a-zA-Z0-9-]+\\.pdf"))
+            throw new IOException("Invalid selected file.");
+        Path path = root.resolve(name);
+        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)
+                || !path.toRealPath().getParent().equals(root))
+            throw new IOException("Input is outside the job grant.");
+        return path;
+    }
+
+    private static String text(JsonObject options, String key, String fallback) {
+        return options.has(key) ? options.get(key).getAsString() : fallback;
+    }
+
+    private static boolean flag(JsonObject options, String key) {
+        return options.has(key) && options.get(key).getAsBoolean();
+    }
+
+    private static Path process(String operation, Path root, Path input, JsonObject options)
+            throws Exception {
+        Set<String> allowed =
+                switch (operation) {
+                    case "sanitize" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "removeJavaScript",
+                                    "removeEmbeddedFiles",
+                                    "removeXMPMetadata",
+                                    "removeMetadata",
+                                    "removeLinks",
+                                    "removeFonts");
+                    case "aes-encrypt" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "ownerPassword",
+                                    "password",
+                                    "keyLength",
+                                    "preserveExisting",
+                                    "preventAssembly",
+                                    "preventExtractContent",
+                                    "preventExtractForAccessibility",
+                                    "preventFillInForm",
+                                    "preventModify",
+                                    "preventModifyAnnotations",
+                                    "preventPrinting",
+                                    "preventPrintingFaithful");
+                    case "decrypt" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "password",
+                                    "ownerPassword",
+                                    "removeAll",
+                                    "retainedOpeningPassword");
+                    case "ocr" ->
+                            Set.of(
+                                    "languages",
+                                    "sidecar",
+                                    "deskew",
+                                    "rotatePages",
+                                    "clean",
+                                    "cleanFinal",
+                                    "removeImagesAfter",
+                                    "ocrRenderType",
+                                    "ocrType");
+                    case "cert-sign-invisible" ->
+                            Set.of("certType", "password", "reason", "showSignature");
+                    case "signature-integrity" -> Set.of();
+                    default -> Set.of();
+                };
+        if (!allowed.containsAll(options.keySet()))
+            throw new IOException("Unsupported operation options.");
+        if (flag(options, "preserveExisting"))
+            throw new IOException(
+                    "Preserving existing protection requires a later worker capability.");
+        Path output = root.resolve("output.pdf");
+        if (operation.equals("cert-sign-invisible")) {
+            if (flag(options, "showSignature")
+                    || options.has("tsaUrl")
+                    || options.has("keyStoreType"))
+                throw new IOException("This signing mode is not connected.");
+            Path certificate = root.resolve("certificate.p12");
+            if (!Files.isRegularFile(certificate, LinkOption.NOFOLLOW_LINKS)
+                    || !certificate.toRealPath().getParent().equals(root))
+                throw new IOException("No selected certificate.");
+            PdfCertificates.sign(
+                    input,
+                    output,
+                    certificate,
+                    text(options, "password", "").toCharArray(),
+                    text(options, "reason", ""));
+            return output;
+        }
+        if (operation.equals("signature-integrity")) {
+            Path report = root.resolve("output.json");
+            Files.writeString(report, JSON.toJson(PdfCertificates.integrity(input)));
+            return report;
+        }
+        if (operation.equals("ocr")) return ocr(root, input, output, options);
+        try (PDDocument document =
+                Loader.loadPDF(input.toFile(), text(options, "sourcePassword", ""))) {
+            PdfProtection.requireOwner(document);
+            switch (operation) {
+                case "sanitize" -> {
+                    if (flag(options, "removeJavaScript"))
+                        PdfSanitizer.sanitizeJavaScript(document);
+                    if (flag(options, "removeEmbeddedFiles"))
+                        PdfSanitizer.sanitizeEmbeddedFiles(document);
+                    if (flag(options, "removeXMPMetadata"))
+                        PdfSanitizer.sanitizeXMPMetadata(document);
+                    if (flag(options, "removeMetadata"))
+                        PdfSanitizer.sanitizeDocumentInfoMetadata(document);
+                    if (flag(options, "removeLinks")) PdfSanitizer.sanitizeLinks(document);
+                    if (flag(options, "removeFonts")) PdfSanitizer.sanitizeFonts(document);
+                }
+                case "aes-encrypt" -> {
+                    if (options.has("keyLength") && options.get("keyLength").getAsInt() != 256)
+                        throw new IOException("Only AES-256 is connected.");
+                    var permissions = new AccessPermission();
+                    permissions.setCanAssembleDocument(!flag(options, "preventAssembly"));
+                    permissions.setCanExtractContent(!flag(options, "preventExtractContent"));
+                    permissions.setCanExtractForAccessibility(
+                            !flag(options, "preventExtractForAccessibility"));
+                    permissions.setCanFillInForm(!flag(options, "preventFillInForm"));
+                    permissions.setCanModify(!flag(options, "preventModify"));
+                    permissions.setCanModifyAnnotations(!flag(options, "preventModifyAnnotations"));
+                    permissions.setCanPrint(!flag(options, "preventPrinting"));
+                    permissions.setCanPrintFaithful(!flag(options, "preventPrintingFaithful"));
+                    PdfProtection.encrypt(
+                            document,
+                            text(options, "ownerPassword", ""),
+                            text(options, "password", ""),
+                            permissions);
+                }
+                case "decrypt" -> PdfProtection.decrypt(document);
+                default -> throw new IOException("Unknown operation.");
+            }
+            document.save(output.toFile());
+        }
+        return output;
+    }
+
+    private static Path helper() {
+        String value = System.getenv("SOOTAN_OCRMYPDF");
+        if (value == null) return null;
+        Path path = Path.of(value);
+        return path.isAbsolute() && Files.isRegularFile(path) ? path : null;
+    }
+
+    private static Path ocr(Path root, Path input, Path output, JsonObject options)
+            throws Exception {
+        if (!text(options, "languages", "eng").equals("eng"))
+            throw new IOException("English OCR only.");
+        if (flag(options, "clean")
+                || flag(options, "cleanFinal")
+                || flag(options, "removeImagesAfter"))
+            throw new IOException("The selected optional OCR helper is not bundled.");
+        try (var document = Loader.loadPDF(input.toFile())) {
+            PdfProtection.requireOwner(document);
+        }
+        String renderer = text(options, "ocrRenderType", "auto");
+        if (!Set.of("auto", "fpdf2", "sandwich", "hocr").contains(renderer))
+            throw new IOException("Unsupported OCR renderer.");
+        var command =
+                new ArrayList<>(
+                        List.of(
+                                helper().toString(),
+                                "--output-type",
+                                "pdf",
+                                "--pdf-renderer",
+                                renderer,
+                                "--language",
+                                "eng"));
+        if (flag(options, "deskew")) command.add("--deskew");
+        if (flag(options, "rotatePages")) command.add("--rotate-pages");
+        command.add(
+                text(options, "ocrType", "skip-text").equals("force-ocr")
+                        ? "--force-ocr"
+                        : "--skip-text");
+        Path sidecar = root.resolve("output.txt");
+        if (flag(options, "sidecar")) {
+            command.add("--sidecar");
+            command.add(sidecar.toString());
+        }
+        command.add(input.toString());
+        command.add(output.toString());
+        Process child =
+                new ProcessBuilder(command)
+                        .directory(root.toFile())
+                        .redirectErrorStream(true)
+                        .redirectOutput(root.resolve("helper.log").toFile())
+                        .start();
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    child.descendants().forEach(ProcessHandle::destroyForcibly);
+                                    child.destroyForcibly();
+                                }));
+        if (child.waitFor() != 0) throw new IOException("OCR helper failed.");
+        if (!flag(options, "sidecar")) return output;
+        Path zip = root.resolve("output.zip");
+        try (var stream = new ZipOutputStream(Files.newOutputStream(zip))) {
+            for (Path file : List.of(output, sidecar)) {
+                stream.putNextEntry(new ZipEntry(file.getFileName().toString()));
+                Files.copy(file, stream);
+                stream.closeEntry();
+            }
+        }
+        return zip;
+    }
+
+    private static void emit(Object value) {
+        System.out.println(JSON.toJson(value));
+        System.out.flush();
+    }
+}

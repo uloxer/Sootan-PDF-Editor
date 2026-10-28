@@ -29,20 +29,12 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
-import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.cms.CMSSignedDataGenerator;
-import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
-import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -187,23 +179,9 @@ public abstract class CreateSignatureBase implements SignatureInterface {
     public byte[] sign(InputStream content) throws IOException {
         // cannot be done private (interface)
         try {
-            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-            X509Certificate cert = (X509Certificate) certificateChain[0];
-            JcaContentSignerBuilder signerBuilder =
-                    new JcaContentSignerBuilder(resolveSignatureAlgorithm(privateKey, cert));
-            // Hardware keys (PKCS#11 / Windows store) must sign on their own provider so the
-            // operation runs on the token; software keys use the default provider.
-            if (signingProvider != null) {
-                signerBuilder.setProvider(signingProvider);
-            }
-            ContentSigner signer = signerBuilder.build(privateKey);
-            gen.addSignerInfoGenerator(
-                    new JcaSignerInfoGeneratorBuilder(
-                                    new JcaDigestCalculatorProviderBuilder().build())
-                            .build(signer, cert));
-            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
-            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
-            CMSSignedData signedData = gen.generate(msg, false);
+            CMSSignedData signedData =
+                    stirling.software.pdf.DetachedCmsSigner.sign(
+                            content, privateKey, certificateChain, signingProvider);
             if (tsaUrl != null && !tsaUrl.isEmpty()) {
                 ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);
                 signedData = validation.addSignedTimeStamp(signedData);
@@ -215,27 +193,5 @@ public abstract class CreateSignatureBase implements SignatureInterface {
                 | URISyntaxException e) {
             throw new IOException(e);
         }
-    }
-
-    /**
-     * Pick a SHA-256 signature algorithm that matches the key type. RSA keeps the historical
-     * default; EC / EdDSA tokens are common, so they are handled too.
-     */
-    private static String resolveSignatureAlgorithm(PrivateKey key, X509Certificate cert) {
-        String alg = key.getAlgorithm();
-        if (alg == null || alg.isBlank()) {
-            alg = cert.getPublicKey().getAlgorithm();
-        }
-        alg = alg == null ? "" : alg.toUpperCase(Locale.ROOT);
-        if (alg.contains("ED25519") || alg.contains("EDDSA")) {
-            return "Ed25519";
-        }
-        if (alg.contains("EC")) { // EC, ECDSA
-            return "SHA256withECDSA";
-        }
-        if (alg.contains("DSA")) {
-            return "SHA256withDSA";
-        }
-        return "SHA256withRSA";
     }
 }

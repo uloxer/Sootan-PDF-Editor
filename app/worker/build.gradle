@@ -1,0 +1,17 @@
+apply plugin: 'application'
+dependencies {
+    implementation project(':pdf-services')
+    implementation "com.google.code.gson:gson:$gsonVersion"
+}
+application { mainClass = 'stirling.software.worker.WorkerMain' }
+tasks.register('verifyNonWebRuntime') {
+    doLast {
+        def forbidden = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.findAll {
+            it.moduleVersion.id.group.startsWith('org.springframework') ||
+            it.moduleVersion.id.group.startsWith('org.eclipse.jetty') ||
+            it.moduleVersion.id.group.startsWith('org.apache.tomcat')
+        }
+        if (!forbidden.empty) throw new GradleException("Worker contains web framework dependencies: $forbidden")
+    }
+}
+tasks.named('check') { dependsOn 'verifyNonWebRuntime' }
