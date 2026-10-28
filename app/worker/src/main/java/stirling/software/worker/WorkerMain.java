@@ -62,6 +62,8 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "svg-pdf-create",
+                    "pdf-csv-export",
                     "office-export",
                     "office-import",
                     "pdf-text-export",
@@ -137,16 +139,19 @@ public final class WorkerMain {
                             Files.size(result),
                             "contentType",
                             result.toString().endsWith(".bin")
-                                    ? operation.equals("office-export")
-                                            ? officeMime(text(options, "outputFormat", "docx"))
-                                            : operation.equals("pdf-image-export")
-                                                    ? "image/"
-                                                            + PdfImageConversion.format(
-                                                                    text(
-                                                                            options,
-                                                                            "imageFormat",
-                                                                            "png"))
-                                                    : "application/octet-stream"
+                                    ? operation.equals("pdf-csv-export")
+                                            ? "text/csv; charset=utf-8"
+                                            : operation.equals("office-export")
+                                                    ? officeMime(
+                                                            text(options, "outputFormat", "docx"))
+                                                    : operation.equals("pdf-image-export")
+                                                            ? "image/"
+                                                                    + PdfImageConversion.format(
+                                                                            text(
+                                                                                    options,
+                                                                                    "imageFormat",
+                                                                                    "png"))
+                                                            : "application/octet-stream"
                                     : result.toString().endsWith(".txt")
                                             ? "text/plain; charset=utf-8"
                                             : result.toString().endsWith(".zip")
@@ -165,13 +170,15 @@ public final class WorkerMain {
                             "type",
                             "error",
                             "code",
-                            failure instanceof PdfOfficeInput.ExternalResource
-                                    ? "OFFICE_EXTERNAL_RESOURCE"
-                                    : failure instanceof UnsupportedStructure
-                                            ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
-                                            : failure instanceof InspectionDenied
-                                                    ? "INSPECTION_ACCESS_DENIED"
-                                                    : "PROCESSING_FAILED",
+                            failure instanceof SvgResourceDenied
+                                    ? "SVG_RESOURCE_DENIED"
+                                    : failure instanceof PdfOfficeInput.ExternalResource
+                                            ? "OFFICE_EXTERNAL_RESOURCE"
+                                            : failure instanceof UnsupportedStructure
+                                                    ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
+                                                    : failure instanceof InspectionDenied
+                                                            ? "INSPECTION_ACCESS_DENIED"
+                                                            : "PROCESSING_FAILED",
                             "message",
                             "The selected operation could not complete. Check its options, document permissions and private helper availability."));
             System.exit(1);
@@ -270,6 +277,8 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "svg-pdf-create" -> Set.of("selectedFiles", "combineIntoSinglePdf");
+                    case "pdf-csv-export" -> Set.of("sourcePassword", "pageNumbers");
                     case "office-export" ->
                             Set.of(
                                     "sourcePassword",
@@ -489,6 +498,56 @@ public final class WorkerMain {
                 && options.has("useStirlingOfficeConvert")
                 && !flag(options, "useStirlingOfficeConvert"))
             throw new IOException("The legacy Office engine is not connected.");
+        if (operation.equals("svg-pdf-create")) {
+            var files = attachmentGrants(root, options);
+            if (files.isEmpty() || files.size() > 20)
+                throw new IOException("Select up to twenty SVGs.");
+            var rendered = new ArrayList<byte[]>();
+            for (var file : files) {
+                if (!file.name().toLowerCase(java.util.Locale.ROOT).endsWith(".svg"))
+                    throw new IOException("Select SVG files.");
+                if (file.size() > 8L * 1024 * 1024) throw new SvgResourceDenied();
+                byte[] sanitized;
+                try (var stream = file.open()) {
+                    try {
+                        sanitized =
+                                stirling.software.pdf.LocalSvgInput.sanitize(
+                                        stream.readNBytes(8 * 1024 * 1024 + 1));
+                    } catch (Exception invalidSvg) {
+                        throw new SvgResourceDenied();
+                    }
+                }
+                try {
+                    rendered.add(stirling.software.SPDF.utils.SvgToPdf.convert(sanitized));
+                } catch (IOException failure) {
+                    throw new SvgResourceDenied();
+                }
+            }
+            if (rendered.size() == 1) {
+                Files.write(output, rendered.getFirst());
+                return output;
+            }
+            if (flag(options, "combineIntoSinglePdf")) {
+                try (var combined = new PDDocument()) {
+                    for (var bytes : rendered)
+                        try (var single = Loader.loadPDF(bytes)) {
+                            new org.apache.pdfbox.multipdf.PDFMergerUtility()
+                                    .appendDocument(combined, single);
+                        }
+                    combined.save(output.toFile());
+                }
+                return output;
+            }
+            var zip = root.resolve("output.zip");
+            try (var stream = new ZipOutputStream(Files.newOutputStream(zip))) {
+                for (int i = 0; i < rendered.size(); i++) {
+                    stream.putNextEntry(new ZipEntry("svg-" + (i + 1) + ".pdf"));
+                    stream.write(rendered.get(i));
+                    stream.closeEntry();
+                }
+            }
+            return zip;
+        }
         if (operation.equals("office-import")) {
             var files = attachmentGrants(root, options);
             if (files.size() != 1) throw new IOException("Select one Office file per job.");
@@ -536,6 +595,47 @@ public final class WorkerMain {
             }
         }
         try (PDDocument document = Loader.loadPDF(input.toFile(), credential)) {
+            if (operation.equals("pdf-csv-export")) {
+                if (document.isEncrypted()
+                        && !document.getCurrentAccessPermission().canExtractContent())
+                    throw new InspectionDenied();
+                if (document.getNumberOfPages() > 1000)
+                    throw new IOException("Table export exceeds page limits.");
+                String pages = text(options, "pageNumbers", "all");
+                if (pages.isBlank()) pages = "all";
+                var entries =
+                        stirling.software.pdf.PdfCsvExtraction.extract(
+                                document,
+                                PdfPageSelection.parsePageList(
+                                                pages, document.getNumberOfPages(), false)
+                                        .stream()
+                                        .map(page -> page + 1)
+                                        .toList());
+                if (entries.isEmpty()) throw new IOException("No ruled tables were detected.");
+                if (entries.size() == 1) {
+                    var target = root.resolve("output.bin");
+                    Files.writeString(target, entries.getFirst().content(), StandardCharsets.UTF_8);
+                    return target;
+                }
+                var target = root.resolve("output.zip");
+                try (var zip = new ZipOutputStream(Files.newOutputStream(target))) {
+                    int index = 0;
+                    for (var entry : entries) {
+                        zip.putNextEntry(
+                                new ZipEntry(
+                                        "table-"
+                                                + (++index)
+                                                + "-p"
+                                                + entry.page()
+                                                + "-t"
+                                                + entry.table()
+                                                + ".csv"));
+                        zip.write(entry.content().getBytes(StandardCharsets.UTF_8));
+                        zip.closeEntry();
+                    }
+                }
+                return target;
+            }
             if (operation.equals("office-export")) {
                 if (document.isEncrypted()
                         && !document.getCurrentAccessPermission().canExtractContent())
@@ -1119,6 +1219,8 @@ public final class WorkerMain {
     private static final class UnsupportedStructure extends IOException {}
 
     private static final class InspectionDenied extends IOException {}
+
+    private static final class SvgResourceDenied extends IOException {}
 
     private static void writeReport(Path output, String text) throws IOException {
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);

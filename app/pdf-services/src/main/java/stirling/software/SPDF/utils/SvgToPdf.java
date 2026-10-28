@@ -15,7 +15,11 @@ import java.util.concurrent.TimeoutException;
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.bridge.BridgeContext;
 import org.apache.batik.bridge.DocumentLoader;
+import org.apache.batik.bridge.ExternalResourceSecurity;
 import org.apache.batik.bridge.GVTBuilder;
+import org.apache.batik.bridge.NoLoadExternalResourceSecurity;
+import org.apache.batik.bridge.NoLoadScriptSecurity;
+import org.apache.batik.bridge.ScriptSecurity;
 import org.apache.batik.bridge.UserAgent;
 import org.apache.batik.bridge.UserAgentAdapter;
 import org.apache.batik.gvt.GraphicsNode;
@@ -87,7 +91,12 @@ public class SvgToPdf {
             log.debug("SVG dimensions: {}x{} points", width, height);
 
             // 4. Create PDF document and render
-            return renderToPdf(rootNode, width, height);
+            validateDimensions(width, height);
+            try {
+                return renderToPdf(rootNode, width, height);
+            } finally {
+                ctx.dispose();
+            }
 
         } catch (Exception e) {
             log.error("Failed to convert SVG to PDF", e);
@@ -97,6 +106,19 @@ public class SvgToPdf {
 
     private UserAgent createSecureUserAgent() {
         return new UserAgentAdapter() {
+            @Override
+            public ScriptSecurity getScriptSecurity(
+                    String type, ParsedURL script, ParsedURL document) {
+                return new NoLoadScriptSecurity(type);
+            }
+
+            @Override
+            public ExternalResourceSecurity getExternalResourceSecurity(
+                    ParsedURL resource, ParsedURL document) {
+                if (resource != null && "data".equals(resource.getProtocol())) return () -> {};
+                return new NoLoadExternalResourceSecurity();
+            }
+
             @Override
             public void checkLoadExternalResource(ParsedURL resourceURL, ParsedURL docURL) {
                 // Inline data: URIs are self-contained (no network/file fetch) - allow them.
@@ -170,6 +192,15 @@ public class SvgToPdf {
         }
     }
 
+    private void validateDimensions(float width, float height) throws IOException {
+        if (!Float.isFinite(width)
+                || !Float.isFinite(height)
+                || width > 14400
+                || height > 14400
+                || (double) width * height > 100000000)
+            throw new IOException("SVG page dimensions exceed limits.");
+    }
+
     public byte[] combineIntoPdf(List<byte[]> svgBytesList) throws IOException {
         if (svgBytesList == null || svgBytesList.isEmpty()) {
             throw new IOException("SVG list is empty or null");
@@ -231,6 +262,7 @@ public class SvgToPdf {
         if (svgWidth <= 0) svgWidth = DEFAULT_PAGE_WIDTH;
         if (svgHeight <= 0) svgHeight = DEFAULT_PAGE_HEIGHT;
 
+        validateDimensions(svgWidth, svgHeight);
         // Use SVG dimensions directly for the PDF page
         PDPage page = new PDPage(new PDRectangle(svgWidth, svgHeight));
         document.addPage(page);

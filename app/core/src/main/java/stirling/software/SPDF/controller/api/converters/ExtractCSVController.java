@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +8,6 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.CsvConversionResponse;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
@@ -35,7 +30,6 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CsvSanitizer;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -63,24 +57,13 @@ public class ExtractCSVController {
 
         try (PDDocument document = pdfDocumentFactory.load(request)) {
             List<Integer> pages = request.getPageNumbersList(document, true);
-            CSVFormat format =
-                    CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
-
-            for (int pageNum : pages) {
-                log.info("{}", pageNum);
-                List<TableFragment> fragments = tabulaTableParser.parse(document, pageNum);
-
-                for (int i = 0; i < fragments.size(); i++) {
-                    StringWriter sw = new StringWriter();
-                    try (CSVPrinter printer = format.print(sw)) {
-                        for (List<String> row : fragments.get(i).rawRows()) {
-                            printer.printRecord(CsvSanitizer.sanitizeRow(row));
-                        }
-                    }
-                    csvEntries.add(
-                            new CsvEntry(
-                                    generateEntryName(baseName, pageNum, i + 1), sw.toString()));
-                }
+            for (var entry :
+                    stirling.software.pdf.PdfCsvExtraction.extract(
+                            document, pages, tabulaTableParser)) {
+                csvEntries.add(
+                        new CsvEntry(
+                                generateEntryName(baseName, entry.page(), entry.table()),
+                                entry.content()));
             }
 
             if (csvEntries.isEmpty()) {

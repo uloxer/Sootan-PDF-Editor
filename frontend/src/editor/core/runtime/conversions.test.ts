@@ -18,6 +18,71 @@ function native() {
     randomUUID: () => "5fd10d6d-8ad2-4537-9a85-793420b72227",
   });
 }
+it("dispatches SVG Convert through bounded selected grants and returns a PDF name", async () => {
+  native();
+  vi.stubGlobal("__SOOTAN_RUNTIME__", {
+    kind: "offline-desktop",
+    advancedOperations: ["svg-pdf-create", "pdf-csv-export"],
+  });
+  expect(supportsLocalConversion("svg", "pdf")).toBe(true);
+  expect(supportsLocalConversion("pdf", "csv")).toBe(true);
+  const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+    ok: true,
+    headers: new Headers({ "Content-Type": "application/pdf" }),
+    blob: async () => new Blob(["PDF"]),
+  }));
+  vi.stubGlobal("fetch", fetch);
+  const result = await convertProcessor(
+    { ...defaultParameters, fromExtension: "svg", toExtension: "pdf" },
+    [new File(["<svg/>"], "Hill with spaces.svg", { type: "image/svg+xml" })],
+  );
+  expect(result.files[0].name).toBe("converted.pdf");
+  expect(fetch.mock.calls[1][0]).toMatch(/attachment-0$/);
+  expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toMatchObject({
+    operation: "svg-pdf-create",
+    options: { selectedFiles: [{ index: 0, name: "Hill with spaces.svg" }] },
+  });
+});
+it("dispatches CSV Convert with the original page selection and CSV MIME/name", async () => {
+  native();
+  vi.stubGlobal("__SOOTAN_RUNTIME__", {
+    kind: "offline-desktop",
+    advancedOperations: ["pdf-csv-export"],
+  });
+  const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+    ok: true,
+    headers: new Headers({ "Content-Type": "text/csv; charset=utf-8" }),
+    blob: async () => new Blob(['"Swona","42"']),
+  }));
+  vi.stubGlobal("fetch", fetch);
+  const result = await convertProcessor(
+    { ...defaultParameters, fromExtension: "pdf", toExtension: "csv" },
+    [new File(["PDF"], "Tables.pdf")],
+  );
+  expect(result.files[0].name).toBe("converted.csv");
+  expect(JSON.parse(String(fetch.mock.calls[1][1]?.body))).toMatchObject({
+    operation: "pdf-csv-export",
+    options: { pageNumbers: "all" },
+  });
+});
+it("reports refused SVG resources without losing private-job cleanup", async () => {
+  native();
+  vi.stubGlobal("__SOOTAN_RUNTIME__", {
+    kind: "offline-desktop",
+    advancedOperations: ["svg-pdf-create"],
+  });
+  const fetch = vi.fn(async (url: string) => ({
+    ok: !url.endsWith("/run"),
+    json: async () => ({ code: "SVG_RESOURCE_DENIED" }),
+  }));
+  vi.stubGlobal("fetch", fetch);
+  const data = new FormData();
+  data.append("fileInput", new File(["<svg/>"], "Remote.svg"));
+  await expect(
+    requestDesktopWorker("/api/v1/convert/svg/pdf", data),
+  ).rejects.toThrow(/external styles/);
+  expect(fetch.mock.calls.at(-1)?.[0]).toMatch(/\/job$/);
+});
 it("advertises exact modes instead of all branches sharing the same endpoint", () => {
   native();
   expect(supportsLocalConversion("pdf", "txt")).toBe(true);

@@ -1,4 +1,14 @@
 dependencies {
+    api "org.apache.xmlgraphics:batik-bridge:$batikVersion"
+    runtimeOnly "org.apache.xmlgraphics:batik-codec:$batikVersion"
+    implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
+    api ('technology.tabula:tabula:1.0.5') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+    implementation 'org.apache.commons:commons-csv:1.14.1'
+
     api "com.stirling:stirling-office-convert:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
     api "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"

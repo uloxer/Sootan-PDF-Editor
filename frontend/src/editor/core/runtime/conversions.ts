@@ -4,6 +4,10 @@ const BITMAPS = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif"];
 /** Exact conversion pairs available from the explicitly bootstrapped local worker. */
 export function supportsLocalConversion(from: string, to: string): boolean {
   if (getRuntime().serverOperations) return true;
+  if (from === "svg" && to === "pdf")
+    return supportsWorkerEndpoint("svg-to-pdf");
+  if (from === "pdf" && to === "csv")
+    return supportsWorkerEndpoint("pdf-to-csv");
   if (
     from === "pdf" &&
     ["docx", "doc", "odt", "rtf", "pptx", "ppt", "odp", "xlsx", "ods"].includes(

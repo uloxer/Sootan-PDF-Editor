@@ -23,6 +23,8 @@ export async function requestDesktopWorker(
   const name =
     (
       {
+        "/api/v1/convert/svg/pdf": "svg-to-pdf",
+        "/api/v1/convert/pdf/csv": "pdf-to-csv",
         "/api/v1/convert/pdf/text": "pdf-to-text",
         "/api/v1/convert/pdf/word": "pdf-to-word",
         "/api/v1/convert/pdf/presentation": "pdf-to-presentation",
@@ -41,11 +43,12 @@ export async function requestDesktopWorker(
     );
   const portfolio =
     name === "create-portfolio" ||
+    name === "svg-to-pdf" ||
     name === "img-to-pdf" ||
     name === "file-to-pdf";
   const selected = form
     .getAll(
-      name === "img-to-pdf" || name === "file-to-pdf"
+      name === "img-to-pdf" || name === "file-to-pdf" || name === "svg-to-pdf"
         ? "fileInput"
         : portfolio
           ? "files"
@@ -208,6 +211,23 @@ export async function requestDesktopWorker(
       options.useStirlingOfficeConvert === "true")
       ? "office-export"
       : DESKTOP_ENDPOINTS[name];
+  if (operation === "pdf-csv-export") {
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+  }
+  if (
+    operation === "svg-pdf-create" &&
+    (selected.length > 20 ||
+      selected.some(
+        (file) =>
+          !file.name.toLowerCase().endsWith(".svg") ||
+          file.size > 8 * 1024 * 1024,
+      ))
+  )
+    throw new CorePdfError(
+      "INVALID_INPUT",
+      "Select up to twenty SVG files, each at most eight MiB.",
+    );
   if (operation === "office-export") {
     if (!getRuntime().advancedOperations?.includes("office-export"))
       throw new CorePdfError(
@@ -325,6 +345,11 @@ export async function requestDesktopWorker(
     });
     if (!response.ok) {
       const failure = await response.json().catch(() => null);
+      if (failure?.code === "SVG_RESOURCE_DENIED")
+        throw new CorePdfError(
+          "UNSUPPORTED_OPTION",
+          "This SVG is invalid, exceeds local limits, or references external styles, fonts or images. Embed bounded bitmap images and remove external resources; no remote content was fetched.",
+        );
       if (failure?.code === "OFFICE_EXTERNAL_RESOURCE")
         throw new CorePdfError(
           "UNSUPPORTED_FEATURE",
@@ -352,6 +377,8 @@ export async function requestDesktopWorker(
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
         ...([
+          "svg-to-pdf",
+          "pdf-to-csv",
           "pdf-to-word",
           "pdf-to-presentation",
           "pdf-to-xlsx",
@@ -361,7 +388,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },
