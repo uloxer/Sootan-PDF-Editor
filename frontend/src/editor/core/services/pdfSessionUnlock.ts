@@ -1,4 +1,5 @@
 import { getRuntime } from "@editor/runtime/runtime";
+import { requestDesktopWorker } from "@editor/runtime/desktopWorker";
 import {
   ensureLocalPdfAccess,
   getPdfAccess,
@@ -45,6 +46,10 @@ async function requestWorkingPdf(
   signal?: AbortSignal,
 ): Promise<Blob> {
   try {
+    if (!getRuntime().serverOperations)
+      return (
+        await requestDesktopWorker(endpoint, form, { cancelToken, signal })
+      ).data;
     const response = await apiClient.post<Blob>(endpoint, form, {
       responseType: "blob",
       suppressErrorToast: true,

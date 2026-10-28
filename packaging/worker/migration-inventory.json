@@ -1,0 +1,844 @@
+{
+  "scope": "Static controller endpoint inventory; source remains retained. Not a promise of connected worker parity.",
+  "endpoints": [
+    {
+      "family": "general",
+      "controller": "AdditionalLanguageJsController.java",
+      "endpoint": "/additionalLanguageCode.js",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/annotation-info",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/basic-info",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/document-properties",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/font-info",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/form-fields",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/page-count",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/page-dimensions",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "AnalysisController.java",
+      "endpoint": "/security-info",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "BookletImpositionController.java",
+      "endpoint": "/booklet-imposition",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertEbookToPDFController.java",
+      "endpoint": "/ebook/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertEmlToPDF.java",
+      "endpoint": "/eml/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertHtmlToPDF.java",
+      "endpoint": "/html/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertImgPDFController.java",
+      "endpoint": "/cbr/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertImgPDFController.java",
+      "endpoint": "/cbz/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertImgPDFController.java",
+      "endpoint": "/img/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertImgPDFController.java",
+      "endpoint": "/pdf/cbr",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertImgPDFController.java",
+      "endpoint": "/pdf/cbz",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertImgPDFController.java",
+      "endpoint": "/pdf/img",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertMarkdownToPdf.java",
+      "endpoint": "/markdown/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertOfficeController.java",
+      "endpoint": "/file/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPdfJsonController.java",
+      "endpoint": "/pdf/text-editor",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPdfJsonController.java",
+      "endpoint": "/pdf/text-editor/metadata",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPdfJsonController.java",
+      "endpoint": "/text-editor/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToEpubController.java",
+      "endpoint": "/pdf/epub",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToExcelController.java",
+      "endpoint": "/pdf/xlsx",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToHtml.java",
+      "endpoint": "/pdf/html",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToOffice.java",
+      "endpoint": "/pdf/presentation",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToOffice.java",
+      "endpoint": "/pdf/text",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToOffice.java",
+      "endpoint": "/pdf/word",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToOffice.java",
+      "endpoint": "/pdf/xml",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPDFToPDFA.java",
+      "endpoint": "/pdf/pdfa",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertPdfToVideoController.java",
+      "endpoint": "/pdf/video",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertSvgToPDF.java",
+      "endpoint": "/svg/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ConvertWebsiteToPDF.java",
+      "endpoint": "/url/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "ExtractCSVController.java",
+      "endpoint": "/pdf/csv",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "PdfVectorExportController.java",
+      "endpoint": "/pdf/vector",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "converters",
+      "controller": "PdfVectorExportController.java",
+      "endpoint": "/vector/pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "CropController.java",
+      "endpoint": "/crop",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "EditTableOfContentsController.java",
+      "endpoint": "/edit-table-of-contents",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "EditTableOfContentsController.java",
+      "endpoint": "/extract-bookmarks",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "EditTextController.java",
+      "endpoint": "/edit-text",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "filters",
+      "controller": "FilterController.java",
+      "endpoint": "/filter-contains-image",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "filters",
+      "controller": "FilterController.java",
+      "endpoint": "/filter-contains-text",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "filters",
+      "controller": "FilterController.java",
+      "endpoint": "/filter-file-size",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "filters",
+      "controller": "FilterController.java",
+      "endpoint": "/filter-page-count",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "filters",
+      "controller": "FilterController.java",
+      "endpoint": "/filter-page-rotation",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "filters",
+      "controller": "FilterController.java",
+      "endpoint": "/filter-page-size",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/add-fields",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/delete-fields",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/edit-fields",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/extract-csv",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/extract-xlsx",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/fields",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/fields-with-coordinates",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/fill",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "form",
+      "controller": "FormFillController.java",
+      "endpoint": "/modify-fields",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "MergeController.java",
+      "endpoint": "/merge-pdfs",
+      "state": "shared-core",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AddCommentsController.java",
+      "endpoint": "/add-comments",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/add-attachments",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/batch-process-attachments",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/delete-attachment",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/extract-attachments",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/extract-single-attachment",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/list-attachments",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AttachmentController.java",
+      "endpoint": "/rename-attachment",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AutoRenameController.java",
+      "endpoint": "/auto-rename",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AutoRotateController.java",
+      "endpoint": "/auto-rotate-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "AutoSplitPdfController.java",
+      "endpoint": "/auto-split-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "BlankPageController.java",
+      "endpoint": "/remove-blanks",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "CompressController.java",
+      "endpoint": "/compress-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "DecompressPdfController.java",
+      "endpoint": "/decompress-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "ExtractImageScansController.java",
+      "endpoint": "/extract-image-scans",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "ExtractImagesController.java",
+      "endpoint": "/extract-images",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "FlattenController.java",
+      "endpoint": "/flatten",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "MetadataController.java",
+      "endpoint": "/update-metadata",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "OCRController.java",
+      "endpoint": "/ocr-pdf",
+      "state": "worker-mode-limited",
+      "mode": "ocr (English; no clean/GS options)"
+    },
+    {
+      "family": "misc",
+      "controller": "OverlayImageController.java",
+      "endpoint": "/add-image",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "PageNumbersController.java",
+      "endpoint": "/add-page-numbers",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "PortfolioController.java",
+      "endpoint": "/create-portfolio",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "PortfolioController.java",
+      "endpoint": "/flatten-portfolio",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "PrintFileController.java",
+      "endpoint": "/print-file",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "RemoveImagesController.java",
+      "endpoint": "/remove-image-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "RepairController.java",
+      "endpoint": "/repair",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "ReplaceAndInvertColorController.java",
+      "endpoint": "/replace-invert-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "ScannerEffectController.java",
+      "endpoint": "/scanner-effect",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "ShowJavascript.java",
+      "endpoint": "/show-javascript",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "StampController.java",
+      "endpoint": "/add-stamp",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "misc",
+      "controller": "UnlockPDFFormsController.java",
+      "endpoint": "/unlock-pdf-forms",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "MultiPageLayoutController.java",
+      "endpoint": "/multi-page-layout",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "PdfOverlayController.java",
+      "endpoint": "/overlay-pdfs",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "PdfTextEditorCharcodeController.java",
+      "endpoint": "/pdf-text-editor/encode-charcodes",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "pipeline",
+      "controller": "PipelineController.java",
+      "endpoint": "/handleData",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "PosterPdfController.java",
+      "endpoint": "/split-for-poster-print",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "RearrangePagesPDFController.java",
+      "endpoint": "/rearrange-pages",
+      "state": "shared-core",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "RearrangePagesPDFController.java",
+      "endpoint": "/remove-pages",
+      "state": "shared-core",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "RotationController.java",
+      "endpoint": "/rotate-pdf",
+      "state": "shared-core",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "ScalePagesController.java",
+      "endpoint": "/scale-pages",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "CertSignController.java",
+      "endpoint": "/cert-sign",
+      "state": "worker-mode-limited",
+      "mode": "cert-sign-invisible (PKCS12 only)"
+    },
+    {
+      "family": "security",
+      "controller": "GetInfoOnPDF.java",
+      "endpoint": "/get-info-on-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "PasswordController.java",
+      "endpoint": "/add-password",
+      "state": "worker-mode-limited",
+      "mode": "aes-encrypt (AES256 only)"
+    },
+    {
+      "family": "security",
+      "controller": "PasswordController.java",
+      "endpoint": "/prepare-pdf-session",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "PasswordController.java",
+      "endpoint": "/remove-password",
+      "state": "worker-mode-limited",
+      "mode": "decrypt (full removal, owner authenticated)"
+    },
+    {
+      "family": "security",
+      "controller": "PasswordController.java",
+      "endpoint": "/restore-pdf-protection",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "RedactController.java",
+      "endpoint": "/auto-redact",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "RedactController.java",
+      "endpoint": "/redact",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "RedactController.java",
+      "endpoint": "/redact-execute",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "RemoveCertSignController.java",
+      "endpoint": "/remove-cert-sign",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "SanitizeController.java",
+      "endpoint": "/sanitize-pdf",
+      "state": "worker-mode-limited",
+      "mode": "sanitize"
+    },
+    {
+      "family": "security",
+      "controller": "TimestampController.java",
+      "endpoint": "/timestamp-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "ValidateComplianceController.java",
+      "endpoint": "/validate-compliance",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "ValidateSignatureController.java",
+      "endpoint": "/validate-signature",
+      "state": "worker-mode-limited",
+      "mode": "signature-integrity (not PKIX/revocation)"
+    },
+    {
+      "family": "security",
+      "controller": "VerifyPDFController.java",
+      "endpoint": "/verify-pdf",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "security",
+      "controller": "WatermarkController.java",
+      "endpoint": "/add-watermark",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "SplitPdfByChaptersController.java",
+      "endpoint": "/split-pdf-by-chapters",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "SplitPdfBySectionsController.java",
+      "endpoint": "/split-pdf-by-sections",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "SplitPdfBySizeController.java",
+      "endpoint": "/split-by-size-or-count",
+      "state": "pending-migration",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "SplitPDFController.java",
+      "endpoint": "/split-pages",
+      "state": "shared-core",
+      "mode": null
+    },
+    {
+      "family": "general",
+      "controller": "ToSinglePageController.java",
+      "endpoint": "/pdf-to-single-page",
+      "state": "pending-migration",
+      "mode": null
+    }
+  ],
+  "legacyAvailability": "Static API source inventory only. Pending means not connected to worker, not proof this endpoint worked in installed3.2.5. Existing WASM annotation/forms/viewing remain shared core independently of these HTTP mappings.",
+  "knownLegacyLimitations": [
+    "English OCR plus osd only",
+    "unpaper cleanup and Ghostscript remove-images not bundled; already unavailable",
+    "Office/compression/conversion helper-dependent branches need individual installed-parity confirmation; do not count optional unbundled branches as migration regressions"
+  ]
+}

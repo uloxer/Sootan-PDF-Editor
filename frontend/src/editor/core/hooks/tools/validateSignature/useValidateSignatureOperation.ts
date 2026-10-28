@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
+import { getRuntime } from "@editor/runtime/runtime";
+import { requestDesktopWorker } from "@editor/runtime/desktopWorker";
 import { useFileContext } from "@editor/contexts/file/fileHooks";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@editor/types/fileContext";
@@ -99,10 +101,21 @@ export const useValidateSignatureOperation =
             }
 
             try {
-              const response = await apiClient.post(
-                "/api/v1/security/validate-signature",
-                formData,
-              );
+              const response = getRuntime().serverOperations
+                ? await apiClient.post(
+                    "/api/v1/security/validate-signature",
+                    formData,
+                  )
+                : {
+                    data: JSON.parse(
+                      await (
+                        await requestDesktopWorker(
+                          "/api/v1/security/validate-signature",
+                          formData,
+                        )
+                      ).data.text(),
+                    ),
+                  };
 
               const data = Array.isArray(response.data)
                 ? (response.data as SignatureValidationBackendResult[])

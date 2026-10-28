@@ -1,3 +1,4 @@
+import { getRuntime } from "@editor/runtime/runtime";
 import React, { useState, useEffect } from "react";
 import { Text, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -47,9 +48,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
-        const { data } = await apiClient.get<{ languages: string[] }>(
-          languagesEndpoint,
-        );
+        const { data } = getRuntime().serverOperations
+          ? await apiClient.get<{ languages: string[] }>(languagesEndpoint)
+          : { data: { languages: ["eng"] } };
 
         const displayNames =
           typeof Intl.DisplayNames !== "undefined"

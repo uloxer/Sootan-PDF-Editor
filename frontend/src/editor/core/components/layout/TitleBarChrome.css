@@ -39,7 +39,7 @@
   background: var(--c-bg);
 }
 .desktop-chrome__bar button:focus-visible {
-  outline: 2px solid var(--c-accent);
+  outline: 2px solid var(--c-accent-fg);
   outline-offset: -2px;
 }
 .desktop-chrome__resize {

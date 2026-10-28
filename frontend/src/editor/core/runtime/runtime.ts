@@ -6,6 +6,7 @@ export interface RuntimeCapabilities {
   nativeFileDialogs: boolean;
   renderer: "wasm";
   nativeWindowControls?: boolean;
+  advancedOperations?: string[];
 }
 
 const SERVER: RuntimeCapabilities = {
@@ -32,6 +33,8 @@ export function getRuntime(): RuntimeCapabilities {
 }
 
 export const OFFLINE_APP_CONFIG: AppConfig = {
+  ocrCleanAvailable: false,
+  ocrRemoveImagesAvailable: false,
   enableLogin: false,
   appNameNavbar: "Sootan PDF Editor",
   enableAnalytics: false,
@@ -51,8 +54,22 @@ export const OFFLINE_OPERATION_REASON =
   "This operation requires a processing adapter that is not available in this offline runtime.";
 
 export function supportsLocalEndpoint(endpoint: string): boolean {
-  return CORE_ENDPOINTS.includes(endpoint);
+  return (
+    CORE_ENDPOINTS.includes(endpoint) ||
+    (getRuntime().kind === "offline-desktop" &&
+      getRuntime().advancedOperations?.includes(WORKER_ENDPOINTS[endpoint]) ===
+        true)
+  );
 }
+
+export const WORKER_ENDPOINTS: Record<string, string> = {
+  "sanitize-pdf": "sanitize",
+  "add-password": "aes-encrypt",
+  "remove-password": "decrypt",
+  "ocr-pdf": "ocr",
+  "cert-sign": "cert-sign-invisible",
+  "validate-signature": "signature-integrity",
+};
 
 export const CORE_ENDPOINTS: string[] = [
   "view-pdf",

@@ -92,11 +92,12 @@ internal sealed class SootanHost : Form {
                 environment=await CoreWebView2Environment.CreateAsync(null,Path.Combine(data,"WebView2"),new CoreWebView2EnvironmentOptions(options));
                 await web.EnsureCoreWebView2Async(environment);
                 var core=web.CoreWebView2;core.Settings.AreHostObjectsAllowed=false;core.Settings.AreBrowserAcceleratorKeysEnabled=false;core.Settings.IsStatusBarEnabled=false;core.Settings.AreDevToolsEnabled=options.Length>0;
-                core.NavigationStarting+=(s,n)=> { if(!Trusted(n.Uri)) n.Cancel=true; };
+                core.NavigationStarting+=(s,n)=> { if(!Trusted(n.Uri)) n.Cancel=true;else if(worker!=null)worker.CancelAll(); };
                 core.NewWindowRequested+=(s,n)=> {n.Handled=true;if(n.IsUserInitiated&&External(n.Uri))Process.Start(n.Uri);};
                 core.PermissionRequested+=(s,p)=>p.State=CoreWebView2PermissionState.Deny;
                 core.WebMessageReceived+=Message;
-                await core.AddScriptToExecuteOnDocumentCreatedAsync("window.__SOOTAN_RUNTIME__={kind:'"+(bundle==null?"server":"offline-desktop")+"',serverOperations:"+(bundle==null?"true":"false")+",nativeFileDialogs:true,nativeWindowControls:true,renderer:'wasm'};");
+                if(bundle!=null)worker=new SootanWorker(core,environment,data);
+                await core.AddScriptToExecuteOnDocumentCreatedAsync("window.__SOOTAN_RUNTIME__={kind:'"+(bundle==null?"server":"offline-desktop")+"',serverOperations:"+(bundle==null?"true":"false")+",nativeFileDialogs:true,nativeWindowControls:true,advancedOperations:"+json.Serialize(worker==null?new string[0]:worker.Capabilities)+",renderer:'wasm'};");
                 if(bundle!=null) {
                     core.AddWebResourceRequestedFilter("*",CoreWebView2WebResourceContext.All);
                     core.WebResourceRequested+=BundledResource;
@@ -121,7 +122,7 @@ internal sealed class SootanHost : Form {
         FormClosing+=(sender,e)=> {
             if(ready&&!approvedClose){e.Cancel=true;web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"close\"}");}
         };
-        FormClosed+=(sender,e)=>{foreach(var stream in streams.Values)stream.Dispose();web.Dispose();if(backend!=null)backend.Dispose();};
+        FormClosed+=(sender,e)=>{if(worker!=null)worker.Dispose();foreach(var stream in streams.Values)stream.Dispose();web.Dispose();if(backend!=null)backend.Dispose();};
         Resize+=(sender,e)=> {if(web.CoreWebView2!=null)web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"window-state\",\"maximized\":"+(WindowState==FormWindowState.Maximized?"true":"false")+"}");};
     }
     protected override CreateParams CreateParams { get {var value=base.CreateParams;value.Style=(value.Style|0x000F0000)&~0x00C00000;return value;} }
@@ -174,7 +175,9 @@ internal sealed class SootanHost : Form {
             case ".woff2":return "font/woff2";case ".woff":return "font/woff";default:return "application/octet-stream";
         }
     }
+    private SootanWorker worker;
     private void BundledResource(object sender,CoreWebView2WebResourceRequestedEventArgs e) {
+        if(Trusted(e.Request.Uri)&&new Uri(e.Request.Uri).AbsolutePath.StartsWith("/__sootan_worker/"))return;
         if(Trusted(e.Request.Uri)&&new Uri(e.Request.Uri).AbsolutePath.StartsWith("/__sootan_selected/"))return;
         string path=BundledPath(bundle,e.Request.Uri);
         if(path==null||e.Request.Method!="GET"||new Uri(e.Request.Uri).AbsolutePath.StartsWith("/api/")) {

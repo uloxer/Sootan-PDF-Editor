@@ -176,8 +176,8 @@ def main():
     shutil.copy2(SPEC / "assets/sootan.ico", inputs / "sootan.ico")
     for name in ["LICENSE.txt", "NOTICE.txt"]:
         shutil.copy2(sdk / name, inputs / ("WEBVIEW2-" + name))
-    run([csc, "/nologo", "/codepage:65001", "/target:winexe", "/platform:x64", "/out:" + str(inputs / "SootanHost.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs"])
-    run([csc, "/nologo", "/codepage:65001", "/target:exe", "/platform:x64", "/main:SootanHostTests", "/out:" + str(inputs / "SootanHostTests.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "tests/SootanHostTests.cs"])
+    run([csc, "/nologo", "/codepage:65001", "/target:winexe", "/platform:x64", "/out:" + str(inputs / "SootanHost.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "SootanWorker.cs"])
+    run([csc, "/nologo", "/codepage:65001", "/target:exe", "/platform:x64", "/main:SootanHostTests", "/out:" + str(inputs / "SootanHostTests.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "SootanWorker.cs", SPEC / "tests/SootanHostTests.cs"])
     run([inputs / "SootanHostTests.exe"])
     (inputs / "SootanHostTests.exe").unlink()
     run([csc, "/nologo", "/target:exe", "/out:" + str(binary_dir / "ocrmypdf.exe"), SPEC / "OcrHelper.cs"])

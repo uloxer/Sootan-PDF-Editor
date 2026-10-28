@@ -24,6 +24,7 @@ apiClient.interceptors.request.use((request) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (axios.isCancel(error)) return Promise.reject(error);
     await handleHttpError(error); // Handle error (shows toast unless suppressed)
     return Promise.reject(error);
   },

@@ -8,6 +8,10 @@ import {
 } from "@editor/runtime/corePdfOperations";
 import { PDFDocument } from "@cantoo/pdf-lib";
 import JSZip from "jszip";
+import {
+  requestDesktopWorker,
+  supportsWorkerEndpoint,
+} from "@editor/runtime/desktopWorker";
 
 /** Existing tool request shapes dispatch locally offline; the server transport remains unchanged. */
 export async function requestPdfProcessing(
@@ -17,6 +21,8 @@ export async function requestPdfProcessing(
 ): Promise<{ data: Blob; status: number; headers: Record<string, string> }> {
   if (getRuntime().serverOperations)
     return apiClient.post(endpoint, form, options);
+  if (supportsWorkerEndpoint(endpoint.split("/").at(-1) ?? ""))
+    return requestDesktopWorker(endpoint, form, options);
   options.cancelToken?.throwIfRequested();
   const context = { signal: options.signal as AbortSignal | undefined };
   const files = form

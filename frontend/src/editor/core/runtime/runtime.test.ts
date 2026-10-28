@@ -6,6 +6,7 @@ import {
   fetchFooterInfo,
 } from "@editor/api/config";
 import apiClient from "@editor/services/apiClient";
+import * as httpErrors from "@editor/services/httpErrorHandler";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -30,5 +31,14 @@ describe("runtime boot boundary", () => {
       serverOperations: true,
     });
     expect(getRuntime().serverOperations).toBe(false);
+  });
+  it("rejects offline API attempts without a misleading network-error toast", async () => {
+    vi.stubGlobal("__SOOTAN_RUNTIME__", { kind: "offline-desktop" });
+    const handler = vi.spyOn(httpErrors, "handleHttpError");
+    await expect(
+      apiClient.get("/api/v1/unused-offline-resource"),
+    ).rejects.toMatchObject({ code: "ERR_CANCELED" });
+    expect(handler).not.toHaveBeenCalled();
+    handler.mockRestore();
   });
 });
