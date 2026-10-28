@@ -67,11 +67,12 @@ export const WORKER_ENDPOINTS: Record<string, string> = {
   "unlock-pdf-forms": "forms-unlock",
   flatten: "flatten",
   "sanitize-pdf": "sanitize",
-  "add-password": "aes-encrypt",
+  "add-password": "password-protect",
   "remove-password": "decrypt",
   "ocr-pdf": "ocr",
-  "cert-sign": "cert-sign-invisible",
+  "cert-sign": "cert-sign-pkcs12",
   "validate-signature": "signature-integrity",
+  "remove-cert-sign": "signature-remove",
 };
 
 export const CORE_ENDPOINTS: string[] = [

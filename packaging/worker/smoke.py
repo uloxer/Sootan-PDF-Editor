@@ -54,7 +54,7 @@ def main():
     encrypted = run("aes-encrypt", source, {"password": "reader-fixture", "ownerPassword": "owner-fixture", "preventPrinting": True})
     with pikepdf.Pdf.open(encrypted, password="reader-fixture") as doc:
         assert doc.encryption.bits == 256 and not doc.allow.print_lowres
-    clear = run("decrypt", encrypted, {"sourcePassword": "owner-fixture"})
+    clear = run("decrypt", encrypted, {"sourcePassword": "owner-fixture", "removeAll": True})
     with pikepdf.Pdf.open(clear) as doc:
         assert len(doc.pages) == 2 and not doc.is_encrypted
     run("decrypt", encrypted, {"sourcePassword": "reader-fixture"}, success=False)

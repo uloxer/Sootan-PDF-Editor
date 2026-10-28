@@ -1,12 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.util.List;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -54,22 +48,7 @@ public class RemoveCertSignController {
         // Load the PDF document with proper resource management
         try (PDDocument document = pdfDocumentFactory.load(pdf)) {
 
-            // Get the document catalog
-            PDDocumentCatalog catalog = document.getDocumentCatalog();
-
-            // Get the AcroForm
-            PDAcroForm acroForm = catalog.getAcroForm();
-            if (acroForm != null) {
-                // Remove signature fields safely
-                List<PDField> fieldsToRemove =
-                        acroForm.getFields().stream()
-                                .filter(PDSignatureField.class::isInstance)
-                                .toList();
-
-                if (!fieldsToRemove.isEmpty()) {
-                    acroForm.flatten(fieldsToRemove, false);
-                }
-            }
+            stirling.software.pdf.PdfCertificates.removeSignatures(document);
             // Return the modified PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,

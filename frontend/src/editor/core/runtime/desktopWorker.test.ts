@@ -24,7 +24,7 @@ function native() {
   });
   vi.stubGlobal("__SOOTAN_RUNTIME__", {
     kind: "offline-desktop",
-    advancedOperations: ["ocr", "cert-sign-invisible", "signature-integrity"],
+    advancedOperations: ["ocr", "cert-sign-pkcs12", "signature-integrity"],
   });
 }
 
@@ -76,21 +76,46 @@ describe("private desktop worker boundary", () => {
     ).rejects.toMatchObject({ code: "UNSUPPORTED_OPTION" });
     expect(fetch.mock.lastCall?.[1]).toEqual({ method: "DELETE" });
   });
-  it("refuses signing appearances and custom trust inputs before copying files", async () => {
+  it("rejects unconnected signing modes and oversized trust grants before file copying", async () => {
     native();
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
     const form = request();
-    form.set("certType", "PKCS12");
-    form.set("showSignature", "true");
+    form.set("certType", "SERVER");
     await expect(
       requestDesktopWorker("/api/v1/security/cert-sign", form),
     ).rejects.toMatchObject({ code: "UNSUPPORTED_OPTION" });
-    form.set("certFile", new File(["certificate"], "selected.pem"));
+    form.set(
+      "certFile",
+      new File([new Uint8Array(1024 * 1024 + 1)], "selected.pem"),
+    );
     await expect(
       requestDesktopWorker("/api/v1/security/validate-signature", form),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPTION" });
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("streams a selected local trust anchor in its own bounded grant", async () => {
+    native();
+    const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+      ok: true,
+      headers: new Headers(),
+      blob: async () => new Blob(["[]"]),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const form = request();
+    form.delete("deskew");
+    const certificate = new File(
+      ["synthetic certificate"],
+      "Local root with spaces.cer",
+    );
+    form.set("certFile", certificate);
+    await requestDesktopWorker("/api/v1/security/validate-signature", form);
+    expect(fetch.mock.calls[1][0]).toMatch(/\/trust$/);
+    expect(fetch.mock.calls[1][1]?.body).toBe(certificate);
+    expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toEqual({
+      operation: "signature-integrity",
+      options: {},
+    });
   });
   it("dispatches the real metadata hook's paired custom map without losing scalar options", async () => {
     native();

@@ -155,61 +155,21 @@ public class PasswordController {
     private void removeSelectedPasswords(
             PDDocument document, RemovePasswordRequest request, String credential)
             throws IOException {
-        String openingPassword = request.getPassword() == null ? "" : request.getPassword();
-        String ownerPassword = request.getOwnerPassword() == null ? "" : request.getOwnerPassword();
-        String retainedOpeningPassword =
-                request.getRetainedOpeningPassword() == null
-                        ? ""
-                        : request.getRetainedOpeningPassword();
-        boolean removeOpening = !openingPassword.isEmpty();
-        boolean removeOwner = !ownerPassword.isEmpty();
-        if (!removeOpening && !removeOwner) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a password to remove");
-        }
         PdfSessionPermissions.requireOwner(document, false);
-        boolean openingSet =
-                document.isEncrypted() && !PdfPasswordRoles.isOpeningPassword(document, "");
-        boolean ownerSet = PdfPasswordRoles.hasSeparateOwnerPassword(document, credential);
-        if (removeOpening
-                && (!openingSet
-                        || !PdfPasswordRoles.isOpeningPassword(document, openingPassword))) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "The opening password is incorrect or is not set");
-        }
-        if (removeOwner && (!ownerSet || !PdfSessionPermissions.isOwnerAuthenticated(document))) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "The permissions password is incorrect or is not set");
-        }
-        if ((!openingSet || removeOpening) && (!ownerSet || removeOwner)) {
-            document.setAllSecurityToBeRemoved(true);
-        } else if (removeOpening) {
-            // Replacing U also changes the owner-password derivation. Verification is needed
-            // to retain that credential even when enforcement is disabled by server policy.
-            if (!PdfSessionPermissions.isOwnerAuthenticated(document)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Verify the permissions password to retain it while removing the opening password");
-            }
-            var protection =
-                    new StandardProtectionPolicy(
-                            credential,
-                            "",
-                            new AccessPermission(document.getEncryption().getPermissions()));
-            protection.setEncryptionKeyLength(document.getEncryption().getLength());
-            protection.setPreferAES(document.getEncryption().getVersion() >= 4);
-            document.protect(protection);
-        } else {
-            if (!PdfPasswordRoles.isOpeningPassword(document, retainedOpeningPassword)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Open the PDF with its opening password before removing only the permissions password");
-            }
-            var protection =
-                    new StandardProtectionPolicy(
-                            "", retainedOpeningPassword, new AccessPermission());
-            protection.setEncryptionKeyLength(document.getEncryption().getLength());
-            protection.setPreferAES(document.getEncryption().getVersion() >= 4);
-            document.protect(protection);
+        try {
+            stirling.software.pdf.PdfProtection.remove(
+                    document,
+                    request.getPassword() == null ? "" : request.getPassword(),
+                    request.getOwnerPassword() == null ? "" : request.getOwnerPassword(),
+                    request.getRetainedOpeningPassword() == null
+                            ? ""
+                            : request.getRetainedOpeningPassword(),
+                    credential,
+                    true,
+                    false,
+                    false);
+        } catch (stirling.software.pdf.PdfProtection.OptionException invalid) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, invalid.getMessage());
         }
     }
 

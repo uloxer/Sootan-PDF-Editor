@@ -41,10 +41,13 @@ public final class WorkerMain {
             Set.of(
                     "sanitize",
                     "aes-encrypt",
+                    "password-protect",
                     "decrypt",
                     "ocr",
                     "cert-sign-invisible",
+                    "cert-sign-pkcs12",
                     "signature-integrity",
+                    "signature-remove",
                     "metadata-update",
                     "forms-unlock",
                     "flatten");
@@ -139,6 +142,8 @@ public final class WorkerMain {
 
     private static Path process(String operation, Path root, Path input, JsonObject options)
             throws Exception {
+        if (operation.equals("password-protect")) operation = "aes-encrypt";
+        if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
                     case "sanitize" ->
@@ -184,7 +189,16 @@ public final class WorkerMain {
                                     "ocrRenderType",
                                     "ocrType");
                     case "cert-sign-invisible" ->
-                            Set.of("certType", "password", "reason", "showSignature");
+                            Set.of(
+                                    "certType",
+                                    "password",
+                                    "reason",
+                                    "location",
+                                    "name",
+                                    "showSignature",
+                                    "pageNumber",
+                                    "showLogo");
+                    case "signature-remove" -> Set.of("sourcePassword");
                     case "metadata-update" ->
                             Set.of(
                                     "sourcePassword",
@@ -206,14 +220,11 @@ public final class WorkerMain {
                 };
         if (!allowed.containsAll(options.keySet()))
             throw new IOException("Unsupported operation options.");
-        if (flag(options, "preserveExisting"))
-            throw new IOException(
-                    "Preserving existing protection requires a later worker capability.");
         Path output = root.resolve("output.pdf");
         if (operation.equals("cert-sign-invisible")) {
-            if (flag(options, "showSignature")
-                    || options.has("tsaUrl")
-                    || options.has("keyStoreType"))
+            if (options.has("tsaUrl")
+                    || options.has("keyStoreType")
+                    || !Set.of("PKCS12", "PFX").contains(text(options, "certType", "PKCS12")))
                 throw new IOException("This signing mode is not connected.");
             Path certificate = root.resolve("certificate.p12");
             if (!Files.isRegularFile(certificate, LinkOption.NOFOLLOW_LINKS)
@@ -224,17 +235,51 @@ public final class WorkerMain {
                     output,
                     certificate,
                     text(options, "password", "").toCharArray(),
-                    text(options, "reason", ""));
+                    text(options, "reason", ""),
+                    text(options, "location", ""),
+                    text(options, "name", ""),
+                    flag(options, "showSignature"),
+                    options.has("pageNumber") ? options.get("pageNumber").getAsInt() : 1,
+                    !options.has("showLogo") || flag(options, "showLogo"));
             return output;
         }
         if (operation.equals("signature-integrity")) {
             Path report = root.resolve("output.json");
-            Files.writeString(report, JSON.toJson(PdfCertificates.integrity(input)));
+            Path trust = root.resolve("trust.cer");
+            if (Files.exists(trust, LinkOption.NOFOLLOW_LINKS)
+                    && (!Files.isRegularFile(trust, LinkOption.NOFOLLOW_LINKS)
+                            || !trust.toRealPath().getParent().equals(root)))
+                throw new IOException("Invalid selected trust certificate.");
+            Files.writeString(
+                    report,
+                    JSON.toJson(
+                            PdfCertificates.integrity(input, Files.exists(trust) ? trust : null)));
             return report;
         }
         if (operation.equals("ocr")) return ocr(root, input, output, options);
-        try (PDDocument document =
-                Loader.loadPDF(input.toFile(), text(options, "sourcePassword", ""))) {
+        String credential = text(options, "sourcePassword", "");
+        boolean selective =
+                options.has("ownerPassword")
+                        || options.has("sourcePassword")
+                        || options.has("retainedOpeningPassword");
+        if (operation.equals("decrypt")) {
+            credential = text(options, "password", "");
+            if (selective) {
+                credential = text(options, "ownerPassword", "");
+                if (credential.isEmpty())
+                    credential = text(options, "sourcePassword", text(options, "password", ""));
+            }
+            if (flag(options, "removeAll"))
+                credential = text(options, "sourcePassword", text(options, "password", ""));
+        }
+        try (PDDocument document = Loader.loadPDF(input.toFile(), credential)) {
+            if (operation.equals("signature-remove")) {
+                if (document.isEncrypted() && !PdfProtection.isOwnerAuthenticated(document))
+                    throw new IOException("Owner authentication is required.");
+                PdfCertificates.removeSignatures(document);
+                document.save(output.toFile());
+                return output;
+            }
             PdfProtection.requireOwner(document);
             switch (operation) {
                 case "metadata-update" -> {
@@ -317,8 +362,6 @@ public final class WorkerMain {
                     if (flag(options, "removeFonts")) PdfSanitizer.sanitizeFonts(document);
                 }
                 case "aes-encrypt" -> {
-                    if (options.has("keyLength") && options.get("keyLength").getAsInt() != 256)
-                        throw new IOException("Only AES-256 is connected.");
                     var permissions = new AccessPermission();
                     permissions.setCanAssembleDocument(!flag(options, "preventAssembly"));
                     permissions.setCanExtractContent(!flag(options, "preventExtractContent"));
@@ -329,16 +372,37 @@ public final class WorkerMain {
                     permissions.setCanModifyAnnotations(!flag(options, "preventModifyAnnotations"));
                     permissions.setCanPrint(!flag(options, "preventPrinting"));
                     permissions.setCanPrintFaithful(!flag(options, "preventPrintingFaithful"));
-                    PdfProtection.encrypt(
+                    PdfProtection.add(
                             document,
                             text(options, "ownerPassword", ""),
                             text(options, "password", ""),
+                            credential,
+                            options.has("keyLength") ? options.get("keyLength").getAsInt() : 256,
+                            flag(options, "preserveExisting"),
                             permissions);
                 }
-                case "decrypt" -> PdfProtection.decrypt(document);
+                case "decrypt" ->
+                        PdfProtection.remove(
+                                document,
+                                text(options, "password", ""),
+                                text(options, "ownerPassword", ""),
+                                text(options, "retainedOpeningPassword", ""),
+                                credential,
+                                selective,
+                                flag(options, "removeAll"));
                 default -> throw new IOException("Unknown operation.");
             }
             document.save(output.toFile());
+            if (operation.equals("aes-encrypt")
+                    && !flag(options, "preserveExisting")
+                    && !new AccessPermission(document.getEncryption().getPermissions())
+                            .isOwnerPermission()) {
+                try (var verified =
+                        Loader.loadPDF(output.toFile(), text(options, "password", ""))) {
+                    if (PdfProtection.isOwnerAuthenticated(verified))
+                        throw new IOException("Encoded passwords collapse into one role.");
+                }
+            }
         }
         return output;
     }

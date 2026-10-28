@@ -1,4 +1,4 @@
-# Standalone document maintenance — phase 4
+# Standalone document maintenance â€” phase 4
 
 Verified 28 October 2026. This is a review checkpoint, not an installed replacement or complete advanced-tool migration. The installed 3.2.5 program and real Data/profile were untouched.
 
@@ -8,7 +8,7 @@ Verified 28 October 2026. This is a review checkpoint, not an installed replacem
 | --- | --- | --- |
 | `update-metadata` / Change Metadata | `metadata-update` | Standard fields, local-time dates, paired custom fields, delete-all Info/XMP/PieceInfo. Omitted standard fields clear their values, matching the existing controller. |
 | `unlock-pdf-forms` | `forms-unlock` | Clear field read-only/Lock; rewrite XFA readOnly access attributes. Malformed XFA fails rather than returning a partly unlocked output. |
-| `flatten` | `flatten` | `flattenOnlyForms=true` paints AcroForm appearances while preserving page text/vector content. XFA forms-only flattening is explicitly refused. `false` is the existing tool's deliberate full-page JPEG raster mode: requested DPI clamps to 72–300, default 300. |
+| `flatten` | `flatten` | `flattenOnlyForms=true` paints AcroForm appearances while preserving page text/vector content. XFA forms-only flattening is explicitly refused. `false` is the existing tool's deliberate full-page JPEG raster mode: requested DPI clamps to 72â€“300, default 300. |
 
 `PdfMetadataEditor`, `PdfForms` and `PdfPageFlattener` hold shared PDFBox algorithms; the HTTP controllers call them too. The controller retains its configured DPI/OOM guards and document factory. The worker has a fixed 300-DPI ceiling and rejects pages above 100 million raster pixels. Full-page output preserves source Info metadata rather than applying server-configured producer defaults. It fails the job on page-render failure rather than silently omitting that page. Full-page flattening retains the existing MediaBox placement behavior; it does not promise editable text, bookmarks or form structure after rasterization.
 
@@ -21,7 +21,7 @@ All worker mutations retain the existing signed-document/owner-permission guard.
 - `task frontend:check "TEST_FILES=src/editor/core/runtime/desktopWorker.test.ts" STIRLING_CHECK_JOBS=2`: pass, six boundary tests plus typecheck/lint/format checks. Actual run also supplied a nonexistent processing test path; only the six reported bridge tests are claimed. Log `.tooling/phase4-frontend-check-final.log`. Initial dynamic-import test timed out at five seconds; static collection-time imports fixed that test-only issue.
 - `task frontend:build:core`: pass, 29.88 seconds; existing chunk warnings. Log `.tooling/phase4-ui-build.log`.
 - `packaging/worker/document_smoke.py --java <private-java>` using private helper Python: eight saved-output/refusal cases pass. Checks metadata/custom/date/remove-all, XFA unlock, XFA forms-flatten refusal, saved AcroForm flatten retains text/value appearance, 72-DPI raster dimensions, reader-permission refusal, unknown-option refusal and original input hashes. Evidence `.tooling/nonweb-document-golden/results.json`.
-- Native C# host compile: pass. Actual WebView2 editor UI changed Title to **Swona native standalone** and pressed **Change**. Input/run/cleanup virtual requests returned 200. Extracted FileContext output reopened with the changed title and original form value. Source bytes/hash and rendered page pixels were unchanged; external resource requests were empty. Evidence `.tooling/phase4-shell/native-result.json`, extracted `file-0.pdf`/`file-1.pdf`, physical 1440×960 screenshot `.tooling/phase4-shell/native-metadata-full.png`. Test CDP port 9445 was isolated and subsequently disabled for the normal prototype.
+- Native C# host compile: pass. Actual WebView2 editor UI changed Title to **Swona native standalone** and pressed **Change**. Input/run/cleanup virtual requests returned 200. Extracted FileContext output reopened with the changed title and original form value. Source bytes/hash and rendered page pixels were unchanged; external resource requests were empty. Evidence `.tooling/phase4-shell/native-result.json`, extracted `file-0.pdf`/`file-1.pdf`, physical 1440Ã—960 screenshot `.tooling/phase4-shell/native-metadata-full.png`. Test CDP port 9445 was isolated and subsequently disabled for the normal prototype.
 
 ## Remaining parity, in concrete batches
 

@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"sanitize","aes-encrypt","decrypt","cert-sign-invisible","signature-integrity","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal Task Work;
         public void Dispose() {
@@ -73,14 +73,14 @@ sealed class SootanWorker : IDisposable {
                     job=new Job {Directory=directory};jobs.Add(id,job);
                 }
             }
-            if(action=="input"||action=="certificate") {
+            if(action=="input"||action=="certificate"||action=="trust") {
                 if(job.Running)throw new IOException();
-                string path=Path.Combine(job.Directory,action=="input"?"input-main.pdf":"certificate.p12");
+                string path=Path.Combine(job.Directory,action=="input"?"input-main.pdf":action=="trust"?"trust.cer":"certificate.p12");
                 Stream source=e.Request.Content;
                 job.Work=Task.Run(()=> {
                     using(var output=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                         var buffer=new byte[65536];long total=0;int count;
-                        while((count=source.Read(buffer,0,buffer.Length))>0){if(job.Cancelled)throw new IOException();total+=count;if(total>512L*1024*1024)throw new IOException("Selected file exceeds 512 MiB.");output.Write(buffer,0,count);}
+                        while((count=source.Read(buffer,0,buffer.Length))>0){if(job.Cancelled)throw new IOException();total+=count;if(total>(action=="trust"?1024L*1024:512L*1024*1024))throw new IOException("Selected file exceeds 512 MiB.");output.Write(buffer,0,count);}
                     }
                     File.SetAttributes(path,FileAttributes.ReadOnly);
                 });

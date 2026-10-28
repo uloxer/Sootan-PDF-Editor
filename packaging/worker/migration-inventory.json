@@ -802,8 +802,9 @@
       "controller": "CertSignController.java",
       "endpoint": "/cert-sign",
       "state": "worker-mode-limited",
-      "mode": "cert-sign-invisible (PKCS12 only)",
-      "classification": "connected-existing-mode"
+      "mode": "cert-sign-pkcs12",
+      "classification": "connected-existing-mode",
+      "note": "Local PKCS12/PFX visible or invisible; PEM/JKS/device pending; remote signing disabled"
     },
     {
       "family": "security",
@@ -818,8 +819,9 @@
       "controller": "PasswordController.java",
       "endpoint": "/add-password",
       "state": "worker-mode-limited",
-      "mode": "aes-encrypt (AES256 only)",
-      "classification": "connected-existing-mode"
+      "mode": "password-protect",
+      "classification": "connected-existing-mode",
+      "note": "40-bit RC4 / AES128 / AES256; preserve credentials and selective permissions, local owner policy"
     },
     {
       "family": "security",
@@ -835,7 +837,8 @@
       "endpoint": "/remove-password",
       "state": "worker-mode-limited",
       "mode": "decrypt (full removal, owner authenticated)",
-      "classification": "connected-existing-mode"
+      "classification": "connected-existing-mode",
+      "note": "Selective role removal or explicit full removal; owner authentication enforced offline"
     },
     {
       "family": "security",
@@ -873,9 +876,9 @@
       "family": "security",
       "controller": "RemoveCertSignController.java",
       "endpoint": "/remove-cert-sign",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-security-mode-parity"
+      "state": "worker-mode",
+      "mode": "signature-remove",
+      "classification": "connected-security-mode"
     },
     {
       "family": "security",
@@ -908,7 +911,8 @@
       "endpoint": "/validate-signature",
       "state": "worker-mode-limited",
       "mode": "signature-integrity (not PKIX/revocation)",
-      "classification": "connected-existing-mode"
+      "classification": "connected-existing-mode",
+      "note": "CMS integrity plus offline local-root/explicit-selected-anchor PKIX; no online revocation"
     },
     {
       "family": "security",

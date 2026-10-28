@@ -40,28 +40,19 @@ export async function requestDesktopWorker(
   if (Object.keys(metadata).length) options.allRequestParams = metadata;
   if (form.getAll("languages").length > 1)
     options.languages = form.getAll("languages").join("+");
-  if (name === "validate-signature" && form.get("certFile") instanceof File)
+  const trust = name === "validate-signature" ? form.get("certFile") : null;
+  if (trust instanceof File && trust.size > 1024 * 1024)
     throw new CorePdfError(
-      "UNSUPPORTED_OPTION",
-      "Custom trust-chain validation is not connected; this worker checks cryptographic integrity only.",
+      "INVALID_INPUT",
+      "The selected trust certificate exceeds one MiB.",
     );
   if (
     name === "cert-sign" &&
-    (!["PKCS12", "PFX"].includes(String(options.certType)) ||
-      options.showSignature === "true")
+    !["PKCS12", "PFX"].includes(String(options.certType))
   )
     throw new CorePdfError(
       "UNSUPPORTED_OPTION",
-      "The connected signing mode is PKCS12 without a visible appearance. Other signing modes remain pending migration.",
-    );
-  if (
-    name === "remove-password" &&
-    (options.ownerPassword || options.retainedOpeningPassword) &&
-    options.removeAll !== "true"
-  )
-    throw new CorePdfError(
-      "UNSUPPORTED_OPTION",
-      "Selective password removal is not connected. Full removal requires the permissions password.",
+      "Select a local PKCS12/PFX signing key. PEM/JKS and device signing are not connected; remote signing is disabled.",
     );
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
@@ -90,6 +81,15 @@ export async function requestDesktopWorker(
         throw new Error(
           "Unable to copy the selected certificate into a private job.",
         );
+    }
+    if (trust instanceof File) {
+      const uploaded = await fetch(`${route}/trust`, {
+        method: "POST",
+        body: trust,
+        signal: controller.signal,
+      });
+      if (!uploaded.ok)
+        throw new Error("Unable to copy the selected local trust certificate.");
     }
     const response = await fetch(`${route}/run`, {
       method: "POST",
