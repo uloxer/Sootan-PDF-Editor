@@ -315,9 +315,9 @@
       "family": "general",
       "controller": "CropController.java",
       "endpoint": "/crop",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "page-crop",
+      "classification": "connected-page-formatting"
     },
     {
       "family": "general",
@@ -640,9 +640,9 @@
       "family": "misc",
       "controller": "PageNumbersController.java",
       "endpoint": "/add-page-numbers",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "page-numbers",
+      "classification": "connected-page-formatting"
     },
     {
       "family": "misc",
@@ -793,9 +793,9 @@
       "family": "general",
       "controller": "ScalePagesController.java",
       "endpoint": "/scale-pages",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "page-scale",
+      "classification": "connected-page-formatting"
     },
     {
       "family": "security",
@@ -926,9 +926,9 @@
       "family": "security",
       "controller": "WatermarkController.java",
       "endpoint": "/add-watermark",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "watermark",
+      "classification": "connected-page-formatting"
     },
     {
       "family": "general",

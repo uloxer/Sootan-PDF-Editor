@@ -27,9 +27,16 @@ import com.google.gson.JsonObject;
 import stirling.software.pdf.PdfCertificates;
 import stirling.software.pdf.PdfForms;
 import stirling.software.pdf.PdfMetadataEditor;
+import stirling.software.pdf.PdfPageCrop;
 import stirling.software.pdf.PdfPageFlattener;
+import stirling.software.pdf.PdfPageNumbers;
+import stirling.software.pdf.PdfPageScale;
+import stirling.software.pdf.PdfPageSelection;
 import stirling.software.pdf.PdfProtection;
+import stirling.software.pdf.PdfRasterizer;
 import stirling.software.pdf.PdfSanitizer;
+import stirling.software.pdf.PdfSelectedImage;
+import stirling.software.pdf.PdfWatermarks;
 
 /**
  * One private job per process. Stdio carries bounded JSON metadata; files stay inside its granted
@@ -39,6 +46,10 @@ public final class WorkerMain {
     private static final Gson JSON = new Gson();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "page-crop",
+                    "page-scale",
+                    "page-numbers",
+                    "watermark",
                     "sanitize",
                     "aes-encrypt",
                     "password-protect",
@@ -108,7 +119,9 @@ public final class WorkerMain {
                             "type",
                             "error",
                             "code",
-                            "PROCESSING_FAILED",
+                            failure instanceof UnsupportedStructure
+                                    ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
+                                    : "PROCESSING_FAILED",
                             "message",
                             "The selected operation could not complete. Check its options, document permissions and private helper availability."));
             System.exit(1);
@@ -118,6 +131,10 @@ public final class WorkerMain {
     private static List<String> capabilities() {
         return OPERATIONS.stream()
                 .filter(operation -> !operation.equals("ocr") || helper() != null)
+                .filter(
+                        operation ->
+                                !operation.equals("watermark")
+                                        || System.getenv("SOOTAN_WORKER_FONTS") != null)
                 .sorted()
                 .toList();
     }
@@ -146,6 +163,45 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "page-crop" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "autoCrop",
+                                    "pageNumbers",
+                                    "x",
+                                    "y",
+                                    "width",
+                                    "height",
+                                    "removeDataOutsideCrop");
+                    case "page-scale" ->
+                            Set.of("sourcePassword", "pageSize", "orientation", "scaleFactor");
+                    case "page-numbers" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "customMargin",
+                                    "position",
+                                    "startingNumber",
+                                    "pagesToNumber",
+                                    "customText",
+                                    "zeroPad",
+                                    "fontSize",
+                                    "fontType",
+                                    "fontColor",
+                                    "filename",
+                                    "pageNumbers");
+                    case "watermark" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "watermarkType",
+                                    "watermarkText",
+                                    "alphabet",
+                                    "fontSize",
+                                    "rotation",
+                                    "opacity",
+                                    "widthSpacer",
+                                    "heightSpacer",
+                                    "customColor",
+                                    "convertPDFToImage");
                     case "sanitize" ->
                             Set.of(
                                     "sourcePassword",
@@ -281,6 +337,140 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
+            if (Set.of("page-crop", "page-scale", "page-numbers", "watermark")
+                    .contains(operation)) {
+                if (document.getNumberOfPages() > 10000)
+                    throw new IOException("Document exceeds the formatting page limit.");
+                if (operation.equals("page-crop") || operation.equals("page-scale")) {
+                    var form = document.getDocumentCatalog().getAcroForm();
+                    if (form != null && !form.getFields().isEmpty())
+                        throw new UnsupportedStructure();
+                    var outline = document.getDocumentCatalog().getDocumentOutline();
+                    if (outline != null && outline.getFirstChild() != null)
+                        throw new UnsupportedStructure();
+                    for (var page : document.getPages())
+                        for (var annotation : page.getAnnotations())
+                            if (!operation.equals("page-scale")
+                                    || !(annotation
+                                            instanceof
+                                            org.apache.pdfbox.pdmodel.interactive.annotation
+                                                    .PDAnnotationRubberStamp)
+                                    || annotation.isHidden()
+                                    || annotation.isNoView()) throw new UnsupportedStructure();
+                }
+                if (operation.equals("page-crop") || operation.equals("page-scale")) {
+                    try (var result = new PDDocument()) {
+                        result.setDocumentInformation(document.getDocumentInformation());
+                        if (operation.equals("page-scale")) {
+                            float scale = number(options, "scaleFactor", 1);
+                            if (scale <= 0 || scale > 100)
+                                throw new IOException("Invalid scale factor.");
+                            PdfPageScale.apply(
+                                    document,
+                                    result,
+                                    text(options, "pageSize", "A4"),
+                                    text(options, "orientation", "PORTRAIT"),
+                                    scale);
+                        } else {
+                            if (flag(options, "removeDataOutsideCrop"))
+                                throw new IOException(
+                                        "Secure destructive crop requires an unavailable optional helper.");
+                            var indices = selection(options, "pageNumbers", document);
+                            var selected = new java.util.BitSet();
+                            indices.forEach(selected::set);
+                            if (flag(options, "autoCrop"))
+                                PdfPageCrop.automatic(document, result, selected, 0, 0, 0, 0);
+                            else {
+                                float x = number(options, "x", 0),
+                                        y = number(options, "y", 0),
+                                        w = number(options, "width", 0),
+                                        h = number(options, "height", 0);
+                                if (w <= 0 || h <= 0) throw new IOException("Invalid crop bounds.");
+                                for (int index : indices) {
+                                    var box = document.getPage(index).getMediaBox();
+                                    if (x < box.getLowerLeftX()
+                                            || y < box.getLowerLeftY()
+                                            || x + w > box.getUpperRightX()
+                                            || y + h > box.getUpperRightY())
+                                        throw new IOException(
+                                                "Crop is outside selected page bounds.");
+                                }
+                                PdfPageCrop.manual(document, result, selected, x, y, w, h);
+                            }
+                        }
+                        result.save(output.toFile());
+                    }
+                    return output;
+                }
+                if (operation.equals("page-numbers")) {
+                    float size = number(options, "fontSize", 12);
+                    int padding = (int) number(options, "zeroPad", 0);
+                    if (size < 1 || size > 1000 || padding < 0 || padding > 100)
+                        throw new IOException("Invalid page number typography.");
+                    String filename = text(options, "filename", "document.pdf").replace('\\', '/');
+                    filename = filename.substring(filename.lastIndexOf('/') + 1);
+                    int dot = filename.lastIndexOf('.');
+                    if (dot > 0) filename = filename.substring(0, dot);
+                    PdfPageNumbers.apply(
+                            document,
+                            selection(options, "pagesToNumber", document),
+                            text(options, "customMargin", "medium"),
+                            (int) number(options, "position", 8),
+                            (int) number(options, "startingNumber", 1),
+                            text(options, "customText", "{n}"),
+                            padding,
+                            size,
+                            text(options, "fontType", "helvetica"),
+                            text(options, "fontColor", "#000000"),
+                            filename);
+                } else {
+                    String type = text(options, "watermarkType", "text");
+                    float size = number(options, "fontSize", 30),
+                            opacity = number(options, "opacity", 0.5f);
+                    int ws = (int) number(options, "widthSpacer", 50),
+                            hs = (int) number(options, "heightSpacer", 50);
+                    if (!Set.of("text", "image").contains(type)
+                            || size < 1
+                            || size > 1000
+                            || opacity < 0
+                            || opacity > 1
+                            || ws < 0
+                            || hs < 0) throw new IOException("Invalid watermark options.");
+                    java.awt.image.BufferedImage image = null;
+                    try {
+                        if (type.equals("image")) {
+                            var selected = root.resolve("image.bin");
+                            if (!Files.isRegularFile(selected, LinkOption.NOFOLLOW_LINKS)
+                                    || !selected.toRealPath().getParent().equals(root))
+                                throw new IOException("No selected bitmap grant.");
+                            image = PdfSelectedImage.decode(selected);
+                        }
+                        PdfWatermarks.apply(
+                                document,
+                                type,
+                                text(options, "watermarkText", ""),
+                                image,
+                                text(options, "alphabet", "roman"),
+                                size,
+                                number(options, "rotation", 0),
+                                opacity,
+                                ws,
+                                hs,
+                                text(options, "customColor", "#d3d3d3"));
+                    } finally {
+                        if (image != null) image.flush();
+                    }
+                    if (flag(options, "convertPDFToImage")) {
+                        try (var raster = new PDDocument()) {
+                            PdfRasterizer.append(document, raster);
+                            raster.save(output.toFile());
+                        }
+                        return output;
+                    }
+                }
+                document.save(output.toFile());
+                return output;
+            }
             switch (operation) {
                 case "metadata-update" -> {
                     Map<String, String> custom = new HashMap<>();
@@ -405,6 +595,26 @@ public final class WorkerMain {
             }
         }
         return output;
+    }
+
+    private static final class UnsupportedStructure extends IOException {}
+
+    private static float number(JsonObject options, String key, float fallback) throws IOException {
+        float value = options.has(key) ? options.get(key).getAsFloat() : fallback;
+        if (!Float.isFinite(value)) throw new IOException("Numeric options must be finite.");
+        return value;
+    }
+
+    private static java.util.List<Integer> selection(
+            JsonObject options, String key, PDDocument document) throws IOException {
+        String input = text(options, key, "all");
+        if (input.isBlank()) input = "all";
+        var pages =
+                PdfPageSelection.parsePageList(
+                        input.split(","), document.getNumberOfPages(), false);
+        if (pages.isEmpty())
+            throw new IOException("The selection does not include a document page.");
+        return pages;
     }
 
     private static Path helper() {

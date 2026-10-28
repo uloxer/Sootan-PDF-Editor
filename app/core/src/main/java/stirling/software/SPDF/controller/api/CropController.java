@@ -6,14 +6,9 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +34,7 @@ import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.pdf.PdfPageCrop;
 
 @GeneralApi
 @RequiredArgsConstructor
@@ -180,52 +176,14 @@ public class CropController {
 
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                PDFRenderer renderer = new PDFRenderer(sourceDocument);
-                renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-                LayerUtility layerUtility = new LayerUtility(newDocument);
-                BitSet pagesToCrop = pageSelection(request, sourceDocument);
-
-                for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
-                    if (!pagesToCrop.get(i)) {
-                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
-                        imported.setResources(sourceDocument.getPage(i).getResources());
-                        continue;
-                    }
-
-                    PDPage sourcePage = sourceDocument.getPage(i);
-                    PDRectangle mediaBox = sourcePage.getMediaBox();
-
-                    BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
-                    int[] bounds = detectContentBounds(image);
-
-                    float scaleX = mediaBox.getWidth() / image.getWidth();
-                    float scaleY = mediaBox.getHeight() / image.getHeight();
-
-                    CropBounds cropBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
-
-                    PDPage newPage = new PDPage(mediaBox);
-                    newDocument.addPage(newPage);
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                        PDFormXObject formXObject =
-                                layerUtility.importPageAsForm(sourceDocument, i);
-                        contentStream.saveGraphicsState();
-                        contentStream.addRect(
-                                cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height);
-                        contentStream.clip();
-                        contentStream.drawForm(formXObject);
-                        contentStream.restoreGraphicsState();
-                    }
-
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    cropBounds.x,
-                                    cropBounds.y,
-                                    cropBounds.width,
-                                    cropBounds.height));
-                }
-
+                PdfPageCrop.automatic(
+                        sourceDocument,
+                        newDocument,
+                        pageSelection(request, sourceDocument),
+                        0,
+                        0,
+                        0,
+                        0);
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(
@@ -241,54 +199,14 @@ public class CropController {
 
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                int totalPages = sourceDocument.getNumberOfPages();
-                LayerUtility layerUtility = new LayerUtility(newDocument);
-                BitSet pagesToCrop = pageSelection(request, sourceDocument);
-
-                for (int i = 0; i < totalPages; i++) {
-                    if (!pagesToCrop.get(i)) {
-                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
-                        imported.setResources(sourceDocument.getPage(i).getResources());
-                        continue;
-                    }
-
-                    PDPage sourcePage = sourceDocument.getPage(i);
-
-                    // Create a new page with the size of the source page
-                    PDPage newPage = new PDPage(sourcePage.getMediaBox());
-                    newDocument.addPage(newPage);
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                        // Import the source page as a form XObject
-                        PDFormXObject formXObject =
-                                layerUtility.importPageAsForm(sourceDocument, i);
-
-                        contentStream.saveGraphicsState();
-
-                        // Define the crop area
-                        contentStream.addRect(
-                                request.getX(),
-                                request.getY(),
-                                request.getWidth(),
-                                request.getHeight());
-                        contentStream.clip();
-
-                        // Draw the entire formXObject
-                        contentStream.drawForm(formXObject);
-
-                        contentStream.restoreGraphicsState();
-                    }
-
-                    // Now, set the new page's media box to the cropped size
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    request.getX(),
-                                    request.getY(),
-                                    request.getWidth(),
-                                    request.getHeight()));
-                }
-
+                PdfPageCrop.manual(
+                        sourceDocument,
+                        newDocument,
+                        pageSelection(request, sourceDocument),
+                        request.getX(),
+                        request.getY(),
+                        request.getWidth(),
+                        request.getHeight());
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(

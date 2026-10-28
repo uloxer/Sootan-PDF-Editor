@@ -63,6 +63,10 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  crop: "page-crop",
+  "scale-pages": "page-scale",
+  "add-page-numbers": "page-numbers",
+  "add-watermark": "watermark",
   "update-metadata": "metadata-update",
   "unlock-pdf-forms": "forms-unlock",
   flatten: "flatten",

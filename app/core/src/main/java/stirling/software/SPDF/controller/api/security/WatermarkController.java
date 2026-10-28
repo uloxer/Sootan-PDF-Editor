@@ -1,23 +1,12 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyEditorSupport;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
-import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +31,6 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -107,52 +95,18 @@ public class WatermarkController {
         // Load the input PDF with proper resource management
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-            PDFont font =
-                    "text".equalsIgnoreCase(watermarkType)
-                            ? loadWatermarkFont(document, alphabet)
-                            : null;
-
-            // Create a page in the document
-            for (PDPage page : document.getPages()) {
-                // Get the page's content stream
-                try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document,
-                                page,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true)) {
-
-                    // Set transparency
-                    PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                    graphicsState.setNonStrokingAlphaConstant(opacity);
-                    contentStream.setGraphicsStateParameters(graphicsState);
-
-                    if ("text".equalsIgnoreCase(watermarkType)) {
-                        addTextWatermark(
-                                contentStream,
-                                watermarkText,
-                                page,
-                                rotation,
-                                widthSpacer,
-                                heightSpacer,
-                                fontSize,
-                                font,
-                                customColor);
-                    } else if ("image".equalsIgnoreCase(watermarkType)) {
-                        addImageWatermark(
-                                contentStream,
-                                watermarkImage,
-                                document,
-                                page,
-                                rotation,
-                                widthSpacer,
-                                heightSpacer,
-                                fontSize);
-                    }
-                }
-            }
-
+            stirling.software.pdf.PdfWatermarks.apply(
+                    document,
+                    watermarkType,
+                    watermarkText,
+                    watermarkImage == null ? null : ImageIO.read(watermarkImage.getInputStream()),
+                    alphabet,
+                    fontSize,
+                    rotation,
+                    opacity,
+                    widthSpacer,
+                    heightSpacer,
+                    customColor);
             if (convertPdfToImage) {
                 try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
                     // Return the watermarked PDF as a response
@@ -178,158 +132,4 @@ public class WatermarkController {
      * object into {@code document} on every call, so calling this per page holds one full copy of
      * the TTF per page in memory (10 MB each for the CJK faces).
      */
-    private PDFont loadWatermarkFont(PDDocument document, String alphabet) throws IOException {
-        String resourceDir =
-                switch (alphabet) {
-                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/NotoSansJP-Regular.ttf";
-                    case "korean" -> "static/fonts/NotoSansKR-Regular.ttf";
-                    case "chinese" -> "static/fonts/NotoSansSC-Regular.ttf";
-                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-                    default -> "static/fonts/NotoSans-Regular.ttf";
-                };
-
-        try (InputStream is = new ClassPathResource(resourceDir).getInputStream()) {
-            return PDType0Font.load(document, is);
-        }
-    }
-
-    private void addTextWatermark(
-            PDPageContentStream contentStream,
-            String watermarkText,
-            PDPage page,
-            float rotation,
-            int widthSpacer,
-            int heightSpacer,
-            float fontSize,
-            PDFont font,
-            String colorString)
-            throws IOException {
-        contentStream.setFont(font, fontSize);
-
-        Color redactColor;
-        try {
-            if (!colorString.startsWith("#")) {
-                colorString = "#" + colorString;
-            }
-            redactColor = Color.decode(colorString);
-        } catch (NumberFormatException e) {
-
-            redactColor = Color.LIGHT_GRAY;
-        }
-        contentStream.setNonStrokingColor(redactColor);
-
-        String[] textLines =
-                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
-        float maxLineWidth = 0;
-
-        for (int i = 0; i < textLines.length; ++i) {
-            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(textLines[i]));
-        }
-
-        // Set size and location of text watermark
-        float watermarkWidth = widthSpacer + maxLineWidth * fontSize / 1000;
-        float watermarkHeight = heightSpacer + fontSize * textLines.length;
-        float pageWidth = page.getMediaBox().getWidth();
-        float pageHeight = page.getMediaBox().getHeight();
-
-        // Calculating the new width and height depending on the angle.
-        float radians = (float) Math.toRadians(rotation);
-        float newWatermarkWidth =
-                (float)
-                        (Math.abs(watermarkWidth * Math.cos(radians))
-                                + Math.abs(watermarkHeight * Math.sin(radians)));
-        float newWatermarkHeight =
-                (float)
-                        (Math.abs(watermarkWidth * Math.sin(radians))
-                                + Math.abs(watermarkHeight * Math.cos(radians)));
-
-        // Calculating the number of rows and columns.
-
-        int watermarkRows = Math.min((int) (pageHeight / newWatermarkHeight + 1), 10_000);
-        int watermarkCols = Math.min((int) (pageWidth / newWatermarkWidth + 1), 10_000);
-
-        // Add the text watermark
-        for (int i = 0; i <= watermarkRows; i++) {
-            for (int j = 0; j <= watermarkCols; j++) {
-                contentStream.beginText();
-                contentStream.setTextMatrix(
-                        Matrix.getRotateInstance(
-                                (float) Math.toRadians(rotation),
-                                j * newWatermarkWidth,
-                                i * newWatermarkHeight));
-
-                for (int k = 0; k < textLines.length; ++k) {
-                    contentStream.showText(textLines[k]);
-                    contentStream.newLineAtOffset(0, -fontSize);
-                }
-
-                contentStream.endText();
-            }
-        }
-    }
-
-    private void addImageWatermark(
-            PDPageContentStream contentStream,
-            MultipartFile watermarkImage,
-            PDDocument document,
-            PDPage page,
-            float rotation,
-            int widthSpacer,
-            int heightSpacer,
-            float fontSize)
-            throws IOException {
-
-        // Load the watermark image
-        BufferedImage image = ImageIO.read(watermarkImage.getInputStream());
-
-        // Compute width based on original aspect ratio
-        float aspectRatio = (float) image.getWidth() / (float) image.getHeight();
-
-        // Desired physical height (in PDF points)
-        float desiredPhysicalHeight = fontSize;
-
-        // Desired physical width based on the aspect ratio
-        float desiredPhysicalWidth = desiredPhysicalHeight * aspectRatio;
-
-        // Convert the BufferedImage to PDImageXObject
-        PDImageXObject xobject = LosslessFactory.createFromImage(document, image);
-
-        // Calculate the number of rows and columns for watermarks
-        float pageWidth = page.getMediaBox().getWidth();
-        float pageHeight = page.getMediaBox().getHeight();
-        int watermarkRows =
-                Math.min(
-                        (int)
-                                ((pageHeight + heightSpacer)
-                                        / (desiredPhysicalHeight + heightSpacer)),
-                        10_000);
-        int watermarkCols =
-                Math.min(
-                        (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer)),
-                        10_000);
-
-        for (int i = 0; i < watermarkRows; i++) {
-            for (int j = 0; j < watermarkCols; j++) {
-                float x = j * (desiredPhysicalWidth + widthSpacer);
-                float y = i * (desiredPhysicalHeight + heightSpacer);
-
-                // Save the graphics state
-                contentStream.saveGraphicsState();
-
-                // Create rotation matrix and rotate
-                contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
-                contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
-                contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                -desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
-
-                // Draw the image and restore the graphics state
-                contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
-                contentStream.restoreGraphicsState();
-            }
-        }
-    }
 }

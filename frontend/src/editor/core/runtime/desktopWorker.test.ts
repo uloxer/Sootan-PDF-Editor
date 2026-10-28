@@ -69,6 +69,7 @@ describe("private desktop worker boundary", () => {
     native();
     const fetch = vi.fn(async (url: string, _options?: RequestInit) => ({
       ok: !url.endsWith("/run"),
+      json: async () => ({}),
     }));
     vi.stubGlobal("fetch", fetch);
     await expect(
@@ -147,6 +148,55 @@ describe("private desktop worker boundary", () => {
     expect(supportsWorkerEndpoint("flatten")).toBe(true);
     expect(supportsWorkerEndpoint("unlock-pdf-forms")).toBe(true);
     expect(supportsWorkerEndpoint("add-watermark")).toBe(false);
+  });
+  it("streams bitmap grants and preserves page-number source names as display metadata", async () => {
+    native();
+    vi.stubGlobal("__SOOTAN_RUNTIME__", {
+      kind: "offline-desktop",
+      advancedOperations: ["watermark", "page-numbers"],
+    });
+    const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+      ok: true,
+      headers: new Headers(),
+      blob: async () => new Blob(["pdf"]),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const image = new File(["synthetic bitmap"], "Island.png", {
+      type: "image/png",
+    });
+    const form = request();
+    form.set("watermarkImage", image);
+    await requestDesktopWorker("/api/v1/security/add-watermark", form);
+    expect(fetch.mock.calls[1][0]).toMatch(/\/image$/);
+    expect(fetch.mock.calls[1][1]?.body).toBe(image);
+    fetch.mockClear();
+    await requestDesktopWorker("/api/v1/misc/add-page-numbers", request());
+    expect(
+      JSON.parse(String(fetch.mock.calls[1][1]?.body)).options.filename,
+    ).toBe("Selected path with spaces.pdf");
+  });
+  it("maps only the fixed unsupported-structure code to a useful formatting error", async () => {
+    native();
+    vi.stubGlobal("__SOOTAN_RUNTIME__", {
+      kind: "offline-desktop",
+      advancedOperations: ["page-crop"],
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => ({
+        ok: !url.endsWith("/run"),
+        json: async () => ({
+          code: "UNSUPPORTED_DOCUMENT_STRUCTURE",
+          message: "untrusted raw detail",
+        }),
+      })),
+    );
+    await expect(
+      requestDesktopWorker("/api/v1/general/crop", request()),
+    ).rejects.toMatchObject({
+      code: "UNSUPPORTED_FEATURE",
+      message: expect.stringContaining("forms, bookmarks or annotations"),
+    });
   });
   it("cancels an active response and still releases its native job", async () => {
     native();

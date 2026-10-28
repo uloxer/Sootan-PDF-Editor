@@ -6,13 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationRubberStamp;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.util.Matrix;
@@ -38,6 +36,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.pdf.PdfPageScale;
 
 @GeneralApi
 @Slf4j
@@ -111,46 +110,8 @@ public class ScalePagesController {
                 PDDocument outputDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
-            PDRectangle targetSize = getTargetSize(targetPDRectangle, orientation, sourceDocument);
-
-            // Create LayerUtility once outside the loop for better performance
-            LayerUtility layerUtility = new LayerUtility(outputDocument);
-
-            int totalPages = sourceDocument.getNumberOfPages();
-            for (int i = 0; i < totalPages; i++) {
-                PDPage sourcePage = sourceDocument.getPage(i);
-                flattenStampAppearances(sourceDocument, sourcePage);
-                PDRectangle sourceSize = sourcePage.getMediaBox();
-
-                float scaleWidth = targetSize.getWidth() / sourceSize.getWidth();
-                float scaleHeight = targetSize.getHeight() / sourceSize.getHeight();
-                float scale = Math.min(scaleWidth, scaleHeight) * scaleFactor;
-
-                PDPage newPage = new PDPage(targetSize);
-                outputDocument.addPage(newPage);
-
-                try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                outputDocument,
-                                newPage,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true)) {
-
-                    float x = (targetSize.getWidth() - sourceSize.getWidth() * scale) / 2;
-                    float y = (targetSize.getHeight() - sourceSize.getHeight() * scale) / 2;
-
-                    contentStream.saveGraphicsState();
-                    contentStream.transform(Matrix.getTranslateInstance(x, y));
-                    contentStream.transform(Matrix.getScaleInstance(scale, scale));
-
-                    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, i);
-                    contentStream.drawForm(form);
-
-                    contentStream.restoreGraphicsState();
-                }
-            }
-
+            PdfPageScale.apply(
+                    sourceDocument, outputDocument, targetPDRectangle, orientation, scaleFactor);
             return WebResponseUtils.pdfDocToWebResponse(
                     outputDocument,
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"),

@@ -54,6 +54,25 @@ export async function requestDesktopWorker(
       "UNSUPPORTED_OPTION",
       "Select a local PKCS12/PFX signing key. PEM/JKS and device signing are not connected; remote signing is disabled.",
     );
+  const watermark =
+    name === "add-watermark" ? form.get("watermarkImage") : null;
+  if (
+    watermark instanceof File &&
+    (watermark.size > 32 * 1024 * 1024 ||
+      ![
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/bmp",
+        "image/x-ms-bmp",
+        "image/tiff",
+      ].includes(watermark.type))
+  )
+    throw new CorePdfError(
+      "INVALID_INPUT",
+      "Select a PNG/JPEG/GIF/BMP/TIFF bitmap up to32MiB.",
+    );
+  if (name === "add-page-numbers") options.filename = input.name;
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
   const controller = new AbortController();
@@ -91,16 +110,34 @@ export async function requestDesktopWorker(
       if (!uploaded.ok)
         throw new Error("Unable to copy the selected local trust certificate.");
     }
+    if (watermark instanceof File) {
+      const uploaded = await fetch(`${route}/image`, {
+        method: "POST",
+        body: watermark,
+        signal: controller.signal,
+      });
+      if (!uploaded.ok)
+        throw new Error(
+          "Unable to copy the selected bitmap into its private grant.",
+        );
+    }
     const response = await fetch(`${route}/run`, {
       method: "POST",
       body: JSON.stringify({ operation: DESKTOP_ENDPOINTS[name], options }),
       signal: controller.signal,
     });
-    if (!response.ok)
+    if (!response.ok) {
+      const failure = await response.json().catch(() => null);
+      if (failure?.code === "UNSUPPORTED_DOCUMENT_STRUCTURE")
+        throw new CorePdfError(
+          "UNSUPPORTED_FEATURE",
+          "This page-format operation cannot yet preserve this document's forms, bookmarks or annotations. The original has not been changed.",
+        );
       throw new CorePdfError(
         "UNSUPPORTED_OPTION",
         "The private worker could not complete this job. Check document permissions, selected options and helper availability.",
       );
+    }
     return {
       data: await response.blob(),
       status: 200,

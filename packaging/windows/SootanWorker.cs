@@ -13,11 +13,11 @@ using Microsoft.Web.WebView2.Core;
 sealed class SootanWorker : IDisposable {
     private readonly CoreWebView2 core;
     private readonly CoreWebView2Environment environment;
-    private readonly string root, java, libraries, helpers;
+    private readonly string root, java, libraries, helpers, fonts;
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal Task Work;
         public void Dispose() {
@@ -43,11 +43,12 @@ sealed class SootanWorker : IDisposable {
         java=Environment.GetEnvironmentVariable("SOOTAN_WORKER_JAVA")??Path.GetFullPath(Path.Combine(app,"..","runtime","bin","java.exe"));
         libraries=Environment.GetEnvironmentVariable("SOOTAN_WORKER_LIB")??Path.Combine(app,"worker","lib");
         helpers=Environment.GetEnvironmentVariable("SOOTAN_WORKER_HELPERS")??Path.Combine(app,"helpers");
+        fonts=Environment.GetEnvironmentVariable("SOOTAN_WORKER_FONTS")??Path.Combine(app,"fonts");
         core.WebResourceRequested+=Resource;
     }
     internal string[] Capabilities {
         get {if(!File.Exists(java)||!System.IO.Directory.Exists(libraries)||!System.IO.Directory.GetFiles(libraries,"worker-*.jar").Any())return new string[0];
-            return Operations.Where(operation=>operation!="ocr"||File.Exists(Path.Combine(helpers,"bin","ocrmypdf.exe"))).ToArray();}
+            return Operations.Where(operation=>(operation!="ocr"||File.Exists(Path.Combine(helpers,"bin","ocrmypdf.exe")))&&(operation!="watermark"||new[]{"NotoSans-Regular.ttf","NotoSansArabic-Regular.ttf","NotoSansJP-Regular.ttf","NotoSansKR-Regular.ttf","NotoSansSC-Regular.ttf","NotoSansThai-Regular.ttf"}.All(name=>File.Exists(Path.Combine(fonts,name))))).ToArray();}
     }
     private async void Resource(object sender,CoreWebView2WebResourceRequestedEventArgs e) {
         var uri=new Uri(e.Request.Uri);
@@ -73,14 +74,15 @@ sealed class SootanWorker : IDisposable {
                     job=new Job {Directory=directory};jobs.Add(id,job);
                 }
             }
-            if(action=="input"||action=="certificate"||action=="trust") {
+            if(action=="input"||action=="certificate"||action=="trust"||action=="image") {
                 if(job.Running)throw new IOException();
-                string path=Path.Combine(job.Directory,action=="input"?"input-main.pdf":action=="trust"?"trust.cer":"certificate.p12");
+                string path=Path.Combine(job.Directory,action=="input"?"input-main.pdf":action=="trust"?"trust.cer":action=="image"?"image.bin":"certificate.p12");
+                if(action=="image"&&!new[]{"image/png","image/jpeg","image/gif","image/bmp","image/x-ms-bmp","image/tiff"}.Contains(e.Request.Headers.GetHeader("Content-Type")))throw new IOException();
                 Stream source=e.Request.Content;
                 job.Work=Task.Run(()=> {
                     using(var output=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                         var buffer=new byte[65536];long total=0;int count;
-                        while((count=source.Read(buffer,0,buffer.Length))>0){if(job.Cancelled)throw new IOException();total+=count;if(total>(action=="trust"?1024L*1024:512L*1024*1024))throw new IOException("Selected file exceeds 512 MiB.");output.Write(buffer,0,count);}
+                        while((count=source.Read(buffer,0,buffer.Length))>0){if(job.Cancelled)throw new IOException();total+=count;if(total>(action=="trust"?1024L*1024:action=="image"?32L*1024*1024:512L*1024*1024))throw new IOException("Selected file exceeds 512 MiB.");output.Write(buffer,0,count);}
                     }
                     File.SetAttributes(path,FileAttributes.ReadOnly);
                 });
@@ -108,11 +110,13 @@ sealed class SootanWorker : IDisposable {
             if((File.GetAttributes(outputPath)&FileAttributes.ReparsePoint)!=0)throw new IOException();
             job.Output=new FileStream(outputPath,FileMode.Open,FileAccess.Read,FileShare.Read);
             e.Response=environment.CreateWebResourceResponse(job.Output,200,"OK","Content-Type: "+(string)result["contentType"]+"\r\nCache-Control: no-store\r\n");
-        } catch(Exception) {Reply(e,400,"{\"message\":\"The private worker could not complete this job. Check the selected options and document permissions.\"}");}
+        } catch(UnsupportedStructure) {Reply(e,400,"{\"code\":\"UNSUPPORTED_DOCUMENT_STRUCTURE\"}");}
+        catch(Exception) {Reply(e,400,"{\"message\":\"The private worker could not complete this job. Check the selected options and document permissions.\"}");}
         finally {deferral.Complete();}
     }
     private Dictionary<string,object> Run(Job job,string header) {
         var start=new ProcessStartInfo(java,"-Djava.io.tmpdir="+Quote(job.Directory)+" -cp "+Quote(Path.Combine(libraries,"*"))+" stirling.software.worker.WorkerMain "+Quote(job.Directory)) {UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=job.Directory};
+        start.EnvironmentVariables["SOOTAN_WORKER_FONTS"]=fonts;
         start.EnvironmentVariables["SOOTAN_OCRMYPDF"]=Path.Combine(helpers,"bin","ocrmypdf.exe");
         start.EnvironmentVariables["TESSDATA_PREFIX"]=Path.Combine(helpers,"tesseract","tessdata");
         start.EnvironmentVariables["PYTHONDONTWRITEBYTECODE"]="1";
@@ -129,11 +133,13 @@ sealed class SootanWorker : IDisposable {
             if(line.Length>65536)throw new IOException();
             var message=new JavaScriptSerializer {MaxJsonLength=65536}.Deserialize<Dictionary<string,object>>(line);
             if(message.ContainsKey("type")&&(string)message["type"]=="result")result=message;
+            if(message.ContainsKey("code")&&(string)message["code"]=="UNSUPPORTED_DOCUMENT_STRUCTURE")throw new UnsupportedStructure();
         }
         job.Process.WaitForExit();
         if(job.Process.ExitCode!=0||result==null)throw new IOException();
         return result;
     }
+    private sealed class UnsupportedStructure : IOException {}
     private void Reply(CoreWebView2WebResourceRequestedEventArgs e,int status,string body) {
         e.Response=environment.CreateWebResourceResponse(new MemoryStream(Encoding.UTF8.GetBytes(body)),status,status==200?"OK":"Worker unavailable","Content-Type: application/json\r\nCache-Control: no-store\r\n");
     }
