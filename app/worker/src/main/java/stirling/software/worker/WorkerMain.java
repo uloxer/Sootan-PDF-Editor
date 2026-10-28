@@ -31,6 +31,8 @@ import stirling.software.pdf.PdfCertificates;
 import stirling.software.pdf.PdfDocumentAnalysis;
 import stirling.software.pdf.PdfDocumentInfo;
 import stirling.software.pdf.PdfForms;
+import stirling.software.pdf.PdfImageConversion;
+import stirling.software.pdf.PdfImageExtraction;
 import stirling.software.pdf.PdfMetadataEditor;
 import stirling.software.pdf.PdfPageCrop;
 import stirling.software.pdf.PdfPageFlattener;
@@ -54,6 +56,10 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "pdf-text-export",
+                    "pdf-image-export",
+                    "image-pdf-create",
+                    "image-extract",
                     "attachments",
                     "portfolio-create",
                     "portfolio-flatten",
@@ -122,7 +128,11 @@ public final class WorkerMain {
                             Files.size(result),
                             "contentType",
                             result.toString().endsWith(".bin")
-                                    ? "application/octet-stream"
+                                    ? operation.equals("pdf-image-export")
+                                            ? "image/"
+                                                    + PdfImageConversion.format(
+                                                            text(options, "imageFormat", "png"))
+                                            : "application/octet-stream"
                                     : result.toString().endsWith(".txt")
                                             ? "text/plain; charset=utf-8"
                                             : result.toString().endsWith(".zip")
@@ -173,6 +183,14 @@ public final class WorkerMain {
         return path;
     }
 
+    private static String color(JsonObject options) throws IOException {
+        String color = text(options, "colorType", "color");
+        if (color.equals("grayscale")) color = "greyscale";
+        if (!Set.of("color", "greyscale", "blackwhite").contains(color))
+            throw new IOException("Unknown color type.");
+        return color;
+    }
+
     private static String attachmentName(String name) throws IOException {
         if (name.isBlank() || name.length() > 1024 || name.indexOf('\0') >= 0)
             throw new IOException("Invalid attachment name.");
@@ -219,6 +237,21 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "pdf-text-export" ->
+                            Set.of("sourcePassword", "outputFormat", "useStirlingOfficeConvert");
+                    case "pdf-image-export" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "imageFormat",
+                                    "colorType",
+                                    "dpi",
+                                    "singleOrMultiple",
+                                    "pageNumbers",
+                                    "includeAnnotations",
+                                    "filename");
+                    case "image-pdf-create" ->
+                            Set.of("selectedFiles", "fitOption", "autoRotate", "colorType");
+                    case "image-extract" -> Set.of("sourcePassword", "format", "filename");
                     case "attachments" ->
                             Set.of(
                                     "sourcePassword",
@@ -412,6 +445,18 @@ public final class WorkerMain {
             if (flag(options, "removeAll"))
                 credential = text(options, "sourcePassword", text(options, "password", ""));
         }
+        if (operation.equals("image-pdf-create")) {
+            try (var imageDocument = new PDDocument()) {
+                PdfImageConversion.appendImages(
+                        imageDocument,
+                        attachmentGrants(root, options),
+                        text(options, "fitOption", "fillPage"),
+                        flag(options, "autoRotate"),
+                        color(options));
+                imageDocument.save(output.toFile());
+                return output;
+            }
+        }
         if (operation.equals("portfolio-create")) {
             try (var portfolio =
                     new PdfPortfolio()
@@ -423,6 +468,81 @@ public final class WorkerMain {
             }
         }
         try (PDDocument document = Loader.loadPDF(input.toFile(), credential)) {
+            if (Set.of("pdf-text-export", "pdf-image-export", "image-extract")
+                    .contains(operation)) {
+                if (document.isEncrypted()
+                        && !document.getCurrentAccessPermission().canExtractContent())
+                    throw new InspectionDenied();
+                if (Files.size(input) > 100L * 1024 * 1024 || document.getNumberOfPages() > 10000)
+                    throw new IOException("Export limits exceeded.");
+                if (operation.equals("pdf-text-export")) {
+                    if (!text(options, "outputFormat", "txt").equals("txt")
+                            || flag(options, "useStirlingOfficeConvert"))
+                        throw new IOException("Only local TXT export is connected.");
+                    Path target = root.resolve("output.txt");
+                    writeReport(target, PdfImageConversion.text(document));
+                    return target;
+                }
+                if (operation.equals("image-extract")) {
+                    String format = PdfImageConversion.format(text(options, "format", "png"));
+                    Path target = root.resolve("output.zip");
+                    try (var zip =
+                            new ZipOutputStream(
+                                    PdfImageConversion.bounded(
+                                            Files.newOutputStream(
+                                                    target,
+                                                    java.nio.file.StandardOpenOption
+                                                            .CREATE_NEW)))) {
+                        var extractor = new PdfImageExtraction();
+                        var fingerprints = new PdfImageExtraction.ImageFingerprints();
+                        for (int page = 0; page < document.getNumberOfPages(); page++)
+                            extractor.extractAndAddImagesToZip(
+                                    document.getPage(page),
+                                    format,
+                                    filename(options),
+                                    page + 1,
+                                    fingerprints,
+                                    zip);
+                    }
+                    return target;
+                }
+                int dpi = (int) number(options, "dpi", 300);
+                if (dpi <= 0) dpi = 300;
+                if (dpi > 500) throw new IOException("DPI exceeds500.");
+                String selection = text(options, "pageNumbers", "all"),
+                        mode = text(options, "singleOrMultiple", "multiple");
+                if (selection.isBlank()) selection = "all";
+                if (!Set.of("single", "multiple").contains(mode))
+                    throw new IOException("Invalid image output mode.");
+                var color =
+                        switch (color(options)) {
+                            case "greyscale" -> ImageType.GRAY;
+                            case "blackwhite" -> ImageType.BINARY;
+                            default -> ImageType.RGB;
+                        };
+                try (var selected = new PDDocument()) {
+                    for (int page :
+                            PdfPageSelection.parsePageList(
+                                    selection, document.getNumberOfPages(), false)) {
+                        if (page < 0 || page >= document.getNumberOfPages())
+                            throw new IOException("Invalid selected page.");
+                        selected.importPage(document.getPage(page));
+                    }
+                    Path target = root.resolve(mode.equals("single") ? "output.bin" : "output.zip");
+                    Files.write(
+                            target,
+                            PdfImageConversion.render(
+                                    selected,
+                                    text(options, "imageFormat", "png"),
+                                    color,
+                                    mode.equals("single"),
+                                    dpi,
+                                    filename(options),
+                                    flag(options, "includeAnnotations")),
+                            java.nio.file.StandardOpenOption.CREATE_NEW);
+                    return target;
+                }
+            }
             if (operation.equals("attachments")) {
                 var attachments = new PdfAttachments(50L * 1024 * 1024, 200L * 1024 * 1024, true);
                 String action = text(options, "action", "");

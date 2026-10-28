@@ -1,3 +1,6 @@
+import { getRuntime } from "@editor/runtime/runtime";
+import { requestDesktopWorker } from "@editor/runtime/desktopWorker";
+import { supportsLocalConversion } from "@editor/runtime/conversions";
 import { useCallback, useMemo } from "react";
 import apiClient from "@editor/services/apiClient";
 import { useTranslation } from "react-i18next";
@@ -283,6 +286,12 @@ export const convertProcessor = async (
   selectedFiles: File[],
 ): Promise<CustomProcessorResult> => {
   const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
+  if (
+    !supportsLocalConversion(parameters.fromExtension, parameters.toExtension)
+  )
+    throw new Error(
+      "This conversion pair is not connected to the local worker. Select PDF to TXT/bitmap, or bitmap to PDF.",
+    );
   const processedFiles: File[] = [];
 
   // Map PDF/X to use PDF/A endpoint
@@ -306,9 +315,9 @@ export const convertProcessor = async (
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
-        const response = await apiClient.post(endpoint, formData, {
-          responseType: "blob",
-        });
+        const response = await (getRuntime().serverOperations
+          ? apiClient.post(endpoint, formData, { responseType: "blob" })
+          : requestDesktopWorker(endpoint, formData));
 
         const convertedFile = createFileFromResponse(
           response.data,
@@ -319,15 +328,16 @@ export const convertProcessor = async (
 
         processedFiles.push(convertedFile);
       } catch (error) {
+        if (!getRuntime().serverOperations) throw error;
         console.warn(`Failed to convert file ${file.name}:`, error);
       }
     }
   } else {
     // Batch processing for simple cases (image→PDF combine)
     const formData = buildConvertFormData(parameters, selectedFiles);
-    const response = await apiClient.post(endpoint, formData, {
-      responseType: "blob",
-    });
+    const response = await (getRuntime().serverOperations
+      ? apiClient.post(endpoint, formData, { responseType: "blob" })
+      : requestDesktopWorker(endpoint, formData));
 
     const baseFilename =
       selectedFiles.length === 1 ? selectedFiles[0].name : "converted_files";

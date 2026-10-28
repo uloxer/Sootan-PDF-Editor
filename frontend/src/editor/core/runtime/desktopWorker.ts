@@ -20,15 +20,26 @@ export async function requestDesktopWorker(
   form: FormData,
   config: AxiosRequestConfig = {},
 ) {
-  const name = endpoint.split("/").at(-1) ?? "";
+  const name =
+    (
+      {
+        "/api/v1/convert/pdf/text": "pdf-to-text",
+        "/api/v1/convert/pdf/img": "pdf-to-img",
+        "/api/v1/convert/img/pdf": "img-to-pdf",
+      } as Record<string, string>
+    )[endpoint] ??
+    endpoint.split("/").at(-1) ??
+    "";
   if (!supportsWorkerEndpoint(name))
     throw new CorePdfError(
       "UNSUPPORTED_FEATURE",
       "This private worker capability is not connected.",
     );
-  const portfolio = name === "create-portfolio";
+  const portfolio = name === "create-portfolio" || name === "img-to-pdf";
   const selected = form
-    .getAll(portfolio ? "files" : "attachments")
+    .getAll(
+      name === "img-to-pdf" ? "fileInput" : portfolio ? "files" : "attachments",
+    )
     .filter((file): file is File => file instanceof File);
   const input = portfolio ? selected[0] : form.get("fileInput");
   if (
@@ -138,6 +149,51 @@ export async function requestDesktopWorker(
     const access = getPdfAccess(input);
     if (access?.encrypted) options.sourcePassword = access.password;
   }
+  if (["pdf-to-text", "pdf-to-img", "extract-images"].includes(name)) {
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+    options.filename = input.name.replace(/\.[^.]+$/, "");
+  }
+  if (name === "pdf-to-text") {
+    delete options.filename;
+    if (
+      options.outputFormat !== "txt" ||
+      options.useStirlingOfficeConvert === "true"
+    )
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "Only local plain-text TXT export is connected. RTF/Office conversion is not available in this runtime.",
+      );
+  }
+  if (
+    name === "pdf-to-img" &&
+    !["png", "jpg", "jpeg", "tiff", "bmp", "gif"].includes(
+      String(options.imageFormat),
+    )
+  )
+    throw new CorePdfError(
+      "UNSUPPORTED_OPTION",
+      "Select PNG, JPEG, TIFF, BMP or GIF. WebP export is not connected.",
+    );
+  if (name === "img-to-pdf")
+    for (const file of selected)
+      if (
+        !["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif"].includes(
+          file.name.split(".").at(-1)?.toLowerCase() ?? "",
+        ) &&
+        ![
+          "image/png",
+          "image/jpeg",
+          "image/tiff",
+          "image/x-tiff",
+          "image/bmp",
+          "image/gif",
+        ].includes(file.type)
+      )
+        throw new CorePdfError(
+          "UNSUPPORTED_OPTION",
+          "Select a local PNG, JPEG, TIFF, BMP or GIF bitmap.",
+        );
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
   const controller = new AbortController();
@@ -225,6 +281,11 @@ export async function requestDesktopWorker(
       headers: {
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
+        ...(["pdf-to-text", "pdf-to-img", "img-to-pdf"].includes(name)
+          ? {
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+            }
+          : {}),
       },
     };
   } finally {

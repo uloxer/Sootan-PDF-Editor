@@ -1,3 +1,5 @@
+import { getRuntime } from "@editor/runtime/runtime";
+import { supportsLocalConversion } from "@editor/runtime/conversions";
 import { useMemo } from "react";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
@@ -85,6 +87,8 @@ const ConvertSettings = ({
   const conversionStatus = useConversionCloudStatus();
 
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
+    if (!getRuntime().serverOperations)
+      return supportsLocalConversion(fromExt, toExt);
     const conversionKey = `${fromExt}-${toExt}`;
 
     // In desktop SaaS mode, check combined availability (local OR SaaS)
@@ -528,16 +532,17 @@ const ConvertSettings = ({
         )}
 
       {/* Stirling Office Convert or LibreOffice */}
-      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
-        <>
-          <Divider />
-          <ConvertOfficeEngineSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      )}
+      {getRuntime().serverOperations &&
+        usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
+          <>
+            <Divider />
+            <ConvertOfficeEngineSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

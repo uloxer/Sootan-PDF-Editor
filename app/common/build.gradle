@@ -3,6 +3,7 @@ bootRun {
     enabled = false
 }
 dependencies {
+    api project(':pdf-services')
     // Security-hardening utilities (zip-slip, SSRF, filename sanitization, command injection).
     // Declared as api here so core + proprietary (which depend on common) get it transitively,
     // keeping it off modules that don't need it (e.g. saas).

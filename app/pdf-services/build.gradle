@@ -1,4 +1,5 @@
 dependencies {
+    implementation "com.drewnoakes:metadata-extractor:2.21.0"
     implementation "org.apache.commons:commons-lang3:$commonsLang3"
     implementation "io.github.pixee:java-security-toolkit:1.2.3"
     implementation 'com.google.zxing:core:3.5.4'

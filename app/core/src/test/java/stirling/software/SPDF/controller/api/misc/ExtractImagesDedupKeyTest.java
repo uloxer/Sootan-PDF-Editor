@@ -30,13 +30,13 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.junit.jupiter.api.Test;
 
-import stirling.software.SPDF.controller.api.misc.ExtractImagesController.ImageFingerprints;
+import stirling.software.pdf.PdfImageExtraction.ImageFingerprints;
 
 class ExtractImagesDedupKeyTest {
 
     private static String key(PDImageXObject image) throws Exception {
         Method m =
-                ExtractImagesController.class.getDeclaredMethod(
+                stirling.software.pdf.PdfImageExtraction.class.getDeclaredMethod(
                         "imageContentKey", PDImageXObject.class);
         m.setAccessible(true);
         return (String) m.invoke(null, image);

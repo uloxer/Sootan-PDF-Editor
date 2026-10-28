@@ -63,6 +63,10 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  "pdf-to-text": "pdf-text-export",
+  "pdf-to-img": "pdf-image-export",
+  "img-to-pdf": "image-pdf-create",
+  "extract-images": "image-extract",
   ...Object.fromEntries(
     [
       "list-attachments",

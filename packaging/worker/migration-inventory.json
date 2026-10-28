@@ -127,9 +127,9 @@
       "family": "converters",
       "controller": "ConvertImgPDFController.java",
       "endpoint": "/img/pdf",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "image-pdf-create",
+      "classification": "connected-bitmap-modes-other-image-plugins-pending"
     },
     {
       "family": "converters",
@@ -151,9 +151,9 @@
       "family": "converters",
       "controller": "ConvertImgPDFController.java",
       "endpoint": "/pdf/img",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "pdf-image-export",
+      "classification": "connected-png-jpeg-tiff-bmp-gif-webp-pending"
     },
     {
       "family": "converters",
@@ -233,9 +233,9 @@
       "family": "converters",
       "controller": "ConvertPDFToOffice.java",
       "endpoint": "/pdf/text",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "pdf-text-export",
+      "classification": "connected-txt-mode-rtf-office-pending"
     },
     {
       "family": "converters",
@@ -600,9 +600,9 @@
       "family": "misc",
       "controller": "ExtractImagesController.java",
       "endpoint": "/extract-images",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "image-extract",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",

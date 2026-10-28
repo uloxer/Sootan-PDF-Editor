@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -113,8 +112,7 @@ public class ConvertPDFToOffice {
                     GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
             TempFile finalOut = tempFileManager.createManagedTempFile(".txt");
             try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
-                PDFTextStripper stripper = new PDFTextStripper();
-                String text = stripper.getText(document);
+                String text = stirling.software.pdf.PdfImageConversion.text(document);
                 Files.writeString(finalOut.getPath(), text, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 finalOut.close();
