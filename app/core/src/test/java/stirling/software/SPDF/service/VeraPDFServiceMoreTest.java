@@ -30,7 +30,7 @@ class VeraPDFServiceMoreTest {
     @SuppressWarnings("unchecked")
     private static <T> T invokeStatic(String name, Class<?>[] types, Object... args)
             throws Exception {
-        Method m = VeraPDFService.class.getDeclaredMethod(name, types);
+        Method m = stirling.software.pdf.PdfStandards.class.getDeclaredMethod(name, types);
         m.setAccessible(true);
         try {
             return (T) m.invoke(null, args);

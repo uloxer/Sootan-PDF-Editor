@@ -19,7 +19,3 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
 }
-
-processResources {
-    from('../core/src/main/resources/static/images/signature.png')
-}

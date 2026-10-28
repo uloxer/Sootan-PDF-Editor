@@ -120,7 +120,9 @@ class VeraPDFServicePdfaFixtureTest {
 
     @Test
     void firstFlavour_withEmptyList_returnsNullInsteadOfThrowing() throws Exception {
-        Method method = VeraPDFService.class.getDeclaredMethod("firstFlavour", List.class);
+        Method method =
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
+                        "firstFlavour", List.class);
         method.setAccessible(true);
 
         assertNull(method.invoke(null, List.of()));
@@ -130,7 +132,8 @@ class VeraPDFServicePdfaFixtureTest {
     @Test
     void detectedFlavours_withNullFlavourList_returnsEmptyList() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod("detectedFlavours", PDFAParser.class);
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
+                        "detectedFlavours", PDFAParser.class);
         method.setAccessible(true);
 
         PDFAParser parser = mock(PDFAParser.class);

@@ -19,7 +19,7 @@ class ProcessPdfWithOcrRequestTest {
         @DisplayName("documented default field values on a fresh instance")
         void documentedDefaults() {
             ProcessPdfWithOcrRequest req = new ProcessPdfWithOcrRequest();
-            assertThat(req.getOcrRenderType()).isEqualTo("hocr");
+            assertThat(req.getOcrRenderType()).isEqualTo("auto");
             assertThat(req.getLanguages()).isNull();
             assertThat(req.isSidecar()).isFalse();
             assertThat(req.isDeskew()).isFalse();

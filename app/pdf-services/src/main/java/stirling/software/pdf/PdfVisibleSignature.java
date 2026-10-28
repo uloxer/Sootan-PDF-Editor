@@ -95,7 +95,7 @@ public final class PdfVisibleSignature {
                             PDImageXObject.createFromByteArray(
                                     doc,
                                     PdfVisibleSignature.class
-                                            .getResourceAsStream("/signature.png")
+                                            .getResourceAsStream("/static/images/signature.png")
                                             .readAllBytes(),
                                     "signature.png");
                     cs.drawImage(img, 100, 0);
