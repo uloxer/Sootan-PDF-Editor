@@ -13,65 +13,65 @@
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/annotation-info",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/basic-info",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/document-properties",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/font-info",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/form-fields",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/page-count",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/page-dimensions",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
       "controller": "AnalysisController.java",
       "endpoint": "/security-info",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "general",
@@ -705,17 +705,17 @@
       "family": "misc",
       "controller": "ShowJavascript.java",
       "endpoint": "/show-javascript",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "StampController.java",
       "endpoint": "/add-stamp",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "stamp",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
@@ -810,9 +810,9 @@
       "family": "security",
       "controller": "GetInfoOnPDF.java",
       "endpoint": "/get-info-on-pdf",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "security",
@@ -918,9 +918,9 @@
       "family": "security",
       "controller": "VerifyPDFController.java",
       "endpoint": "/verify-pdf",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-inspection-contract"
+      "state": "worker-mode",
+      "mode": "document-inspect",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "security",

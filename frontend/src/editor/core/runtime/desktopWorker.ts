@@ -1,3 +1,4 @@
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 import type { AxiosRequestConfig } from "axios";
 import { getRuntime, WORKER_ENDPOINTS } from "@editor/runtime/runtime";
 import { CorePdfError } from "@editor/runtime/corePdfOperations";
@@ -55,7 +56,11 @@ export async function requestDesktopWorker(
       "Select a local PKCS12/PFX signing key. PEM/JKS and device signing are not connected; remote signing is disabled.",
     );
   const watermark =
-    name === "add-watermark" ? form.get("watermarkImage") : null;
+    name === "add-watermark"
+      ? form.get("watermarkImage")
+      : name === "add-stamp"
+        ? form.get("stampImage")
+        : null;
   if (
     watermark instanceof File &&
     (watermark.size > 32 * 1024 * 1024 ||
@@ -73,6 +78,18 @@ export async function requestDesktopWorker(
       "Select a PNG/JPEG/GIF/BMP/TIFF bitmap up to32MiB.",
     );
   if (name === "add-page-numbers") options.filename = input.name;
+  if (DESKTOP_ENDPOINTS[name] === "document-inspect") {
+    options.report =
+      name === "get-info-on-pdf"
+        ? "all-info"
+        : name === "show-javascript"
+          ? "javascript"
+          : name;
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+  }
+  if (DESKTOP_ENDPOINTS[name] === "document-inspect" || name === "add-stamp")
+    options.filename = input.name;
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
   const controller = new AbortController();
@@ -128,6 +145,11 @@ export async function requestDesktopWorker(
     });
     if (!response.ok) {
       const failure = await response.json().catch(() => null);
+      if (failure?.code === "INSPECTION_ACCESS_DENIED")
+        throw new CorePdfError(
+          "UNSUPPORTED_FEATURE",
+          "This report exports document content. Authenticate with a credential that permits extraction; basic and security inspection remain available.",
+        );
       if (failure?.code === "UNSUPPORTED_DOCUMENT_STRUCTURE")
         throw new CorePdfError(
           "UNSUPPORTED_FEATURE",

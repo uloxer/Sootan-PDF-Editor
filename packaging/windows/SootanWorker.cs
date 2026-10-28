@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal Task Work;
         public void Dispose() {
@@ -48,7 +48,7 @@ sealed class SootanWorker : IDisposable {
     }
     internal string[] Capabilities {
         get {if(!File.Exists(java)||!System.IO.Directory.Exists(libraries)||!System.IO.Directory.GetFiles(libraries,"worker-*.jar").Any())return new string[0];
-            return Operations.Where(operation=>(operation!="ocr"||File.Exists(Path.Combine(helpers,"bin","ocrmypdf.exe")))&&(operation!="watermark"||new[]{"NotoSans-Regular.ttf","NotoSansArabic-Regular.ttf","NotoSansJP-Regular.ttf","NotoSansKR-Regular.ttf","NotoSansSC-Regular.ttf","NotoSansThai-Regular.ttf"}.All(name=>File.Exists(Path.Combine(fonts,name))))).ToArray();}
+            return Operations.Where(operation=>(operation!="ocr"||File.Exists(Path.Combine(helpers,"bin","ocrmypdf.exe")))&&((operation!="watermark"&&operation!="stamp")||new[]{"NotoSans-Regular.ttf","NotoSansArabic-Regular.ttf","NotoSansJP-Regular.ttf","NotoSansKR-Regular.ttf","NotoSansSC-Regular.ttf","NotoSansThai-Regular.ttf"}.All(name=>File.Exists(Path.Combine(fonts,name))))).ToArray();}
     }
     private async void Resource(object sender,CoreWebView2WebResourceRequestedEventArgs e) {
         var uri=new Uri(e.Request.Uri);
@@ -105,12 +105,13 @@ sealed class SootanWorker : IDisposable {
             var result=await running;
             if(job.Cancelled)throw new IOException();
             string name=result["file"] as string;
-            if(name!="output.pdf"&&name!="output.zip"&&name!="output.json")throw new IOException();
+            if(name!="output.pdf"&&name!="output.zip"&&name!="output.json"&&name!="output.txt")throw new IOException();
             string outputPath=Path.Combine(job.Directory,name);
             if((File.GetAttributes(outputPath)&FileAttributes.ReparsePoint)!=0)throw new IOException();
             job.Output=new FileStream(outputPath,FileMode.Open,FileAccess.Read,FileShare.Read);
             e.Response=environment.CreateWebResourceResponse(job.Output,200,"OK","Content-Type: "+(string)result["contentType"]+"\r\nCache-Control: no-store\r\n");
-        } catch(UnsupportedStructure) {Reply(e,400,"{\"code\":\"UNSUPPORTED_DOCUMENT_STRUCTURE\"}");}
+        } catch(InspectionDenied) {Reply(e,400,"{\"code\":\"INSPECTION_ACCESS_DENIED\"}");}
+        catch(UnsupportedStructure) {Reply(e,400,"{\"code\":\"UNSUPPORTED_DOCUMENT_STRUCTURE\"}");}
         catch(Exception) {Reply(e,400,"{\"message\":\"The private worker could not complete this job. Check the selected options and document permissions.\"}");}
         finally {deferral.Complete();}
     }
@@ -134,12 +135,14 @@ sealed class SootanWorker : IDisposable {
             var message=new JavaScriptSerializer {MaxJsonLength=65536}.Deserialize<Dictionary<string,object>>(line);
             if(message.ContainsKey("type")&&(string)message["type"]=="result")result=message;
             if(message.ContainsKey("code")&&(string)message["code"]=="UNSUPPORTED_DOCUMENT_STRUCTURE")throw new UnsupportedStructure();
+            if(message.ContainsKey("code")&&(string)message["code"]=="INSPECTION_ACCESS_DENIED")throw new InspectionDenied();
         }
         job.Process.WaitForExit();
         if(job.Process.ExitCode!=0||result==null)throw new IOException();
         return result;
     }
     private sealed class UnsupportedStructure : IOException {}
+    private sealed class InspectionDenied : IOException {}
     private void Reply(CoreWebView2WebResourceRequestedEventArgs e,int status,string body) {
         e.Response=environment.CreateWebResourceResponse(new MemoryStream(Encoding.UTF8.GetBytes(body)),status,status==200?"OK":"Worker unavailable","Content-Type: application/json\r\nCache-Control: no-store\r\n");
     }

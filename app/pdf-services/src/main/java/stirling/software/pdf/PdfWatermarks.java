@@ -33,10 +33,7 @@ public final class PdfWatermarks {
             int heightSpacer,
             String customColor)
             throws IOException {
-        PDFont font =
-                "text".equalsIgnoreCase(watermarkType)
-                        ? loadWatermarkFont(document, alphabet)
-                        : null;
+        PDFont font = "text".equalsIgnoreCase(watermarkType) ? loadFont(document, alphabet) : null;
 
         for (PDPage page : document.getPages()) {
             try (PDPageContentStream contentStream =
@@ -73,8 +70,11 @@ public final class PdfWatermarks {
         }
     }
 
-    private static PDFont loadWatermarkFont(PDDocument document, String alphabet)
-            throws IOException {
+    /**
+     * Loads the fixed alphabet face once per caller-owned document; paths never come from a
+     * request.
+     */
+    public static PDFont loadFont(PDDocument document, String alphabet) throws IOException {
         String resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";

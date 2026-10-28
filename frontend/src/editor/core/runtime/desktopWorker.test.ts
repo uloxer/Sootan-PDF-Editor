@@ -198,6 +198,35 @@ describe("private desktop worker boundary", () => {
       message: expect.stringContaining("forms, bookmarks or annotations"),
     });
   });
+  it("dispatches only fixed report kinds and streams stamp bitmap grants", async () => {
+    native();
+    vi.stubGlobal("__SOOTAN_RUNTIME__", {
+      kind: "offline-desktop",
+      advancedOperations: ["document-inspect", "stamp"],
+    });
+    const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+      ok: true,
+      headers: new Headers(),
+      blob: async () => new Blob(["{}"]),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const form = request();
+    form.delete("deskew");
+    form.set("report", "arbitrary-method");
+    await requestDesktopWorker("/api/v1/security/get-info-on-pdf", form);
+    expect(
+      JSON.parse(String(fetch.mock.calls[1][1]?.body)).options,
+    ).toMatchObject({
+      report: "all-info",
+      filename: "Selected path with spaces.pdf",
+    });
+    fetch.mockClear();
+    const bitmap = new File(["bitmap"], "hill.png", { type: "image/png" });
+    form.set("stampImage", bitmap);
+    await requestDesktopWorker("/api/v1/misc/add-stamp", form);
+    expect(fetch.mock.calls[1][0]).toMatch(/\/image$/);
+    expect(fetch.mock.calls[1][1]?.body).toBe(bitmap);
+  });
   it("cancels an active response and still releases its native job", async () => {
     native();
     const controller = new AbortController();

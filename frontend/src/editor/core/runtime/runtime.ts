@@ -63,6 +63,22 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  "add-stamp": "stamp",
+  ...Object.fromEntries(
+    [
+      "page-count",
+      "basic-info",
+      "document-properties",
+      "page-dimensions",
+      "form-fields",
+      "annotation-info",
+      "font-info",
+      "security-info",
+      "get-info-on-pdf",
+      "show-javascript",
+      "verify-pdf",
+    ].map((endpoint) => [endpoint, "document-inspect"]),
+  ),
   crop: "page-crop",
   "scale-pages": "page-scale",
   "add-page-numbers": "page-numbers",

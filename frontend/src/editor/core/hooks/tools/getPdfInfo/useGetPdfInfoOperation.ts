@@ -1,3 +1,5 @@
+import { getRuntime } from "@editor/runtime/runtime";
+import { requestDesktopWorker } from "@editor/runtime/desktopWorker";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
@@ -79,10 +81,21 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
           formData.append("fileInput", file);
 
           try {
-            const response = await apiClient.post(
-              "/api/v1/security/get-info-on-pdf",
-              formData,
-            );
+            const response = getRuntime().serverOperations
+              ? await apiClient.post(
+                  "/api/v1/security/get-info-on-pdf",
+                  formData,
+                )
+              : {
+                  data: JSON.parse(
+                    await (
+                      await requestDesktopWorker(
+                        "/api/v1/security/get-info-on-pdf",
+                        formData,
+                      )
+                    ).data.text(),
+                  ),
+                };
 
             const stub = selectors.getStirlingFileStub(file.fileId);
             const entry: PdfInfoReportEntry = {

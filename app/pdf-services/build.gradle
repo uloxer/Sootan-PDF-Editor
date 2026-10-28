@@ -1,4 +1,13 @@
 dependencies {
+    implementation 'com.google.zxing:core:3.5.4'
+    implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
+    api 'org.verapdf:validation-model:1.30.2'
+    implementation 'org.mozilla:rhino:1.7.15'
+    api 'tools.jackson.core:jackson-databind:3.1.5'
+    implementation 'org.slf4j:slf4j-api:2.0.18'
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+
     implementation "com.fathzer:javaluator:3.0.6"
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"

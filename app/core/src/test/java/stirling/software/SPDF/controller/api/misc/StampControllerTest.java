@@ -52,7 +52,7 @@ class StampControllerTest {
     @BeforeEach
     void setUp() throws NoSuchMethodException {
         processStampTextMethod =
-                StampController.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStamp.class.getDeclaredMethod(
                         "processStampText",
                         String.class,
                         int.class,
@@ -62,12 +62,12 @@ class StampControllerTest {
         processStampTextMethod.setAccessible(true);
 
         processCustomDateFormatMethod =
-                StampController.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStamp.class.getDeclaredMethod(
                         "processCustomDateFormat", String.class, LocalDateTime.class);
         processCustomDateFormatMethod.setAccessible(true);
 
         calculateImagePositionYMethod =
-                StampController.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStamp.class.getDeclaredMethod(
                         "calculateImagePositionY",
                         PDRectangle.class,
                         int.class,

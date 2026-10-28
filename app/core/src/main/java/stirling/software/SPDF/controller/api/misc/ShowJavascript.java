@@ -2,11 +2,8 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,47 +45,11 @@ public class ShowJavascript {
             description = "desc.")
     public ResponseEntity<Resource> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
-        StringBuilder script = new StringBuilder();
-        boolean foundScript = false;
-
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
-            if (document.getDocumentCatalog() != null
-                    && document.getDocumentCatalog().getNames() != null) {
-                PDNameTreeNode<PDActionJavaScript> jsTree =
-                        document.getDocumentCatalog().getNames().getJavaScript();
-
-                if (jsTree != null) {
-                    Map<String, PDActionJavaScript> jsEntries = jsTree.getNames();
-
-                    for (Map.Entry<String, PDActionJavaScript> entry : jsEntries.entrySet()) {
-                        String name = entry.getKey();
-                        PDActionJavaScript jsAction = entry.getValue();
-                        String jsCodeStr = jsAction.getAction();
-
-                        if (jsCodeStr != null && !jsCodeStr.trim().isEmpty()) {
-                            script.append("// File: ")
-                                    .append(
-                                            Filenames.toSimpleFileName(
-                                                    inputFile.getOriginalFilename()))
-                                    .append(", Script: ")
-                                    .append(name)
-                                    .append("\n")
-                                    .append(jsCodeStr)
-                                    .append("\n");
-                            foundScript = true;
-                        }
-                    }
-                }
-            }
-
-            if (!foundScript) {
-                script =
-                        new StringBuilder("PDF '")
-                                .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
-                                .append("' does not contain Javascript");
-            }
-
+            String script =
+                    stirling.software.pdf.PdfDocumentAnalysis.javascript(
+                            document, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
             TempFile tempOut = tempFileManager.createManagedTempFile(".js");
             try {
                 Files.write(

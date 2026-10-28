@@ -68,7 +68,7 @@ class VeraPDFServiceTest {
     @Test
     void formatStandardDisplay_inferredPdfaWithoutDeclaration_returnsNotPdfa() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "formatStandardDisplay",
                         String.class,
                         int.class,
@@ -83,7 +83,7 @@ class VeraPDFServiceTest {
     @Test
     void formatStandardDisplay_notPdfaBaseName_returnsNotPdfa() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "formatStandardDisplay",
                         String.class,
                         int.class,
@@ -105,7 +105,7 @@ class VeraPDFServiceTest {
     @Test
     void formatStandardDisplay_withErrors_appendsWithErrors() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "formatStandardDisplay",
                         String.class,
                         int.class,
@@ -120,7 +120,7 @@ class VeraPDFServiceTest {
     @Test
     void formatStandardDisplay_compliant_appendsCompliant() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "formatStandardDisplay",
                         String.class,
                         int.class,
@@ -135,7 +135,8 @@ class VeraPDFServiceTest {
     @Test
     void getStandardName_pdfaFlavour() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod("getStandardName", PDFAFlavour.class);
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
+                        "getStandardName", PDFAFlavour.class);
         method.setAccessible(true);
 
         String result = (String) method.invoke(null, PDFAFlavour.PDFA_1_B);
@@ -146,7 +147,9 @@ class VeraPDFServiceTest {
 
     @Test
     void createNoPdfaDeclarationResult_hasCorrectStructure() throws Exception {
-        Method method = VeraPDFService.class.getDeclaredMethod("createNoPdfaDeclarationResult");
+        Method method =
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
+                        "createNoPdfaDeclarationResult");
         method.setAccessible(true);
 
         PDFVerificationResult result = (PDFVerificationResult) method.invoke(null);
@@ -163,7 +166,7 @@ class VeraPDFServiceTest {
     @Test
     void buildErrorResult_withPdfaFlavour_setsFields() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "buildErrorResult", PDFAFlavour.class, PDFAFlavour.class, String.class);
         method.setAccessible(true);
 
@@ -180,7 +183,7 @@ class VeraPDFServiceTest {
     @Test
     void buildErrorResult_withNullFlavours_handlesGracefully() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "buildErrorResult", PDFAFlavour.class, PDFAFlavour.class, String.class);
         method.setAccessible(true);
 
@@ -195,7 +198,7 @@ class VeraPDFServiceTest {
     @Test
     void createValidationIssue_withNullRuleId() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "createValidationIssue", TestAssertion.class);
         method.setAccessible(true);
 
@@ -215,7 +218,7 @@ class VeraPDFServiceTest {
     @Test
     void createValidationIssue_withLocation() throws Exception {
         Method method =
-                VeraPDFService.class.getDeclaredMethod(
+                stirling.software.pdf.PdfStandards.class.getDeclaredMethod(
                         "createValidationIssue", TestAssertion.class);
         method.setAccessible(true);
 

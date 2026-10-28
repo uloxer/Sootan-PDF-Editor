@@ -22,9 +22,12 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import stirling.software.pdf.PdfCertificates;
+import stirling.software.pdf.PdfDocumentAnalysis;
+import stirling.software.pdf.PdfDocumentInfo;
 import stirling.software.pdf.PdfForms;
 import stirling.software.pdf.PdfMetadataEditor;
 import stirling.software.pdf.PdfPageCrop;
@@ -36,6 +39,8 @@ import stirling.software.pdf.PdfProtection;
 import stirling.software.pdf.PdfRasterizer;
 import stirling.software.pdf.PdfSanitizer;
 import stirling.software.pdf.PdfSelectedImage;
+import stirling.software.pdf.PdfStamp;
+import stirling.software.pdf.PdfStandards;
 import stirling.software.pdf.PdfWatermarks;
 
 /**
@@ -43,9 +48,11 @@ import stirling.software.pdf.PdfWatermarks;
  * job directory.
  */
 public final class WorkerMain {
-    private static final Gson JSON = new Gson();
+    private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "document-inspect",
+                    "stamp",
                     "page-crop",
                     "page-scale",
                     "page-numbers",
@@ -66,6 +73,11 @@ public final class WorkerMain {
     private WorkerMain() {}
 
     public static void main(String[] args) throws Exception {
+        for (String property :
+                List.of(
+                        "javax.xml.accessExternalDTD",
+                        "javax.xml.accessExternalSchema",
+                        "javax.xml.accessExternalStylesheet")) System.setProperty(property, "");
         if (args.length == 1 && args[0].equals("--capabilities")) {
             emit(Map.of("protocol", 1, "operations", capabilities()));
             return;
@@ -103,11 +115,13 @@ public final class WorkerMain {
                             "bytes",
                             Files.size(result),
                             "contentType",
-                            result.toString().endsWith(".zip")
-                                    ? "application/zip"
-                                    : result.toString().endsWith(".json")
-                                            ? "application/json"
-                                            : "application/pdf"));
+                            result.toString().endsWith(".txt")
+                                    ? "text/plain; charset=utf-8"
+                                    : result.toString().endsWith(".zip")
+                                            ? "application/zip"
+                                            : result.toString().endsWith(".json")
+                                                    ? "application/json"
+                                                    : "application/pdf"));
         } catch (Exception failure) {
             System.err.println("Worker failure type: " + failure.getClass().getSimpleName());
             // Requests can contain credentials; neither their text nor exception messages belong in
@@ -121,7 +135,9 @@ public final class WorkerMain {
                             "code",
                             failure instanceof UnsupportedStructure
                                     ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
-                                    : "PROCESSING_FAILED",
+                                    : failure instanceof InspectionDenied
+                                            ? "INSPECTION_ACCESS_DENIED"
+                                            : "PROCESSING_FAILED",
                             "message",
                             "The selected operation could not complete. Check its options, document permissions and private helper availability."));
             System.exit(1);
@@ -133,7 +149,7 @@ public final class WorkerMain {
                 .filter(operation -> !operation.equals("ocr") || helper() != null)
                 .filter(
                         operation ->
-                                !operation.equals("watermark")
+                                !(operation.equals("watermark") || operation.equals("stamp"))
                                         || System.getenv("SOOTAN_WORKER_FONTS") != null)
                 .sorted()
                 .toList();
@@ -163,6 +179,23 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "document-inspect" -> Set.of("sourcePassword", "report", "filename");
+                    case "stamp" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "stampType",
+                                    "stampText",
+                                    "alphabet",
+                                    "fontSize",
+                                    "rotation",
+                                    "opacity",
+                                    "position",
+                                    "overrideX",
+                                    "overrideY",
+                                    "customColor",
+                                    "customMargin",
+                                    "pageNumbers",
+                                    "filename");
                     case "page-crop" ->
                             Set.of(
                                     "sourcePassword",
@@ -329,6 +362,87 @@ public final class WorkerMain {
                 credential = text(options, "sourcePassword", text(options, "password", ""));
         }
         try (PDDocument document = Loader.loadPDF(input.toFile(), credential)) {
+            if (operation.equals("document-inspect")) {
+                String report = text(options, "report", "");
+                if (document.getNumberOfPages() > 10000 || Files.size(input) > 100L * 1024 * 1024)
+                    throw new IOException("Inspection input exceeds its resource limit.");
+                if (document.isEncrypted()
+                        && !document.getCurrentAccessPermission().canExtractContent()
+                        && Set.of("all-info", "javascript").contains(report))
+                    throw new InspectionDenied();
+                Object result;
+                switch (report) {
+                    case "page-count" ->
+                            result = PdfDocumentAnalysis.getPageCount(document, Files.size(input));
+                    case "basic-info" ->
+                            result = PdfDocumentAnalysis.getBasicInfo(document, Files.size(input));
+                    case "document-properties" ->
+                            result =
+                                    PdfDocumentAnalysis.getDocumentProperties(
+                                            document, Files.size(input));
+                    case "page-dimensions" ->
+                            result =
+                                    PdfDocumentAnalysis.getPageDimensions(
+                                            document, Files.size(input));
+                    case "form-fields" ->
+                            result = PdfDocumentAnalysis.getFormFields(document, Files.size(input));
+                    case "annotation-info" ->
+                            result =
+                                    PdfDocumentAnalysis.getAnnotationInfo(
+                                            document, Files.size(input));
+                    case "font-info" ->
+                            result = PdfDocumentAnalysis.getFontInfo(document, Files.size(input));
+                    case "security-info" ->
+                            result =
+                                    PdfDocumentAnalysis.getSecurityInfo(
+                                            document, Files.size(input));
+                    case "javascript" -> {
+                        Path text = root.resolve("output.txt");
+                        writeReport(
+                                text, PdfDocumentAnalysis.javascript(document, filename(options)));
+                        return text;
+                    }
+                    case "verify-pdf" -> {
+                        if (document.isEncrypted())
+                            throw new IOException(
+                                    "Standards verification requires an unencrypted copy.");
+                        try (var bytes = Files.newInputStream(input)) {
+                            result = new PdfStandards().validatePDF(bytes);
+                        }
+                    }
+                    case "all-info" -> {
+                        java.util.List<
+                                        stirling.software
+                                                .SPDF
+                                                .model
+                                                .api
+                                                .security
+                                                .PDFVerificationResult>
+                                standards = null;
+                        boolean validationFailed = false;
+                        try (var bytes = Files.newInputStream(input)) {
+                            standards = new PdfStandards().validatePDF(bytes);
+                        } catch (Exception unavailable) {
+                            validationFailed = true;
+                        }
+                        var full =
+                                new PdfDocumentInfo()
+                                        .inspect(document, Files.size(input), standards);
+                        if (validationFailed)
+                            ((tools.jackson.databind.node.ObjectNode) full.get("Compliancy"))
+                                    .put(
+                                            "ValidationError",
+                                            "Standards validation could not run on these original bytes; no compliance verdict was fabricated.");
+                        Path json = root.resolve("output.json");
+                        writeReport(json, full.toString());
+                        return json;
+                    }
+                    default -> throw new IOException("Unknown inspection report kind.");
+                }
+                Path json = root.resolve("output.json");
+                writeReport(json, JSON.toJson(result));
+                return json;
+            }
             if (operation.equals("signature-remove")) {
                 if (document.isEncrypted() && !PdfProtection.isOwnerAuthenticated(document))
                     throw new IOException("Owner authentication is required.");
@@ -337,6 +451,54 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
+            if (operation.equals("stamp")) {
+                float size = number(options, "fontSize", 40),
+                        opacity = number(options, "opacity", 0.5f);
+                int position = (int) number(options, "position", 8);
+                String type = text(options, "stampType", "text");
+                if (!Set.of("text", "image", "qr").contains(type)
+                        || size < 1
+                        || size > 1000
+                        || opacity < 0
+                        || opacity > 1
+                        || position < 1
+                        || position > 9) throw new IOException("Invalid stamp options.");
+                var pages =
+                        selection(options, "pageNumbers", document).stream()
+                                .map(i -> i + 1)
+                                .toList();
+                java.awt.image.BufferedImage bitmap = null;
+                try {
+                    if (type.equals("image")) {
+                        var selected = root.resolve("image.bin");
+                        if (!Files.isRegularFile(selected, LinkOption.NOFOLLOW_LINKS)
+                                || !selected.toRealPath().getParent().equals(root))
+                            throw new IOException("No selected image grant.");
+                        bitmap = PdfSelectedImage.decode(selected);
+                    }
+                    new PdfStamp()
+                            .apply(
+                                    document,
+                                    pages,
+                                    filename(options),
+                                    type,
+                                    text(options, "stampText", ""),
+                                    bitmap,
+                                    text(options, "alphabet", "roman"),
+                                    size,
+                                    number(options, "rotation", 0),
+                                    opacity,
+                                    position,
+                                    number(options, "overrideX", -1),
+                                    number(options, "overrideY", -1),
+                                    text(options, "customColor", "#d3d3d3"),
+                                    text(options, "customMargin", "medium"));
+                } finally {
+                    if (bitmap != null) bitmap.flush();
+                }
+                document.save(output.toFile());
+                return output;
+            }
             if (Set.of("page-crop", "page-scale", "page-numbers", "watermark")
                     .contains(operation)) {
                 if (document.getNumberOfPages() > 10000)
@@ -598,6 +760,20 @@ public final class WorkerMain {
     }
 
     private static final class UnsupportedStructure extends IOException {}
+
+    private static final class InspectionDenied extends IOException {}
+
+    private static void writeReport(Path output, String text) throws IOException {
+        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > 32 * 1024 * 1024)
+            throw new IOException("Report exceeds32MiB; no partial report was returned.");
+        Files.write(output, bytes);
+    }
+
+    private static String filename(JsonObject options) {
+        String name = text(options, "filename", "document.pdf").replace('\\', '/');
+        return name.substring(name.lastIndexOf('/') + 1);
+    }
 
     private static float number(JsonObject options, String key, float fallback) throws IOException {
         float value = options.has(key) ? options.get(key).getAsFloat() : fallback;
