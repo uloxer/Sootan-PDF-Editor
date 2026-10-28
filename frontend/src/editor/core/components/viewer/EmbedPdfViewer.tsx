@@ -1960,9 +1960,7 @@ const EmbedPdfViewerContent = ({
               enableRedaction={
                 shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
               }
-              enableFormFill={
-                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
-              }
+              enableFormFill={shouldEnableFormFill}
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}

@@ -11,6 +11,7 @@ import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@editor/hooks/useLocalPdfiumEngine";
+import { withViewerFormRendering } from "@editor/components/viewer/viewerFormRendering";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
@@ -1349,7 +1350,7 @@ export function LocalEmbedPDF({
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: !enableFormFill,
+        withForms: true,
         // The overlay owns appearances in every mode, so access changes never rebuild the registry.
         withAnnotations: false,
       }),
@@ -1434,8 +1435,14 @@ export function LocalEmbedPDF({
     fontFallback: fontFallbackConfig,
   });
   const engine = useMemo(
-    () => (workerEngine ? withPdfViewerAccess(workerEngine) : null),
-    [workerEngine],
+    () =>
+      workerEngine
+        ? withViewerFormRendering(
+            withPdfViewerAccess(workerEngine),
+            enableFormFill,
+          )
+        : null,
+    [workerEngine, enableFormFill],
   );
 
   useEffect(() => {
@@ -1624,7 +1631,7 @@ export function LocalEmbedPDF({
     file,
     fileId,
     pdfRenderMode,
-    enableFormFill,
+    enableFormFill: enableFormFill && !!pdfAccess && !pdfAccess.encrypted,
     formEditingActive,
     enableAnnotations: true,
     annotationsReadOnly,
