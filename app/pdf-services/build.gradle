@@ -1,4 +1,6 @@
 dependencies {
+    implementation "org.apache.commons:commons-lang3:$commonsLang3"
+    implementation "io.github.pixee:java-security-toolkit:1.2.3"
     implementation 'com.google.zxing:core:3.5.4'
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api 'org.verapdf:validation-model:1.30.2'

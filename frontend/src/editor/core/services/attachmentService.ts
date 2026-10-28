@@ -1,6 +1,27 @@
+import { getRuntime } from "@editor/runtime/runtime";
+import { requestDesktopWorker } from "@editor/runtime/desktopWorker";
+import type { AxiosRequestConfig } from "axios";
 import apiClient from "@editor/services/apiClient";
 import axios from "axios";
 import JSZip from "jszip";
+
+async function attachmentPost<T = Blob>(
+  endpoint: string,
+  form: FormData,
+  config?: AxiosRequestConfig,
+) {
+  if (getRuntime().serverOperations)
+    return config
+      ? apiClient.post<T>(endpoint, form, config)
+      : apiClient.post<T>(endpoint, form);
+  const response = await requestDesktopWorker(endpoint, form, config);
+  return {
+    ...response,
+    data: (endpoint.endsWith("/list-attachments")
+      ? JSON.parse(await response.data.text())
+      : response.data) as T,
+  };
+}
 
 export interface AttachmentInfo {
   filename: string;
@@ -57,7 +78,7 @@ export async function listAttachments(
   const formData = new FormData();
   formData.append("fileInput", fileInput);
 
-  const response = await apiClient.post<AttachmentInfo[]>(
+  const response = await attachmentPost<AttachmentInfo[]>(
     "/api/v1/misc/list-attachments",
     formData,
   );
@@ -78,12 +99,12 @@ export async function renameAttachment(
   formData.append("attachmentName", attachmentName);
   formData.append("newName", newName);
 
-  const response = await apiClient.post(
+  const response = await attachmentPost(
     "/api/v1/misc/rename-attachment",
     formData,
     { responseType: "blob" },
   );
-  return response.data as Blob;
+  return response.data;
 }
 
 /**
@@ -98,12 +119,12 @@ export async function deleteAttachment(
   formData.append("fileInput", fileInput);
   formData.append("attachmentName", attachmentName);
 
-  const response = await apiClient.post(
+  const response = await attachmentPost(
     "/api/v1/misc/delete-attachment",
     formData,
     { responseType: "blob" },
   );
-  return response.data as Blob;
+  return response.data;
 }
 
 /**
@@ -114,12 +135,12 @@ export async function extractAttachments(fileInput: File): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
 
-  const response = await apiClient.post(
+  const response = await attachmentPost(
     "/api/v1/misc/extract-attachments",
     formData,
     { responseType: "blob" },
   );
-  return response.data as Blob;
+  return response.data;
 }
 
 /**
@@ -135,12 +156,12 @@ export async function extractSingleAttachment(
   formData.append("attachmentName", filename);
 
   try {
-    const response = await apiClient.post(
+    const response = await attachmentPost(
       "/api/v1/misc/extract-single-attachment",
       formData,
       { responseType: "blob" },
     );
-    return response.data as Blob;
+    return response.data;
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : undefined;
     if (status !== 404 && status !== 501) {
@@ -202,12 +223,12 @@ export async function addAttachments(
     formData.append("convertToPdfA3b", "true");
   }
 
-  const response = await apiClient.post(
+  const response = await attachmentPost(
     "/api/v1/misc/add-attachments",
     formData,
     { responseType: "blob" },
   );
-  return response.data as Blob;
+  return response.data;
 }
 
 /**
@@ -240,12 +261,12 @@ export async function applyBatchAttachmentOps(
   }
 
   try {
-    const response = await apiClient.post(
+    const response = await attachmentPost(
       "/api/v1/misc/batch-process-attachments",
       formData,
       { responseType: "blob" },
     );
-    return response.data as Blob;
+    return response.data;
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : undefined;
     if (status !== 404 && status !== 501) {

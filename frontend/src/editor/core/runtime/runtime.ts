@@ -63,6 +63,19 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  ...Object.fromEntries(
+    [
+      "list-attachments",
+      "extract-attachments",
+      "extract-single-attachment",
+      "add-attachments",
+      "rename-attachment",
+      "delete-attachment",
+      "batch-process-attachments",
+    ].map((endpoint) => [endpoint, "attachments"]),
+  ),
+  "create-portfolio": "portfolio-create",
+  "flatten-portfolio": "portfolio-flatten",
   "add-stamp": "stamp",
   ...Object.fromEntries(
     [

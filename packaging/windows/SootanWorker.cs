@@ -17,9 +17,9 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
-        internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal Task Work;
+        internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal long AttachmentBytes;internal int AttachmentCount;internal Task Work;
         public void Dispose() {
             lock(this) {
             Cancelled=true;
@@ -74,16 +74,19 @@ sealed class SootanWorker : IDisposable {
                     job=new Job {Directory=directory};jobs.Add(id,job);
                 }
             }
-            if(action=="input"||action=="certificate"||action=="trust"||action=="image") {
-                if(job.Running)throw new IOException();
-                string path=Path.Combine(job.Directory,action=="input"?"input-main.pdf":action=="trust"?"trust.cer":action=="image"?"image.bin":"certificate.p12");
+            bool attachment=System.Text.RegularExpressions.Regex.IsMatch(action,@"^attachment-(?:[0-9]|[1-9][0-9])$");
+            if(action=="input"||action=="certificate"||action=="trust"||action=="image"||attachment) {
+                if(job.Running||(job.Work!=null&&!job.Work.IsCompleted))throw new IOException();
+                if(attachment&&job.AttachmentCount>=100)throw new IOException();
+                string path=Path.Combine(job.Directory,attachment?action+".bin":action=="input"?"input-main.pdf":action=="trust"?"trust.cer":action=="image"?"image.bin":"certificate.p12");
                 if(action=="image"&&!new[]{"image/png","image/jpeg","image/gif","image/bmp","image/x-ms-bmp","image/tiff"}.Contains(e.Request.Headers.GetHeader("Content-Type")))throw new IOException();
                 Stream source=e.Request.Content;
                 job.Work=Task.Run(()=> {
                     using(var output=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                         var buffer=new byte[65536];long total=0;int count;
-                        while((count=source.Read(buffer,0,buffer.Length))>0){if(job.Cancelled)throw new IOException();total+=count;if(total>(action=="trust"?1024L*1024:action=="image"?32L*1024*1024:512L*1024*1024))throw new IOException("Selected file exceeds 512 MiB.");output.Write(buffer,0,count);}
+                        while((count=source.Read(buffer,0,buffer.Length))>0){if(job.Cancelled)throw new IOException();total+=count;if(total>(attachment?50L*1024*1024:action=="trust"?1024L*1024:action=="image"?32L*1024*1024:512L*1024*1024))throw new IOException("Selected file exceeds 512 MiB.");output.Write(buffer,0,count);}
                     }
+                    if(attachment){if(totalSize(path)+job.AttachmentBytes>200L*1024*1024)throw new IOException();job.AttachmentBytes+=totalSize(path);job.AttachmentCount++;}
                     File.SetAttributes(path,FileAttributes.ReadOnly);
                 });
                 await job.Work;
@@ -105,7 +108,7 @@ sealed class SootanWorker : IDisposable {
             var result=await running;
             if(job.Cancelled)throw new IOException();
             string name=result["file"] as string;
-            if(name!="output.pdf"&&name!="output.zip"&&name!="output.json"&&name!="output.txt")throw new IOException();
+            if(name!="output.pdf"&&name!="output.zip"&&name!="output.json"&&name!="output.txt"&&name!="output.bin")throw new IOException();
             string outputPath=Path.Combine(job.Directory,name);
             if((File.GetAttributes(outputPath)&FileAttributes.ReparsePoint)!=0)throw new IOException();
             job.Output=new FileStream(outputPath,FileMode.Open,FileAccess.Read,FileShare.Read);
@@ -115,6 +118,7 @@ sealed class SootanWorker : IDisposable {
         catch(Exception) {Reply(e,400,"{\"message\":\"The private worker could not complete this job. Check the selected options and document permissions.\"}");}
         finally {deferral.Complete();}
     }
+    private static long totalSize(string path){return new FileInfo(path).Length;}
     private Dictionary<string,object> Run(Job job,string header) {
         var start=new ProcessStartInfo(java,"-Djava.io.tmpdir="+Quote(job.Directory)+" -cp "+Quote(Path.Combine(libraries,"*"))+" stirling.software.worker.WorkerMain "+Quote(job.Directory)) {UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=job.Directory};
         start.EnvironmentVariables["SOOTAN_WORKER_FONTS"]=fonts;

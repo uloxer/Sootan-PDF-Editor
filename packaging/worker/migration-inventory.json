@@ -486,57 +486,57 @@
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/add-attachments",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/batch-process-attachments",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/delete-attachment",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/extract-attachments",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/extract-single-attachment",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/list-attachments",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "AttachmentController.java",
       "endpoint": "/rename-attachment",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "attachments",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
@@ -648,17 +648,17 @@
       "family": "misc",
       "controller": "PortfolioController.java",
       "endpoint": "/create-portfolio",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "portfolio-create",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",
       "controller": "PortfolioController.java",
       "endpoint": "/flatten-portfolio",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "portfolio-flatten",
+      "classification": "connected-existing-mode"
     },
     {
       "family": "misc",

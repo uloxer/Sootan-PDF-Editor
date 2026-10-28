@@ -39,7 +39,9 @@ describe("private desktop worker boundary", () => {
     expect(supportsWorkerEndpoint("ocr-pdf")).toBe(false);
     await expect(
       requestDesktopWorker("/api/v1/misc/ocr-pdf", request()),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_FEATURE" });
+    ).rejects.toMatchObject({
+      code: "UNSUPPORTED_FEATURE",
+    });
     expect(fetch).not.toHaveBeenCalled();
   });
   it("streams the selected File and releases its private grant after output", async () => {
@@ -74,7 +76,9 @@ describe("private desktop worker boundary", () => {
     vi.stubGlobal("fetch", fetch);
     await expect(
       requestDesktopWorker("/api/v1/misc/ocr-pdf", request()),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPTION" });
+    ).rejects.toMatchObject({
+      code: "UNSUPPORTED_OPTION",
+    });
     expect(fetch.mock.lastCall?.[1]).toEqual({ method: "DELETE" });
   });
   it("rejects unconnected signing modes and oversized trust grants before file copying", async () => {
@@ -85,14 +89,18 @@ describe("private desktop worker boundary", () => {
     form.set("certType", "SERVER");
     await expect(
       requestDesktopWorker("/api/v1/security/cert-sign", form),
-    ).rejects.toMatchObject({ code: "UNSUPPORTED_OPTION" });
+    ).rejects.toMatchObject({
+      code: "UNSUPPORTED_OPTION",
+    });
     form.set(
       "certFile",
       new File([new Uint8Array(1024 * 1024 + 1)], "selected.pem"),
     );
     await expect(
       requestDesktopWorker("/api/v1/security/validate-signature", form),
-    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    ).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
     expect(fetch).not.toHaveBeenCalled();
   });
   it("streams a selected local trust anchor in its own bounded grant", async () => {
@@ -249,5 +257,91 @@ describe("private desktop worker boundary", () => {
     controller.abort();
     await failed;
     expect(fetch.mock.lastCall?.[1]).toEqual({ method: "DELETE" });
+  });
+});
+
+describe("attachment grants", () => {
+  function attachmentNative() {
+    native();
+    vi.stubGlobal("__SOOTAN_RUNTIME__", {
+      kind: "offline-desktop",
+      advancedOperations: [
+        "attachments",
+        "portfolio-create",
+        "portfolio-flatten",
+      ],
+    });
+  }
+  it("streams selected non-PDF members by index and sends filenames only as metadata", async () => {
+    attachmentNative();
+    const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+      ok: true,
+      headers: new Headers(),
+      blob: async () => new Blob(["PDF"]),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const form = new FormData();
+    form.set("fileInput", new File(["PDF"], "source.pdf"));
+    const file = new File(["private bytes"], "Notes with spaces.txt", {
+      type: "text/plain",
+    });
+    form.append("attachments", file);
+    await requestDesktopWorker("/api/v1/misc/add-attachments", form);
+    expect(fetch.mock.calls.map((call) => call[0])).toEqual([
+      expect.stringMatching(/\/input$/),
+      expect.stringMatching(/\/attachment-0$/),
+      expect.stringMatching(/\/run$/),
+      expect.stringMatching(/\/job$/),
+    ]);
+    expect(fetch.mock.calls[1][1]?.body).toBe(file);
+    expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toMatchObject({
+      operation: "attachments",
+      options: {
+        action: "add",
+        selectedFiles: [
+          { index: 0, name: file.name, contentType: "text/plain" },
+        ],
+      },
+    });
+  });
+  it("refuses PDF/A conversion and oversized manifests before copying", async () => {
+    attachmentNative();
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const form = new FormData();
+    form.set("fileInput", new File(["PDF"], "source.pdf"));
+    form.set("convertToPdfA3b", "true");
+    await expect(
+      requestDesktopWorker("/api/v1/misc/add-attachments", form),
+    ).rejects.toMatchObject({
+      code: "UNSUPPORTED_OPTION",
+    });
+    form.delete("convertToPdfA3b");
+    for (let i = 0; i < 101; i++)
+      form.append("attachments", new File(["x"], i + ".txt"));
+    await expect(
+      requestDesktopWorker("/api/v1/misc/add-attachments", form),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("creates a portfolio without requiring a PDF source", async () => {
+    attachmentNative();
+    const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+      ok: true,
+      headers: new Headers(),
+      blob: async () => new Blob(["PDF"]),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const form = new FormData();
+    form.append(
+      "files",
+      new File(["notes"], "notes.txt", { type: "text/plain" }),
+    );
+    form.set("coverTitle", "Swona");
+    await requestDesktopWorker("/api/v1/misc/create-portfolio", form);
+    expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toMatchObject({
+      operation: "portfolio-create",
+      options: { coverTitle: "Swona" },
+    });
   });
 });

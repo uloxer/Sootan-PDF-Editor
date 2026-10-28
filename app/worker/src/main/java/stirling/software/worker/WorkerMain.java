@@ -25,6 +25,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import stirling.software.pdf.PdfAttachmentFiles;
+import stirling.software.pdf.PdfAttachments;
 import stirling.software.pdf.PdfCertificates;
 import stirling.software.pdf.PdfDocumentAnalysis;
 import stirling.software.pdf.PdfDocumentInfo;
@@ -35,6 +37,7 @@ import stirling.software.pdf.PdfPageFlattener;
 import stirling.software.pdf.PdfPageNumbers;
 import stirling.software.pdf.PdfPageScale;
 import stirling.software.pdf.PdfPageSelection;
+import stirling.software.pdf.PdfPortfolio;
 import stirling.software.pdf.PdfProtection;
 import stirling.software.pdf.PdfRasterizer;
 import stirling.software.pdf.PdfSanitizer;
@@ -51,6 +54,9 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "attachments",
+                    "portfolio-create",
+                    "portfolio-flatten",
                     "document-inspect",
                     "stamp",
                     "page-crop",
@@ -115,13 +121,15 @@ public final class WorkerMain {
                             "bytes",
                             Files.size(result),
                             "contentType",
-                            result.toString().endsWith(".txt")
-                                    ? "text/plain; charset=utf-8"
-                                    : result.toString().endsWith(".zip")
-                                            ? "application/zip"
-                                            : result.toString().endsWith(".json")
-                                                    ? "application/json"
-                                                    : "application/pdf"));
+                            result.toString().endsWith(".bin")
+                                    ? "application/octet-stream"
+                                    : result.toString().endsWith(".txt")
+                                            ? "text/plain; charset=utf-8"
+                                            : result.toString().endsWith(".zip")
+                                                    ? "application/zip"
+                                                    : result.toString().endsWith(".json")
+                                                            ? "application/json"
+                                                            : "application/pdf"));
         } catch (Exception failure) {
             System.err.println("Worker failure type: " + failure.getClass().getSimpleName());
             // Requests can contain credentials; neither their text nor exception messages belong in
@@ -165,6 +173,38 @@ public final class WorkerMain {
         return path;
     }
 
+    private static String attachmentName(String name) throws IOException {
+        if (name.isBlank() || name.length() > 1024 || name.indexOf('\0') >= 0)
+            throw new IOException("Invalid attachment name.");
+        return name;
+    }
+
+    private static List<PdfAttachmentFiles.SelectedFile> attachmentGrants(
+            Path root, JsonObject options) throws IOException {
+        if (!options.has("selectedFiles")) throw new IOException("No selected files.");
+        var result = new ArrayList<PdfAttachmentFiles.SelectedFile>();
+        var ids = new java.util.HashSet<Integer>();
+        for (var item : options.getAsJsonArray("selectedFiles")) {
+            var entry = item.getAsJsonObject();
+            int index = entry.get("index").getAsInt();
+            if (index < 0 || index >= 100 || !ids.add(index))
+                throw new IOException("Invalid attachment grant.");
+            Path file = root.resolve("attachment-" + index + ".bin");
+            if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)
+                    || !file.toRealPath().getParent().equals(root))
+                throw new IOException("Invalid attachment grant.");
+            String name = attachmentName(entry.get("name").getAsString());
+            String type = entry.get("contentType").getAsString();
+            if (type.length() > 255 || !type.matches("[a-zA-Z0-9!#$&^_.+/-]*"))
+                throw new IOException("Invalid attachment MIME type.");
+            result.add(
+                    new PdfAttachmentFiles.SelectedFile(
+                            name, type, Files.size(file), () -> Files.newInputStream(file)));
+        }
+        PdfAttachmentFiles.validate(result);
+        return result;
+    }
+
     private static String text(JsonObject options, String key, String fallback) {
         return options.has(key) ? options.get(key).getAsString() : fallback;
     }
@@ -179,6 +219,17 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "attachments" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "action",
+                                    "attachmentName",
+                                    "newName",
+                                    "opsJson",
+                                    "convertToPdfA3b",
+                                    "selectedFiles");
+                    case "portfolio-create" -> Set.of("coverTitle", "selectedFiles");
+                    case "portfolio-flatten" -> Set.of("sourcePassword");
                     case "document-inspect" -> Set.of("sourcePassword", "report", "filename");
                     case "stamp" ->
                             Set.of(
@@ -361,7 +412,93 @@ public final class WorkerMain {
             if (flag(options, "removeAll"))
                 credential = text(options, "sourcePassword", text(options, "password", ""));
         }
+        if (operation.equals("portfolio-create")) {
+            try (var portfolio =
+                    new PdfPortfolio()
+                            .createFiles(
+                                    attachmentGrants(root, options),
+                                    text(options, "coverTitle", ""))) {
+                portfolio.save(output.toFile());
+                return output;
+            }
+        }
         try (PDDocument document = Loader.loadPDF(input.toFile(), credential)) {
+            if (operation.equals("attachments")) {
+                var attachments = new PdfAttachments(50L * 1024 * 1024, 200L * 1024 * 1024, true);
+                String action = text(options, "action", "");
+                if (Set.of("list", "extract", "single").contains(action)) {
+                    if (document.isEncrypted()
+                            && !document.getCurrentAccessPermission().canExtractContent())
+                        throw new InspectionDenied();
+                    if (action.equals("list")) {
+                        Path json = root.resolve("output.json");
+                        writeReport(json, JSON.toJson(attachments.listAttachments(document)));
+                        return json;
+                    }
+                    byte[] bytes =
+                            action.equals("single")
+                                    ? attachments
+                                            .extractSingleAttachment(
+                                                    document, text(options, "attachmentName", ""))
+                                            .orElseThrow()
+                                    : attachments.extractAttachments(document).orElseThrow();
+                    Path target =
+                            root.resolve(action.equals("single") ? "output.bin" : "output.zip");
+                    Files.write(target, bytes, java.nio.file.StandardOpenOption.CREATE_NEW);
+                    return target;
+                }
+                PdfProtection.requireOwner(document);
+                if (flag(options, "convertToPdfA3b")) throw new UnsupportedStructure();
+                switch (action) {
+                    case "add" -> attachments.addFiles(document, attachmentGrants(root, options));
+                    case "rename" ->
+                            attachments.renameAttachment(
+                                    document,
+                                    text(options, "attachmentName", ""),
+                                    attachmentName(text(options, "newName", "")));
+                    case "delete" ->
+                            attachments.deleteAttachment(
+                                    document, text(options, "attachmentName", ""));
+                    case "batch" -> {
+                        var ops = JSON.fromJson(text(options, "opsJson", "{}"), JsonObject.class);
+                        if (ops.has("deletions"))
+                            for (var item : ops.getAsJsonArray("deletions")) {
+                                try {
+                                    attachments.deleteAttachment(document, item.getAsString());
+                                } catch (IOException | IllegalArgumentException missing) {
+                                }
+                            }
+                        if (ops.has("renames"))
+                            for (var item : ops.getAsJsonArray("renames")) {
+                                var rename = item.getAsJsonObject();
+                                if (rename.has("oldName") && rename.has("newName")) {
+                                    try {
+                                        attachments.renameAttachment(
+                                                document,
+                                                rename.get("oldName").getAsString(),
+                                                attachmentName(
+                                                        rename.get("newName").getAsString()));
+                                    } catch (IOException | IllegalArgumentException missing) {
+                                    }
+                                }
+                            }
+                        if (options.has("selectedFiles")
+                                && !options.getAsJsonArray("selectedFiles").isEmpty())
+                            attachments.addFiles(document, attachmentGrants(root, options));
+                    }
+                    default -> throw new IOException("Unknown attachment action.");
+                }
+                document.save(output.toFile());
+                return output;
+            }
+            if (operation.equals("portfolio-flatten")) {
+                PdfProtection.requireOwner(document);
+                var portfolio = new PdfPortfolio();
+                if (!portfolio.isPortfolio(document)) throw new IOException("Not a portfolio.");
+                portfolio.flattenPortfolio(document);
+                document.save(output.toFile());
+                return output;
+            }
             if (operation.equals("document-inspect")) {
                 String report = text(options, "report", "");
                 if (document.getNumberOfPages() > 10000 || Files.size(input) > 100L * 1024 * 1024)

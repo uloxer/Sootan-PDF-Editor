@@ -26,10 +26,22 @@ export async function requestDesktopWorker(
       "UNSUPPORTED_FEATURE",
       "This private worker capability is not connected.",
     );
-  const input = form.get("fileInput");
-  if (!(input instanceof File) || form.getAll("fileInput").length !== 1)
+  const portfolio = name === "create-portfolio";
+  const selected = form
+    .getAll(portfolio ? "files" : "attachments")
+    .filter((file): file is File => file instanceof File);
+  const input = portfolio ? selected[0] : form.get("fileInput");
+  if (
+    !(input instanceof File) ||
+    (!portfolio && form.getAll("fileInput").length !== 1)
+  )
     throw new CorePdfError("INVALID_INPUT", "Select exactly one PDF.");
-  const options: Record<string, string | Record<string, string>> = {};
+  const options: Record<
+    string,
+    | string
+    | Record<string, string>
+    | { index: number; name: string; contentType: string }[]
+  > = {};
   const metadata: Record<string, string> = {};
   for (const [key, value] of form) {
     if (typeof value !== "string") continue;
@@ -90,6 +102,42 @@ export async function requestDesktopWorker(
   }
   if (DESKTOP_ENDPOINTS[name] === "document-inspect" || name === "add-stamp")
     options.filename = input.name;
+  if (DESKTOP_ENDPOINTS[name] === "attachments") {
+    const actions: Record<string, string> = {
+      "list-attachments": "list",
+      "extract-attachments": "extract",
+      "extract-single-attachment": "single",
+      "add-attachments": "add",
+      "rename-attachment": "rename",
+      "delete-attachment": "delete",
+      "batch-process-attachments": "batch",
+    };
+    options.action = actions[name];
+    if (options.convertToPdfA3b === "true")
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "PDF/A-3b conversion is not connected to the standalone worker. Turn off PDF/A conversion to preserve ordinary attachments.",
+      );
+  }
+  if (
+    selected.length > 100 ||
+    selected.some((file) => file.size === 0 || file.size > 50 * 1024 * 1024) ||
+    selected.reduce((total, file) => total + file.size, 0) > 200 * 1024 * 1024
+  )
+    throw new CorePdfError(
+      "INVALID_INPUT",
+      "Select up to100 nonempty attachment files,50MiB each and200MiB total.",
+    );
+  if (selected.length)
+    options.selectedFiles = selected.map((file, index) => ({
+      index,
+      name: file.name,
+      contentType: file.type,
+    }));
+  if (["attachments", "portfolio-flatten"].includes(DESKTOP_ENDPOINTS[name])) {
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+  }
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
   const controller = new AbortController();
@@ -106,6 +154,17 @@ export async function requestDesktopWorker(
     });
     if (!upload.ok)
       throw new Error("Unable to copy the selected PDF into a private job.");
+    for (let index = 0; index < selected.length; index++) {
+      const grant = await fetch(`${route}/attachment-${index}`, {
+        method: "POST",
+        body: selected[index],
+        signal: controller.signal,
+      });
+      if (!grant.ok)
+        throw new Error(
+          "Unable to copy the selected attachment into its private grant.",
+        );
+    }
     const certificate = form.get("p12File");
     if (certificate instanceof File) {
       const uploaded = await fetch(`${route}/certificate`, {
