@@ -1,3 +1,4 @@
+import { getRuntime } from "@editor/runtime/runtime";
 // Must be imported before React so the DOM-prototype patch is installed
 // before React's commit phase runs. Prevents browser page translators
 // (Edge / Google Translate / extensions) from crashing the app via
@@ -13,7 +14,7 @@ import "@editor/styles/index.css"; // Import global styles
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import App from "@editor/App";
 import "@editor/i18n"; // Initialize i18next
 import { BASE_PATH } from "@editor/constants/app";
@@ -26,12 +27,13 @@ if (!container) {
   throw new Error("Root container missing in index.html");
 }
 
+const Router = getRuntime().kind === "extension" ? HashRouter : BrowserRouter;
 const root = ReactDOM.createRoot(container); // Finds the root DOM element
 root.render(
   <React.StrictMode>
     <ColorSchemeScript />
-    <BrowserRouter basename={BASE_PATH}>
+    <Router basename={BASE_PATH}>
       <App />
-    </BrowserRouter>
+    </Router>
   </React.StrictMode>,
 );

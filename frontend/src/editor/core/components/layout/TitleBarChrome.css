@@ -1,0 +1,101 @@
+.desktop-chrome {
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+.desktop-chrome .app-frame {
+  height: calc(100dvh - 2rem);
+}
+.desktop-chrome__bar {
+  display: flex;
+  height: 2rem;
+  align-items: stretch;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border-subtle);
+  user-select: none;
+  position: relative;
+  z-index: 30000;
+}
+.desktop-chrome__drag {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.75rem;
+  font-size: 0.75rem;
+}
+.desktop-chrome__bar button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  width: 2.75rem;
+  display: grid;
+  place-items: center;
+}
+.desktop-chrome__bar button:hover {
+  background: var(--c-bg);
+}
+.desktop-chrome__bar button:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+}
+.desktop-chrome__resize {
+  position: fixed;
+  z-index: 31000;
+}
+.desktop-chrome__resize--n,
+.desktop-chrome__resize--s {
+  left: 6px;
+  right: 6px;
+  height: 5px;
+  cursor: ns-resize;
+}
+.desktop-chrome__resize--n {
+  top: 0;
+}
+.desktop-chrome__resize--s {
+  bottom: 0;
+}
+.desktop-chrome__resize--e,
+.desktop-chrome__resize--w {
+  top: 6px;
+  bottom: 6px;
+  width: 5px;
+  cursor: ew-resize;
+}
+.desktop-chrome__resize--e {
+  right: 0;
+}
+.desktop-chrome__resize--w {
+  left: 0;
+}
+.desktop-chrome__resize--ne,
+.desktop-chrome__resize--nw,
+.desktop-chrome__resize--se,
+.desktop-chrome__resize--sw {
+  width: 7px;
+  height: 7px;
+}
+.desktop-chrome__resize--ne {
+  right: 0;
+  top: 0;
+  cursor: nesw-resize;
+}
+.desktop-chrome__resize--nw {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+.desktop-chrome__resize--se {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+.desktop-chrome__resize--sw {
+  left: 0;
+  bottom: 0;
+  cursor: nesw-resize;
+}

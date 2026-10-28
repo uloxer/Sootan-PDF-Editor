@@ -1,4 +1,4 @@
-import apiClient from "@editor/services/apiClient";
+import { requestPdfProcessing } from "@editor/runtime/processing";
 import { useTranslation } from "react-i18next";
 import {
   defineCustomTool,
@@ -52,7 +52,7 @@ export const extractPagesOperationConfig = defineCustomTool({
       formData.append("fileInput", file);
       formData.append("pageNumbers", csv);
 
-      const response = await apiClient.post(
+      const response = await requestPdfProcessing(
         "/api/v1/general/rearrange-pages",
         formData,
         { responseType: "blob" },

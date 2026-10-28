@@ -1,3 +1,4 @@
+import { getRuntime } from "@editor/runtime/runtime";
 /**
  * FormFillContext — React context for form fill state management.
  *
@@ -698,7 +699,8 @@ export function FormFillProvider({
   );
 
   const setProviderMode = useCallback(
-    (mode: "pdflib" | "pdfbox") => {
+    (requestedMode: "pdflib" | "pdfbox") => {
+      const mode = getRuntime().serverOperations ? requestedMode : "pdflib";
       // Use the ref to check the current mode synchronously — avoids
       // relying on stale closure state and allows the early return.
       if (providerModeRef.current === mode) return;

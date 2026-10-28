@@ -1,6 +1,6 @@
+import { requestPdfProcessing } from "@editor/runtime/processing";
 import { useCallback, useRef } from "react";
 import axios, { type CancelTokenSource } from "axios"; // Real axios for static methods (CancelToken, isCancel)
-import apiClient from "@editor/services/apiClient"; // Our configured instance
 import {
   processResponse,
   ResponseHandler,
@@ -125,7 +125,7 @@ export const useToolApiCalls = <TParams = void>() => {
                   status: 200,
                   headers: undefined,
                 }
-              : await apiClient.post(endpoint, formData, {
+              : await requestPdfProcessing(endpoint, formData, {
                   responseType: "blob",
                   cancelToken: cancellation.token,
                   signal: sourceLifetime,

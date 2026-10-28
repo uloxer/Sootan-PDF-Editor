@@ -1,5 +1,5 @@
+import { requestPdfProcessing } from "@editor/runtime/processing";
 import { useCallback, useRef, useEffect, useContext } from "react";
-import apiClient from "@editor/services/apiClient";
 import {
   assertFilesNotBlocked,
   policySourceIds,
@@ -418,7 +418,7 @@ export const useToolOperation = <TParams>(
               );
             }
 
-            const response = await apiClient.post(endpoint, formData, {
+            const response = await requestPdfProcessing(endpoint, formData, {
               responseType: "blob",
             });
 

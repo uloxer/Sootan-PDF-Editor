@@ -1,3 +1,8 @@
+import { getRuntime } from "@editor/runtime/runtime";
+import {
+  runCorePdfOperation,
+  CorePdfError,
+} from "@editor/runtime/corePdfOperations";
 import {
   getPdfiumModule,
   openRawDocumentSafe,
@@ -110,6 +115,24 @@ export class PDFExportService {
     sourceFiles: Map<string, File>,
     pages: PDFPage[],
   ): Promise<Blob> {
+    if (!getRuntime().serverOperations) {
+      const ids = [...sourceFiles.keys()];
+      if (pages.some((p) => p.isBlankPage || p.originalPageNumber === -1))
+        throw new CorePdfError(
+          "UNSUPPORTED_OPTION",
+          "Adding blank pages is not available in this local composition yet.",
+        );
+      const result = await runCorePdfOperation({
+        kind: "compose",
+        files: [...sourceFiles.values()],
+        pages: pages.map((p) => ({
+          source: p.originalFileId ? ids.indexOf(p.originalFileId) : 0,
+          page: p.originalPageNumber ?? p.pageNumber,
+          rotation: p.rotation,
+        })),
+      });
+      return result.files[0];
+    }
     const m = await getPdfiumModule();
 
     // Create destination document
@@ -210,6 +233,25 @@ export class PDFExportService {
     sourceData: ArrayBuffer,
     pages: PDFPage[],
   ): Promise<Blob> {
+    if (!getRuntime().serverOperations) {
+      if (pages.some((p) => p.isBlankPage || p.originalPageNumber === -1))
+        throw new CorePdfError(
+          "UNSUPPORTED_OPTION",
+          "Adding blank pages is not available in this local composition yet.",
+        );
+      const result = await runCorePdfOperation({
+        kind: "compose",
+        files: [
+          new File([sourceData], "document.pdf", { type: "application/pdf" }),
+        ],
+        pages: pages.map((p) => ({
+          source: 0,
+          page: p.originalPageNumber ?? p.pageNumber,
+          rotation: p.rotation,
+        })),
+      });
+      return result.files[0];
+    }
     const m = await getPdfiumModule();
 
     // Open source document

@@ -1,3 +1,4 @@
+import { getRuntime } from "@editor/runtime/runtime";
 import {
   ensureLocalPdfAccess,
   getPdfAccess,
@@ -190,6 +191,10 @@ export async function prepareUnlockedFile(
     getPdfAccess(file) ??
     (await ensureAccessUnlessDamaged(file, inspectionSignal));
   if (!access?.encrypted) return file;
+  if (getRuntime().kind !== "server")
+    throw new Error(
+      "Local page processing cannot preserve this PDF's encryption. Viewing with its password remains available; use an unencrypted copy for local edits.",
+    );
   if (!supportsSessionUnlock(endpoint))
     throw new Error(
       i18n.t(

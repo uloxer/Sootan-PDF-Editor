@@ -5,6 +5,7 @@ export interface RuntimeCapabilities {
   serverOperations: boolean;
   nativeFileDialogs: boolean;
   renderer: "wasm";
+  nativeWindowControls?: boolean;
 }
 
 const SERVER: RuntimeCapabilities = {
@@ -21,7 +22,13 @@ export function getRuntime(): RuntimeCapabilities {
   ).__SOOTAN_RUNTIME__;
   return seed?.kind === "offline-desktop" || seed?.kind === "extension"
     ? { ...seed, serverOperations: false, renderer: "wasm" }
-    : SERVER;
+    : seed?.kind === "server"
+      ? {
+          ...SERVER,
+          nativeFileDialogs: seed.nativeFileDialogs === true,
+          nativeWindowControls: seed.nativeWindowControls === true,
+        }
+      : SERVER;
 }
 
 export const OFFLINE_APP_CONFIG: AppConfig = {
@@ -44,5 +51,30 @@ export const OFFLINE_OPERATION_REASON =
   "This operation requires a processing adapter that is not available in this offline runtime.";
 
 export function supportsLocalEndpoint(endpoint: string): boolean {
-  return ["view-pdf", "sign", "form-fill"].includes(endpoint);
+  return CORE_ENDPOINTS.includes(endpoint);
 }
+
+export const CORE_ENDPOINTS: string[] = [
+  "view-pdf",
+  "sign",
+  "form-fill",
+  "multi-tool",
+  "merge-pdfs",
+  "split-pages",
+  "rearrange-pages",
+  "remove-pages",
+  "rotate-pdf",
+];
+export const CORE_TOOL_IDS = new Set([
+  "read",
+  "annotate",
+  "formFill",
+  "sign",
+  "merge",
+  "split",
+  "extractPages",
+  "reorganizePages",
+  "removePages",
+  "rotate",
+  "multiTool",
+]);

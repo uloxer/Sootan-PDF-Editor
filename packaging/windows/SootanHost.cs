@@ -28,6 +28,15 @@ internal sealed class SootanHost : Form {
     private readonly string bundle;
 
     [DllImport("user32.dll")] private static extern bool SetProcessDpiAwarenessContext(IntPtr context);
+    [DllImport("user32.dll")] private static extern bool ReleaseCapture();
+    [DllImport("user32.dll")] private static extern IntPtr SendMessage(IntPtr window,int message,IntPtr wParam,IntPtr lParam);
+    [DllImport("user32.dll")] private static extern IntPtr MonitorFromWindow(IntPtr window,int flags);
+    [DllImport("user32.dll")] private static extern bool GetMonitorInfo(IntPtr monitor,ref MonitorInfo info);
+    [StructLayout(LayoutKind.Sequential)] private struct NativePoint { public int X,Y; }
+    [StructLayout(LayoutKind.Sequential)] private struct NativeRect { public int Left,Top,Right,Bottom; }
+    [StructLayout(LayoutKind.Sequential)] private struct MonitorInfo { public int Size;public NativeRect Monitor,Work;public int Flags; }
+    [StructLayout(LayoutKind.Sequential)] private struct MinMaxInfo { public NativePoint Reserved,MaxSize,MaxPosition,MinTrackSize,MaxTrackSize; }
+    private int lastDragClick;private Point lastDragPoint;
     internal static void ConfigureDpi() { SetProcessDpiAwarenessContext(new IntPtr(-4)); }
 
     [STAThread] public static int Main(string[] args) {
@@ -67,6 +76,7 @@ internal sealed class SootanHost : Form {
         data=directory;pipeName=PipeName(data);
         Directory.CreateDirectory(data);
         AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;
+        FormBorderStyle=FormBorderStyle.None;
         Text="Sootan PDF Editor";Width=1440;Height=960;MinimumSize=new Size(960,640);
         Icon=new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"sootan.ico"));
         web.Dock=DockStyle.Fill;Controls.Add(web);
@@ -86,8 +96,8 @@ internal sealed class SootanHost : Form {
                 core.NewWindowRequested+=(s,n)=> {n.Handled=true;if(n.IsUserInitiated&&External(n.Uri))Process.Start(n.Uri);};
                 core.PermissionRequested+=(s,p)=>p.State=CoreWebView2PermissionState.Deny;
                 core.WebMessageReceived+=Message;
+                await core.AddScriptToExecuteOnDocumentCreatedAsync("window.__SOOTAN_RUNTIME__={kind:'"+(bundle==null?"server":"offline-desktop")+"',serverOperations:"+(bundle==null?"true":"false")+",nativeFileDialogs:true,nativeWindowControls:true,renderer:'wasm'};");
                 if(bundle!=null) {
-                    await core.AddScriptToExecuteOnDocumentCreatedAsync("window.__SOOTAN_RUNTIME__={kind:'offline-desktop',serverOperations:false,nativeFileDialogs:true,renderer:'wasm'};");
                     core.AddWebResourceRequestedFilter("*",CoreWebView2WebResourceContext.All);
                     core.WebResourceRequested+=BundledResource;
                 }
@@ -112,6 +122,34 @@ internal sealed class SootanHost : Form {
             if(ready&&!approvedClose){e.Cancel=true;web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"close\"}");}
         };
         FormClosed+=(sender,e)=>{foreach(var stream in streams.Values)stream.Dispose();web.Dispose();if(backend!=null)backend.Dispose();};
+        Resize+=(sender,e)=> {if(web.CoreWebView2!=null)web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"window-state\",\"maximized\":"+(WindowState==FormWindowState.Maximized?"true":"false")+"}");};
+    }
+    protected override CreateParams CreateParams { get {var value=base.CreateParams;value.Style=(value.Style|0x000F0000)&~0x00C00000;return value;} }
+    protected override void WndProc(ref System.Windows.Forms.Message message) {
+        if(message.Msg==0x0083&&message.WParam!=IntPtr.Zero){message.Result=IntPtr.Zero;return;}
+        base.WndProc(ref message);
+        if(message.Msg==0x0024) {
+            var monitor=new MonitorInfo {Size=Marshal.SizeOf(typeof(MonitorInfo))};
+            if(GetMonitorInfo(MonitorFromWindow(Handle,2),ref monitor)) {
+                var bounds=(MinMaxInfo)Marshal.PtrToStructure(message.LParam,typeof(MinMaxInfo));
+                bounds.MaxPosition.X=monitor.Work.Left-monitor.Monitor.Left;bounds.MaxPosition.Y=monitor.Work.Top-monitor.Monitor.Top;
+                bounds.MaxSize.X=monitor.Work.Right-monitor.Work.Left;bounds.MaxSize.Y=monitor.Work.Bottom-monitor.Work.Top;
+                Marshal.StructureToPtr(bounds,message.LParam,false);
+            }
+        }
+    }
+    private void WindowCommand(string action) {
+        if(action=="state"){web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"window-state\",\"maximized\":"+(WindowState==FormWindowState.Maximized?"true":"false")+"}");return;}
+        if(action=="close"){Close();return;}
+        if(action=="minimize"){WindowState=FormWindowState.Minimized;return;}
+        if(action=="maximize"){WindowState=WindowState==FormWindowState.Maximized?FormWindowState.Normal:FormWindowState.Maximized;return;}
+        int hit=0;
+        switch(action){case "drag":
+            int now=Environment.TickCount;Point point=Cursor.Position;
+            if(unchecked(now-lastDragClick)<SystemInformation.DoubleClickTime&&Math.Abs(point.X-lastDragPoint.X)<SystemInformation.DoubleClickSize.Width&&Math.Abs(point.Y-lastDragPoint.Y)<SystemInformation.DoubleClickSize.Height){lastDragClick=0;WindowCommand("maximize");return;}
+            lastDragClick=now;lastDragPoint=point;hit=2;break;
+            case "resize-w":hit=10;break;case "resize-e":hit=11;break;case "resize-n":hit=12;break;case "resize-nw":hit=13;break;case "resize-ne":hit=14;break;case "resize-s":hit=15;break;case "resize-sw":hit=16;break;case "resize-se":hit=17;break;}
+        if(hit!=0){ReleaseCapture();SendMessage(Handle,0x00A1,new IntPtr(hit),IntPtr.Zero);}
     }
     protected override bool ProcessCmdKey(ref System.Windows.Forms.Message message,Keys keys) {
         if(keys==(Keys.Control|Keys.O)){OpenFiles();return true;}
@@ -182,6 +220,7 @@ internal sealed class SootanHost : Form {
             string type=message.ContainsKey("type")?message["type"] as string:null;
             if(type=="ready"){ready=true;SendPending();}
             if(type=="open")BeginInvoke(new Action(OpenFiles));
+            if(type=="window"&&message.ContainsKey("action"))BeginInvoke(new Action(()=>WindowCommand(message["action"] as string)));
             if(type=="close-approved"){approvedClose=true;BeginInvoke(new Action(Close));}
             if(type=="release"&&message.ContainsKey("token")) {
                 string token=message["token"] as string;Stream stream;
