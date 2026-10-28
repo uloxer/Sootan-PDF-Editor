@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal long AttachmentBytes;internal int AttachmentCount;internal Task Work;
         public void Dispose() {
@@ -104,7 +104,7 @@ sealed class SootanWorker : IDisposable {
             object options=message.ContainsKey("options")?message["options"]:new Dictionary<string,object>();
             job.Running=true;
             string header=json.Serialize(new {requestId=id,operation=operation,input="input-main.pdf",options=options});
-            var running=Task.Run(()=>Run(job,header));job.Work=running;
+            var running=Task.Run(()=>Run(job,header,operation));job.Work=running;
             var result=await running;
             if(job.Cancelled)throw new IOException();
             string name=result["file"] as string;
@@ -113,13 +113,14 @@ sealed class SootanWorker : IDisposable {
             if((File.GetAttributes(outputPath)&FileAttributes.ReparsePoint)!=0)throw new IOException();
             job.Output=new FileStream(outputPath,FileMode.Open,FileAccess.Read,FileShare.Read);
             e.Response=environment.CreateWebResourceResponse(job.Output,200,"OK","Content-Type: "+(string)result["contentType"]+"\r\nCache-Control: no-store\r\n");
-        } catch(InspectionDenied) {Reply(e,400,"{\"code\":\"INSPECTION_ACCESS_DENIED\"}");}
+        } catch(OfficeExternalResource) {Reply(e,400,"{\"code\":\"OFFICE_EXTERNAL_RESOURCE\"}");}
+        catch(InspectionDenied) {Reply(e,400,"{\"code\":\"INSPECTION_ACCESS_DENIED\"}");}
         catch(UnsupportedStructure) {Reply(e,400,"{\"code\":\"UNSUPPORTED_DOCUMENT_STRUCTURE\"}");}
         catch(Exception) {Reply(e,400,"{\"message\":\"The private worker could not complete this job. Check the selected options and document permissions.\"}");}
         finally {deferral.Complete();}
     }
     private static long totalSize(string path){return new FileInfo(path).Length;}
-    private Dictionary<string,object> Run(Job job,string header) {
+    private Dictionary<string,object> Run(Job job,string header,string operation) {
         var start=new ProcessStartInfo(java,"-Djava.io.tmpdir="+Quote(job.Directory)+" -cp "+Quote(Path.Combine(libraries,"*"))+" stirling.software.worker.WorkerMain "+Quote(job.Directory)) {UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=job.Directory};
         start.EnvironmentVariables["SOOTAN_WORKER_FONTS"]=fonts;
         start.EnvironmentVariables["SOOTAN_OCRMYPDF"]=Path.Combine(helpers,"bin","ocrmypdf.exe");
@@ -131,7 +132,8 @@ sealed class SootanWorker : IDisposable {
             if(job.Cancelled)throw new IOException();
             job.Process=Process.Start(start);job.Tree=new ProcessTree(job.Process);
         }
-        var error=job.Process.StandardError.ReadToEndAsync();
+        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="office-export"||operation=="office-import"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
+        var error=job.Process.StandardError.BaseStream.CopyToAsync(Stream.Null);
         job.Process.StandardInput.WriteLine(header);job.Process.StandardInput.Close();
         Dictionary<string,object> result=null;string line;
         while((line=job.Process.StandardOutput.ReadLine())!=null) {
@@ -139,14 +141,17 @@ sealed class SootanWorker : IDisposable {
             var message=new JavaScriptSerializer {MaxJsonLength=65536}.Deserialize<Dictionary<string,object>>(line);
             if(message.ContainsKey("type")&&(string)message["type"]=="result")result=message;
             if(message.ContainsKey("code")&&(string)message["code"]=="UNSUPPORTED_DOCUMENT_STRUCTURE")throw new UnsupportedStructure();
+            if(message.ContainsKey("code")&&(string)message["code"]=="OFFICE_EXTERNAL_RESOURCE")throw new OfficeExternalResource();
             if(message.ContainsKey("code")&&(string)message["code"]=="INSPECTION_ACCESS_DENIED")throw new InspectionDenied();
         }
-        job.Process.WaitForExit();
+        job.Process.WaitForExit();error.GetAwaiter().GetResult();
         if(job.Process.ExitCode!=0||result==null)throw new IOException();
         return result;
+        }
     }
     private sealed class UnsupportedStructure : IOException {}
     private sealed class InspectionDenied : IOException {}
+    private sealed class OfficeExternalResource : IOException {}
     private void Reply(CoreWebView2WebResourceRequestedEventArgs e,int status,string body) {
         e.Response=environment.CreateWebResourceResponse(new MemoryStream(Encoding.UTF8.GetBytes(body)),status,status==200?"OK":"Worker unavailable","Content-Type: application/json\r\nCache-Control: no-store\r\n");
     }

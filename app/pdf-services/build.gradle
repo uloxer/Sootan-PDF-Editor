@@ -1,4 +1,7 @@
 dependencies {
+    api "com.stirling:stirling-office-convert:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
+    api "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
     implementation "com.drewnoakes:metadata-extractor:2.21.0"
     implementation "org.apache.commons:commons-lang3:$commonsLang3"
     implementation "io.github.pixee:java-security-toolkit:1.2.3"

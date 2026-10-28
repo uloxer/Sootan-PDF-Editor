@@ -167,9 +167,9 @@
       "family": "converters",
       "controller": "ConvertOfficeController.java",
       "endpoint": "/file/pdf",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "legacy-helper-or-external-mode-unverified",
+      "state": "worker-mode",
+      "mode": "office-import",
+      "classification": "connected-in-process-office-modes-legacy-helper-branches-pending",
       "note": "Java/optional installed Office branches require mode audit"
     },
     {
@@ -209,9 +209,9 @@
       "family": "converters",
       "controller": "ConvertPDFToExcelController.java",
       "endpoint": "/pdf/xlsx",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "office-export",
+      "classification": "connected-in-process-office-modes-legacy-helper-branches-pending"
     },
     {
       "family": "converters",
@@ -225,9 +225,9 @@
       "family": "converters",
       "controller": "ConvertPDFToOffice.java",
       "endpoint": "/pdf/presentation",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "office-export",
+      "classification": "connected-in-process-office-modes-legacy-helper-branches-pending"
     },
     {
       "family": "converters",
@@ -235,15 +235,19 @@
       "endpoint": "/pdf/text",
       "state": "worker-mode",
       "mode": "pdf-text-export",
-      "classification": "connected-txt-mode-rtf-office-pending"
+      "classification": "connected-txt-rtf-in-process-modes-legacy-helper-pending",
+      "modes": [
+        "pdf-text-export",
+        "office-export"
+      ]
     },
     {
       "family": "converters",
       "controller": "ConvertPDFToOffice.java",
       "endpoint": "/pdf/word",
-      "state": "pending-migration",
-      "mode": null,
-      "classification": "pending-processing-mode-audit"
+      "state": "worker-mode",
+      "mode": "office-export",
+      "classification": "connected-in-process-office-modes-legacy-helper-branches-pending"
     },
     {
       "family": "converters",

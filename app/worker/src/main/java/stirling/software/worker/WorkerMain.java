@@ -25,6 +25,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import stirling.software.officeconvert.OfficeConvert;
+import stirling.software.officeconvert.PdfToXlsx;
+import stirling.software.officeconvert.topdf.OfficeToPdf;
 import stirling.software.pdf.PdfAttachmentFiles;
 import stirling.software.pdf.PdfAttachments;
 import stirling.software.pdf.PdfCertificates;
@@ -34,6 +37,8 @@ import stirling.software.pdf.PdfForms;
 import stirling.software.pdf.PdfImageConversion;
 import stirling.software.pdf.PdfImageExtraction;
 import stirling.software.pdf.PdfMetadataEditor;
+import stirling.software.pdf.PdfOfficeConversion;
+import stirling.software.pdf.PdfOfficeInput;
 import stirling.software.pdf.PdfPageCrop;
 import stirling.software.pdf.PdfPageFlattener;
 import stirling.software.pdf.PdfPageNumbers;
@@ -53,9 +58,12 @@ import stirling.software.pdf.PdfWatermarks;
  * job directory.
  */
 public final class WorkerMain {
+    private static final java.io.PrintStream PROTOCOL = System.out;
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "office-export",
+                    "office-import",
                     "pdf-text-export",
                     "pdf-image-export",
                     "image-pdf-create",
@@ -85,6 +93,7 @@ public final class WorkerMain {
     private WorkerMain() {}
 
     public static void main(String[] args) throws Exception {
+        System.setOut(System.err);
         for (String property :
                 List.of(
                         "javax.xml.accessExternalDTD",
@@ -128,11 +137,16 @@ public final class WorkerMain {
                             Files.size(result),
                             "contentType",
                             result.toString().endsWith(".bin")
-                                    ? operation.equals("pdf-image-export")
-                                            ? "image/"
-                                                    + PdfImageConversion.format(
-                                                            text(options, "imageFormat", "png"))
-                                            : "application/octet-stream"
+                                    ? operation.equals("office-export")
+                                            ? officeMime(text(options, "outputFormat", "docx"))
+                                            : operation.equals("pdf-image-export")
+                                                    ? "image/"
+                                                            + PdfImageConversion.format(
+                                                                    text(
+                                                                            options,
+                                                                            "imageFormat",
+                                                                            "png"))
+                                                    : "application/octet-stream"
                                     : result.toString().endsWith(".txt")
                                             ? "text/plain; charset=utf-8"
                                             : result.toString().endsWith(".zip")
@@ -151,11 +165,13 @@ public final class WorkerMain {
                             "type",
                             "error",
                             "code",
-                            failure instanceof UnsupportedStructure
-                                    ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
-                                    : failure instanceof InspectionDenied
-                                            ? "INSPECTION_ACCESS_DENIED"
-                                            : "PROCESSING_FAILED",
+                            failure instanceof PdfOfficeInput.ExternalResource
+                                    ? "OFFICE_EXTERNAL_RESOURCE"
+                                    : failure instanceof UnsupportedStructure
+                                            ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
+                                            : failure instanceof InspectionDenied
+                                                    ? "INSPECTION_ACCESS_DENIED"
+                                                    : "PROCESSING_FAILED",
                             "message",
                             "The selected operation could not complete. Check its options, document permissions and private helper availability."));
             System.exit(1);
@@ -181,6 +197,23 @@ public final class WorkerMain {
                 || !path.toRealPath().getParent().equals(root))
             throw new IOException("Input is outside the job grant.");
         return path;
+    }
+
+    private static String officeMime(String format) throws IOException {
+        return switch (format) {
+            case "docx" ->
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            case "pptx" ->
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            case "doc", "rtf" -> "application/rtf";
+            case "txt" -> "text/plain; charset=utf-8";
+            case "ppt" -> "application/vnd.ms-powerpoint";
+            case "odt" -> "application/vnd.oasis.opendocument.text";
+            case "ods" -> "application/vnd.oasis.opendocument.spreadsheet";
+            case "odp" -> "application/vnd.oasis.opendocument.presentation";
+            default -> throw new IOException("Unsupported Office format.");
+        };
     }
 
     private static String color(JsonObject options) throws IOException {
@@ -237,6 +270,13 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "office-export" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "outputFormat",
+                                    "pageNumbers",
+                                    "useStirlingOfficeConvert");
+                    case "office-import" -> Set.of("selectedFiles", "useStirlingOfficeConvert");
                     case "pdf-text-export" ->
                             Set.of("sourcePassword", "outputFormat", "useStirlingOfficeConvert");
                     case "pdf-image-export" ->
@@ -445,6 +485,34 @@ public final class WorkerMain {
             if (flag(options, "removeAll"))
                 credential = text(options, "sourcePassword", text(options, "password", ""));
         }
+        if (Set.of("office-import", "office-export").contains(operation)
+                && options.has("useStirlingOfficeConvert")
+                && !flag(options, "useStirlingOfficeConvert"))
+            throw new IOException("The legacy Office engine is not connected.");
+        if (operation.equals("office-import")) {
+            var files = attachmentGrants(root, options);
+            if (files.size() != 1) throw new IOException("Select one Office file per job.");
+            var descriptor = options.getAsJsonArray("selectedFiles").get(0).getAsJsonObject();
+            int index = descriptor.get("index").getAsInt();
+            String name = files.getFirst().name();
+            String extension =
+                    name.substring(name.lastIndexOf('.') + 1).toLowerCase(java.util.Locale.ROOT);
+            Path staged =
+                    PdfOfficeInput.stage(
+                            root.resolve("attachment-" + index + ".bin"), root, extension);
+            var importOptions =
+                    OfficeToPdf.Options.defaults()
+                            .timeout(java.time.Duration.ofMinutes(2))
+                            .maxPages(1000)
+                            .maxScratchBytes(256L * 1024 * 1024)
+                            .displayName(name);
+            String fonts = System.getenv("SOOTAN_WORKER_FONTS");
+            if (fonts != null) importOptions = importOptions.fontDirs(List.of(Path.of(fonts)));
+            var result = PdfOfficeInput.convert(staged, output, importOptions);
+            if (result.truncated() || result.pageLimitReached() || result.pages() < 1)
+                throw new IOException("Office import was incomplete.");
+            return output;
+        }
         if (operation.equals("image-pdf-create")) {
             try (var imageDocument = new PDDocument()) {
                 PdfImageConversion.appendImages(
@@ -468,6 +536,38 @@ public final class WorkerMain {
             }
         }
         try (PDDocument document = Loader.loadPDF(input.toFile(), credential)) {
+            if (operation.equals("office-export")) {
+                if (document.isEncrypted()
+                        && !document.getCurrentAccessPermission().canExtractContent())
+                    throw new InspectionDenied();
+                if (document.getNumberOfPages() > 1000 || Files.size(input) > 100L * 1024 * 1024)
+                    throw new IOException("Office export exceeds limits.");
+                String format = text(options, "outputFormat", "docx");
+                if (!PdfOfficeConversion.supports(format))
+                    throw new IOException("Unsupported Office format.");
+                var settings =
+                        OfficeConvert.Settings.defaults().timeout(java.time.Duration.ofMinutes(2));
+                Path target = root.resolve("output.bin");
+                if (format.equals("xlsx") || format.equals("ods"))
+                    settings = settings.sheets(PdfToXlsx.Sheets.TABLE);
+                try (var chosen = new PDDocument()) {
+                    String pages = text(options, "pageNumbers", "all");
+                    if (pages.isBlank()) pages = "all";
+                    for (int page :
+                            PdfPageSelection.parsePageList(
+                                    pages, document.getNumberOfPages(), false)) {
+                        if (page < 0 || page >= document.getNumberOfPages())
+                            throw new IOException("Invalid selected page.");
+                        chosen.importPage(document.getPage(page));
+                    }
+                    new PdfOfficeConversion().convert(chosen, target, format, settings);
+                }
+                if (Files.size(target) > 256L * 1024 * 1024)
+                    throw new IOException("Office export exceeds256MiB.");
+                if (format.equals("xlsx") && !PdfOfficeConversion.hasCells(target))
+                    throw new IOException("No table cells found.");
+                return target;
+            }
             if (Set.of("pdf-text-export", "pdf-image-export", "image-extract")
                     .contains(operation)) {
                 if (document.isEncrypted()
@@ -1121,7 +1221,7 @@ public final class WorkerMain {
     }
 
     private static void emit(Object value) {
-        System.out.println(JSON.toJson(value));
+        PROTOCOL.println(JSON.toJson(value));
         System.out.flush();
     }
 }

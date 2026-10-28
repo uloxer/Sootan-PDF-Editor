@@ -65,7 +65,7 @@ public class OfficeToPdfService {
                         .getTimeoutMinutes()
                         .getLibreOfficeTimeoutMinutes();
         OfficeToPdf.Result result =
-                OfficeToPdf.convert(
+                stirling.software.pdf.PdfOfficeInput.convert(
                         in,
                         out,
                         OfficeToPdf.Options.defaults().timeout(Duration.ofMinutes(minutes)));

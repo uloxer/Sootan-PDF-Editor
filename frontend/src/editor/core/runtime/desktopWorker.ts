@@ -24,6 +24,10 @@ export async function requestDesktopWorker(
     (
       {
         "/api/v1/convert/pdf/text": "pdf-to-text",
+        "/api/v1/convert/pdf/word": "pdf-to-word",
+        "/api/v1/convert/pdf/presentation": "pdf-to-presentation",
+        "/api/v1/convert/pdf/xlsx": "pdf-to-xlsx",
+        "/api/v1/convert/file/pdf": "file-to-pdf",
         "/api/v1/convert/pdf/img": "pdf-to-img",
         "/api/v1/convert/img/pdf": "img-to-pdf",
       } as Record<string, string>
@@ -35,10 +39,17 @@ export async function requestDesktopWorker(
       "UNSUPPORTED_FEATURE",
       "This private worker capability is not connected.",
     );
-  const portfolio = name === "create-portfolio" || name === "img-to-pdf";
+  const portfolio =
+    name === "create-portfolio" ||
+    name === "img-to-pdf" ||
+    name === "file-to-pdf";
   const selected = form
     .getAll(
-      name === "img-to-pdf" ? "fileInput" : portfolio ? "files" : "attachments",
+      name === "img-to-pdf" || name === "file-to-pdf"
+        ? "fileInput"
+        : portfolio
+          ? "files"
+          : "attachments",
     )
     .filter((file): file is File => file instanceof File);
   const input = portfolio ? selected[0] : form.get("fileInput");
@@ -156,13 +167,10 @@ export async function requestDesktopWorker(
   }
   if (name === "pdf-to-text") {
     delete options.filename;
-    if (
-      options.outputFormat !== "txt" ||
-      options.useStirlingOfficeConvert === "true"
-    )
+    if (!["txt", "rtf"].includes(String(options.outputFormat)))
       throw new CorePdfError(
         "UNSUPPORTED_OPTION",
-        "Only local plain-text TXT export is connected. RTF/Office conversion is not available in this runtime.",
+        "Choose TXT or RTF for this text conversion endpoint.",
       );
   }
   if (
@@ -194,6 +202,63 @@ export async function requestDesktopWorker(
           "UNSUPPORTED_OPTION",
           "Select a local PNG, JPEG, TIFF, BMP or GIF bitmap.",
         );
+  const operation =
+    name === "pdf-to-text" &&
+    (options.outputFormat === "rtf" ||
+      options.useStirlingOfficeConvert === "true")
+      ? "office-export"
+      : DESKTOP_ENDPOINTS[name];
+  if (operation === "office-export") {
+    if (!getRuntime().advancedOperations?.includes("office-export"))
+      throw new CorePdfError(
+        "UNSUPPORTED_FEATURE",
+        "The local Office converter is unavailable.",
+      );
+    if (name === "pdf-to-xlsx" && !options.outputFormat)
+      options.outputFormat = "xlsx";
+    if (
+      ![
+        "txt",
+        "docx",
+        "doc",
+        "odt",
+        "rtf",
+        "pptx",
+        "ppt",
+        "odp",
+        "xlsx",
+        "ods",
+      ].includes(String(options.outputFormat))
+    )
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "Select an available local Office output format.",
+      );
+    if (options.useStirlingOfficeConvert === "false")
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "The legacy LibreOffice engine is not bundled. Use the in-process Office converter.",
+      );
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+  }
+  if (operation === "office-import") {
+    if (
+      selected.length !== 1 ||
+      !["docx", "pptx", "xlsx", "ppt", "txt", "csv", "tsv"].includes(
+        input.name.split(".").at(-1)?.toLowerCase() ?? "",
+      )
+    )
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "Select one DOCX, PPTX, XLSX, PPT, TXT, CSV or TSV document.",
+      );
+    if (options.useStirlingOfficeConvert === "false")
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "The legacy LibreOffice engine is not bundled. Use the in-process Office converter.",
+      );
+  }
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
   const controller = new AbortController();
@@ -255,11 +320,16 @@ export async function requestDesktopWorker(
     }
     const response = await fetch(`${route}/run`, {
       method: "POST",
-      body: JSON.stringify({ operation: DESKTOP_ENDPOINTS[name], options }),
+      body: JSON.stringify({ operation, options }),
       signal: controller.signal,
     });
     if (!response.ok) {
       const failure = await response.json().catch(() => null);
+      if (failure?.code === "OFFICE_EXTERNAL_RESOURCE")
+        throw new CorePdfError(
+          "UNSUPPORTED_FEATURE",
+          "This Office document contains external relationships. Embed linked resources or remove external links before converting; no remote content was fetched and the original is unchanged.",
+        );
       if (failure?.code === "INSPECTION_ACCESS_DENIED")
         throw new CorePdfError(
           "UNSUPPORTED_FEATURE",
@@ -281,9 +351,17 @@ export async function requestDesktopWorker(
       headers: {
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
-        ...(["pdf-to-text", "pdf-to-img", "img-to-pdf"].includes(name)
+        ...([
+          "pdf-to-word",
+          "pdf-to-presentation",
+          "pdf-to-xlsx",
+          "file-to-pdf",
+          "pdf-to-text",
+          "pdf-to-img",
+          "img-to-pdf",
+        ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },
