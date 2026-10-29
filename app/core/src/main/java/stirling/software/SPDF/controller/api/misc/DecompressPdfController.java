@@ -1,12 +1,8 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.pdfbox.cos.*;
-import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
@@ -27,7 +23,6 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -56,7 +51,7 @@ public class DecompressPdfController {
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             // Process all objects in document
-            processAllObjects(document);
+            stirling.software.pdf.PdfRecovery.decompress(document);
 
             // Save with explicit no compression to a temp file
             TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
@@ -71,84 +66,6 @@ public class DecompressPdfController {
             return WebResponseUtils.pdfFileToWebResponse(
                     tempOut,
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
-        }
-    }
-
-    private void processAllObjects(PDDocument document) {
-        Set<COSBase> processed = new HashSet<>();
-        COSDocument cosDoc = document.getDocument();
-
-        // Process all objects in the document
-        for (COSObjectKey key : cosDoc.getXrefTable().keySet()) {
-            COSObject obj = cosDoc.getObjectFromPool(key);
-            processObject(obj, processed);
-        }
-    }
-
-    private void processObject(COSBase obj, Set<COSBase> processed) {
-        // Skip null objects or already processed objects to avoid infinite recursion
-        if (obj == null || processed.contains(obj)) return;
-        processed.add(obj);
-
-        if (obj instanceof COSObject cosObj) {
-            processObject(cosObj.getObject(), processed);
-        } else if (obj instanceof COSDictionary dict) {
-            processDictionary(dict, processed);
-        } else if (obj instanceof COSArray array) {
-            processArray(array, processed);
-        }
-    }
-
-    private void processDictionary(COSDictionary dict, Set<COSBase> processed) {
-        // Process all dictionary entries
-        for (COSName key : dict.keySet()) {
-            processObject(dict.getDictionaryObject(key), processed);
-        }
-
-        // If this is a stream, decompress it
-        if (dict instanceof COSStream stream) {
-            decompressStream(stream);
-        }
-    }
-
-    private void processArray(COSArray array, Set<COSBase> processed) {
-        // Process all array elements
-        for (int i = 0; i < array.size(); i++) {
-            processObject(array.get(i), processed);
-        }
-    }
-
-    private void decompressStream(COSStream stream) {
-        try {
-            log.debug("Processing stream: {}", stream);
-
-            // Only remove filter information if it exists
-            if (stream.containsKey(COSName.FILTER)
-                    || stream.containsKey(COSName.DECODE_PARMS)
-                    || stream.containsKey(COSName.D)) {
-
-                // Read the decompressed content first
-                byte[] decompressedBytes;
-                try (COSInputStream is = stream.createInputStream()) {
-                    decompressedBytes = IOUtils.toByteArray(is);
-                }
-
-                // Now remove filter information
-                stream.removeItem(COSName.FILTER);
-                stream.removeItem(COSName.DECODE_PARMS);
-                stream.removeItem(COSName.D);
-
-                // Write the raw content back
-                try (OutputStream out = stream.createRawOutputStream()) {
-                    out.write(decompressedBytes);
-                }
-
-                // Set the Length to reflect the new stream size
-                stream.setInt(COSName.LENGTH, decompressedBytes.length);
-            }
-        } catch (IOException e) {
-            ExceptionUtils.logException("stream decompression", e);
-            // Continue processing other streams even if this one fails
         }
     }
 }

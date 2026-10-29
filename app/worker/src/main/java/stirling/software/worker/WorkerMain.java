@@ -62,6 +62,9 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "compress",
+                    "decompress",
+                    "repair",
                     "overlay",
                     "layout-nup",
                     "layout-poster",
@@ -313,6 +316,17 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "compress" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "optimizeLevel",
+                                    "expectedOutputSize",
+                                    "grayscale",
+                                    "lineArt",
+                                    "lineArtThreshold",
+                                    "lineArtEdgeLevel",
+                                    "linearize");
+                    case "decompress", "repair" -> Set.of("sourcePassword");
                     case "overlay" ->
                             Set.of(
                                     "sourcePassword",
@@ -1051,6 +1065,49 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
+            if (operation.equals("compress")) {
+                if (flag(options, "lineArt") || flag(options, "linearize"))
+                    throw new IOException(
+                            "Line art/linearization require unavailable optional helpers.");
+                String size = text(options, "expectedOutputSize", "");
+                Long target = null;
+                if (!size.isBlank()) {
+                    var match =
+                            java.util.regex.Pattern.compile("(?i)^(\\d+(?:\\.\\d+)?)(KB|MB|B)$")
+                                    .matcher(size.trim());
+                    if (!match.matches())
+                        throw new IOException("Enter a positive target size in KB or MB.");
+                    double bytes =
+                            Double.parseDouble(match.group(1))
+                                    * (match.group(2).equalsIgnoreCase("MB")
+                                            ? 1024 * 1024
+                                            : match.group(2).equalsIgnoreCase("KB") ? 1024 : 1);
+                    if (!Double.isFinite(bytes) || bytes <= 0 || bytes > 1024L * 1024 * 1024)
+                        throw new IOException("Target size is outside the supported range.");
+                    target = (long) bytes;
+                }
+                stirling.software.pdf.PdfCompression.compress(
+                        input,
+                        document,
+                        (int) number(options, "optimizeLevel", 5),
+                        target,
+                        flag(options, "grayscale"),
+                        output);
+                return output;
+            }
+            if (operation.equals("decompress")) {
+                stirling.software.pdf.PdfRecovery.decompress(document);
+                try (var stream = PdfImageConversion.bounded(Files.newOutputStream(output))) {
+                    document.save(
+                            stream,
+                            org.apache.pdfbox.pdfwriter.compress.CompressParameters.NO_COMPRESSION);
+                }
+                return output;
+            }
+            if (operation.equals("repair")) {
+                stirling.software.pdf.PdfRecovery.repair(document, output);
+                return output;
+            }
             if (operation.equals("overlay")) {
                 var grants = attachmentGrants(root, options);
                 if (grants.isEmpty()) throw new IOException("Select overlay PDFs.");

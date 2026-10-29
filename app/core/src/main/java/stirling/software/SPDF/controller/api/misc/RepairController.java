@@ -126,7 +126,8 @@ public class RepairController {
                 if (!isGhostscriptEnabled() && !isQpdfEnabled()) {
                     // Basic PDFBox repair - load and save to fix structural issues
                     try (var document = pdfDocumentFactory.load(tempInputFile.getFile())) {
-                        document.save(tempOutputFile.getFile());
+                        stirling.software.pdf.PdfRecovery.repair(
+                                document, tempOutputFile.getPath());
                         repairSuccess = true;
                     }
                 } else {

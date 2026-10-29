@@ -98,6 +98,15 @@ export async function requestDesktopWorker(
     if (custom) metadata[custom[1]] = value;
     else options[key] = value;
   }
+  if (["compress-pdf", "decompress-pdf", "repair"].includes(name)) {
+    if (form.get("lineArt") === "true" || form.get("linearize") === "true")
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "Line art requires ImageMagick and linearization requires QPDF; these optional helpers are not bundled. Turn these options off for local PDFBox compression.",
+      );
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+  }
   if (name === "overlay-pdfs") {
     if (
       !selected.length ||
@@ -439,6 +448,9 @@ export async function requestDesktopWorker(
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
         ...([
+          "compress-pdf",
+          "decompress-pdf",
+          "repair",
           "overlay-pdfs",
           "multi-page-layout",
           "split-for-poster-print",
@@ -458,7 +470,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" || operation.startsWith("layout-") || operation === "overlay" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" || operation.startsWith("layout-") || ["overlay", "compress", "decompress", "repair"].includes(operation) ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },

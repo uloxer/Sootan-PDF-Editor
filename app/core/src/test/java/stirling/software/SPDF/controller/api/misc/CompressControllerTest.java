@@ -470,7 +470,7 @@ class CompressControllerTest {
     // ----- reflection / field helpers ----------------------------------------------------------
 
     private static Method privateStatic(String name, Class<?>... params) throws Exception {
-        Method m = CompressController.class.getDeclaredMethod(name, params);
+        Method m = stirling.software.pdf.PdfCompression.class.getDeclaredMethod(name, params);
         m.setAccessible(true);
         return m;
     }
