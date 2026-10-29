@@ -188,6 +188,25 @@ public class PdfStandards {
         }
     }
 
+    /** Validates against an explicit local profile rather than trusting document declarations. */
+    public PDFVerificationResult validateRequested(InputStream input, String flavourId)
+            throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
+        PDFAFlavour flavour =
+                switch (flavourId) {
+                    case "1b" -> PDFAFlavour.PDFA_1_B;
+                    case "2b" -> PDFAFlavour.PDFA_2_B;
+                    case "3b" -> PDFAFlavour.PDFA_3_B;
+                    default ->
+                            throw new IllegalArgumentException(
+                                    "Unsupported PDF/A validation profile.");
+                };
+        try (PDFAParser parser = Foundries.defaultInstance().createParser(input, flavour)) {
+            PDFAValidator validator = Foundries.defaultInstance().createValidator(flavour, false);
+            return convertToVerificationResult(
+                    validator.validate(parser), firstFlavour(detectedFlavours(parser)), flavour);
+        }
+    }
+
     public List<PDFVerificationResult> validatePDF(InputStream pdfStream)
             throws IOException, ValidationException, ModelParsingException, EncryptedPdfException {
 

@@ -23,6 +23,7 @@ export async function requestDesktopWorker(
   const name =
     (
       {
+        "/api/v1/convert/pdf/pdfa": "pdf-to-pdfa",
         "/api/v1/convert/pdf/text-editor": "pdf-to-text-editor",
         "/api/v1/convert/text-editor/pdf": "text-editor-to-pdf",
         "/api/v1/convert/svg/pdf": "svg-to-pdf",
@@ -43,6 +44,19 @@ export async function requestDesktopWorker(
       "UNSUPPORTED_FEATURE",
       "This private worker capability is not connected.",
     );
+  if (name === "pdf-to-pdfa") {
+    const format = String(form.get("outputFormat") ?? "pdfa");
+    if (
+      !["pdfa", "pdfa-1", "pdfa-2", "pdfa-2b", "pdfa-3", "pdfa-3b"].includes(
+        format,
+      ) ||
+      form.get("pdfUa") === "true"
+    )
+      throw new CorePdfError(
+        "UNSUPPORTED_OPTION",
+        "Select PDF/A-1b, 2b or 3b. PDF/X and accessibility tagging require unavailable helpers. Outputs are always validated before returning.",
+      );
+  }
   const portfolio =
     name === "text-editor-to-pdf" ||
     name === "create-portfolio" ||
@@ -217,7 +231,11 @@ export async function requestDesktopWorker(
       options.useStirlingOfficeConvert === "true")
       ? "office-export"
       : DESKTOP_ENDPOINTS[name];
-  if (operation === "pdf-csv-export" || operation === "json-export") {
+  if (
+    operation === "pdf-csv-export" ||
+    operation === "json-export" ||
+    operation === "pdfa-convert"
+  ) {
     const access = getPdfAccess(input);
     if (access?.encrypted) options.sourcePassword = access.password;
   }
@@ -361,6 +379,16 @@ export async function requestDesktopWorker(
           "UNSUPPORTED_FEATURE",
           "This Office document contains external relationships. Embed linked resources or remove external links before converting; no remote content was fetched and the original is unchanged.",
         );
+      if (failure?.code === "PDFA_NONCOMPLIANT")
+        throw new CorePdfError(
+          "UNSUPPORTED_FEATURE",
+          "The converted document did not pass the requested PDF/A standard. No output was returned; the original is unchanged.",
+        );
+      if (failure?.code === "PDFA_HELPER_REQUIRED")
+        throw new CorePdfError(
+          "UNSUPPORTED_FEATURE",
+          "This document needs font embedding or PDF/A-1 transparency processing with an unbundled helper. Try an already embedded-font PDF and PDF/A-2b or 3b. The original is unchanged.",
+        );
       if (failure?.code === "INSPECTION_ACCESS_DENIED")
         throw new CorePdfError(
           "UNSUPPORTED_FEATURE",
@@ -396,7 +424,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },

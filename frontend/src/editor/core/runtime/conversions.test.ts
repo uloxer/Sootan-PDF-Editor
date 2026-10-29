@@ -270,3 +270,36 @@ it("maps external resource refusal to a useful fixed message and cleans the job"
   ).rejects.toThrow(/external relationships/);
   expect(fetch.mock.lastCall?.[0]).toMatch(/\/job$/);
 });
+it("dispatches validated PDF/A modes and refuses unsupported conformance", async () => {
+  native();
+  vi.stubGlobal("__SOOTAN_RUNTIME__", {
+    kind: "offline-desktop",
+    advancedOperations: ["pdfa-convert"],
+  });
+  const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+    ok: true,
+    headers: new Headers({ "Content-Type": "application/pdf" }),
+    blob: async () => new Blob(["PDF/A"]),
+  }));
+  vi.stubGlobal("fetch", fetch);
+  const params = {
+    ...defaultParameters,
+    fromExtension: "pdf",
+    toExtension: "pdfa",
+    pdfaOptions: { outputFormat: "pdfa-2b", strict: false },
+  };
+  const result = await convertProcessor(params, [
+    new File(["PDF"], "Hill.pdf"),
+  ]);
+  expect(result.files[0].name).toMatch(/\.pdf$/);
+  expect(JSON.parse(String(fetch.mock.calls[1][1]?.body))).toMatchObject({
+    operation: "pdfa-convert",
+    options: { outputFormat: "pdfa-2b" },
+  });
+  await expect(
+    convertProcessor(
+      { ...params, pdfaOptions: { outputFormat: "pdfa-2a", strict: true } },
+      [new File(["PDF"], "Hill.pdf")],
+    ),
+  ).rejects.toThrow(/PDF\/A-1b/);
+});

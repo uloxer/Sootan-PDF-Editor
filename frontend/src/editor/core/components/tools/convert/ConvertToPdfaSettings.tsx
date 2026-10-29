@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { getRuntime } from "@editor/runtime/runtime";
 import { Stack, Text, Select, Alert, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
@@ -27,6 +28,7 @@ const ConvertToPdfaSettings = ({
   const { hasDigitalSignatures, isChecking } =
     usePdfSignatureDetection(selectedFiles);
   const outputFormatLabelId = useId();
+  const localWorker = !getRuntime().serverOperations;
   // Level A needs the same tagger as PDF/UA, so it stands or falls with that endpoint.
   const { enabled: taggingAvailable } = useEndpointEnabled("pdf-to-ua");
 
@@ -35,7 +37,7 @@ const ConvertToPdfaSettings = ({
     { value: "pdfa-2b", label: "PDF/A-2b" },
     { value: "pdfa-3b", label: "PDF/A-3b" },
     // Level A is level B plus accessibility: it additionally tags the document.
-    ...(taggingAvailable === false
+    ...(localWorker || taggingAvailable === false
       ? []
       : [
           {
@@ -123,14 +125,14 @@ const ConvertToPdfaSettings = ({
           "convert.strictModeDesc",
           "Error if conversion is not perfect (uses VeraPDF verification)",
         )}
-        checked={parameters.pdfaOptions.strict}
+        checked={localWorker || parameters.pdfaOptions.strict}
         onChange={(event) =>
           onParameterChange("pdfaOptions", {
             ...parameters.pdfaOptions,
             strict: event.currentTarget.checked,
           })
         }
-        disabled={disabled || isChecking}
+        disabled={localWorker || disabled || isChecking}
       />
     </Stack>
   );

@@ -62,6 +62,7 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "pdfa-convert",
                     "json-export",
                     "json-import",
                     "svg-pdf-create",
@@ -172,15 +173,27 @@ public final class WorkerMain {
                             "type",
                             "error",
                             "code",
-                            failure instanceof SvgResourceDenied
-                                    ? "SVG_RESOURCE_DENIED"
-                                    : failure instanceof PdfOfficeInput.ExternalResource
-                                            ? "OFFICE_EXTERNAL_RESOURCE"
-                                            : failure instanceof UnsupportedStructure
-                                                    ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
-                                                    : failure instanceof InspectionDenied
-                                                            ? "INSPECTION_ACCESS_DENIED"
-                                                            : "PROCESSING_FAILED",
+                            failure instanceof stirling.software.pdf.PdfArchive.NonCompliant
+                                    ? "PDFA_NONCOMPLIANT"
+                                    : failure
+                                                    instanceof
+                                                    stirling.software.pdf.PdfArchive.HelperRequired
+                                            ? "PDFA_HELPER_REQUIRED"
+                                            : failure instanceof SvgResourceDenied
+                                                    ? "SVG_RESOURCE_DENIED"
+                                                    : failure
+                                                                    instanceof
+                                                                    PdfOfficeInput.ExternalResource
+                                                            ? "OFFICE_EXTERNAL_RESOURCE"
+                                                            : failure
+                                                                            instanceof
+                                                                            UnsupportedStructure
+                                                                    ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
+                                                                    : failure
+                                                                                    instanceof
+                                                                                    InspectionDenied
+                                                                            ? "INSPECTION_ACCESS_DENIED"
+                                                                            : "PROCESSING_FAILED",
                             "message",
                             "The selected operation could not complete. Check its options, document permissions and private helper availability."));
             System.exit(1);
@@ -288,6 +301,8 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "pdfa-convert" ->
+                            Set.of("sourcePassword", "outputFormat", "strict", "pdfUa");
                     case "json-export" -> Set.of("sourcePassword", "lightweight");
                     case "json-import" -> Set.of("selectedFiles");
                     case "svg-pdf-create" -> Set.of("selectedFiles", "combineIntoSinglePdf");
@@ -950,6 +965,15 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
+            if (operation.equals("pdfa-convert")) {
+                if (flag(options, "pdfUa"))
+                    throw new IOException("PDF/UA tagging is not connected.");
+                Files.write(
+                        output,
+                        stirling.software.pdf.PdfArchive.convertLocal(
+                                document, text(options, "outputFormat", "pdfa")));
+                return output;
+            }
             if (operation.equals("stamp")) {
                 float size = number(options, "fontSize", 40),
                         opacity = number(options, "opacity", 0.5f);

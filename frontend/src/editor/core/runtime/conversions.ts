@@ -4,6 +4,8 @@ const BITMAPS = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif"];
 /** Exact conversion pairs available from the explicitly bootstrapped local worker. */
 export function supportsLocalConversion(from: string, to: string): boolean {
   if (getRuntime().serverOperations) return true;
+  if (from === "pdf" && to === "pdfa")
+    return supportsWorkerEndpoint("pdf-to-pdfa");
   if (from === "pdf" && to === "json")
     return supportsWorkerEndpoint("pdf-to-text-editor");
   if (from === "json" && to === "pdf")
