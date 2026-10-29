@@ -24,7 +24,7 @@ OUT = ROOT / ".tooling/windows-package"
 
 def run(args, **kwargs):
     print("+", " ".join(map(str, args)), flush=True)
-    subprocess.run(list(map(str, args)), check=True, cwd=ROOT, **kwargs)
+    subprocess.run(list(map(str, args)), check=True, cwd=kwargs.pop("cwd",ROOT), **kwargs)
 
 
 def clear(path):
@@ -84,10 +84,14 @@ def footprint(path):
 
 
 def main():
+    global OUT
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-build", action="store_true", help="Reuse the already verified Windows JAR")
     parser.add_argument("--image-only", action="store_true", help="Build the test app-image before creating an installer")
+    parser.add_argument("--output",type=Path,default=ROOT/".tooling/windows-candidate",help="Staging directory under .tooling; installed app is never changed")
     args = parser.parse_args()
+    OUT=args.output.resolve()
+    if not OUT.is_relative_to(ROOT/".tooling"):raise ValueError("Candidate output must be in .tooling")
     if os.name != "nt":
         raise SystemExit("Build this package on Windows x64")
     jdk = Path(os.environ.get("JAVA_HOME", ""))
@@ -114,24 +118,23 @@ def main():
         run(["uv", "pip", "install", "--target", CACHE / "python/Lib/site-packages", "--python-version", "3.13", "--python-platform", "x86_64-pc-windows-msvc", "--only-binary", ":all:", "--require-hashes", "-r", SPEC / "ocr-requirements.txt"])
         marker.write_text(lock_hash)
     run([CACHE / "python/python.exe", SPEC / "brand_assets.py"])
+    ui=ROOT/".tooling/windows-ui"
     if not args.skip_build:
-        run([ROOT / "gradlew.bat", ":stirling-pdf:bootJar", "-PbuildWithFrontend=true", "-PwindowsPackage", "-PjpdfiumPlatforms=windows-x64", "--console=plain"])
-    jars = list((ROOT / "app/core/build/libs").glob("*.jar"))
-    if len(jars) != 1:
-        raise ValueError("Expected one executable JAR")
-    with zipfile.ZipFile(jars[0]) as archive:
-        names = archive.namelist()
-        if any("/static/" in n and n.endswith((".br", ".gz")) for n in names):
-            raise ValueError("Windows JAR still contains static precompression siblings")
-        if any("jpdfium-natives-linux" in n for n in names):
-            raise ValueError("Windows JAR contains Linux PDFium natives")
+        run([ROOT/"gradlew.bat",":worker:installDist",":worker:check","--console=plain"])
+        env=os.environ.copy();env.update(SOOTAN_WINDOWS_PACKAGE="true",VITE_API_BASE_URL="/")
+        run(["npx.cmd","vite","build","--outDir",str(ui)],cwd=ROOT/"frontend",env=env)
+    if not (ui/"index.html").exists() or not (ROOT/"app/worker/build/install/worker/lib").exists():raise ValueError("Build UI and worker before --skip-build")
     clear(WORK)
     clear(OUT)
     inputs = WORK / "input"
     helpers = inputs / "helpers"
     inputs.mkdir()
     helpers.mkdir()
-    shutil.copy2(jars[0], inputs / "sootan.jar")
+    shutil.copytree(ui,inputs/"ui")
+    shutil.copytree(ROOT/"app/worker/build/install/worker/lib",inputs/"worker/lib")
+    shutil.copytree(ROOT/"app/core/src/main/resources/static/fonts",inputs/"fonts")
+    (inputs/"migration").mkdir()
+    for name in ["migration-source.html","migration-target.html"]:shutil.copy2(SPEC/name,inputs/"migration"/name)
     shutil.copytree(CACHE / "python", helpers / "python")
     for path in list((helpers / "python").rglob("__pycache__")):
         shutil.rmtree(path)
@@ -176,8 +179,8 @@ def main():
     shutil.copy2(SPEC / "assets/sootan.ico", inputs / "sootan.ico")
     for name in ["LICENSE.txt", "NOTICE.txt"]:
         shutil.copy2(sdk / name, inputs / ("WEBVIEW2-" + name))
-    run([csc, "/nologo", "/codepage:65001", "/target:winexe", "/platform:x64", "/out:" + str(inputs / "SootanHost.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "SootanWorker.cs"])
-    run([csc, "/nologo", "/codepage:65001", "/target:exe", "/platform:x64", "/main:SootanHostTests", "/out:" + str(inputs / "SootanHostTests.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "SootanWorker.cs", SPEC / "tests/SootanHostTests.cs"])
+    run([csc, "/nologo", "/codepage:65001", "/target:winexe", "/platform:x64", "/out:" + str(inputs / "SootanHost.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "SootanWorker.cs", SPEC / "SootanMigration.cs"])
+    run([csc, "/nologo", "/codepage:65001", "/target:exe", "/platform:x64", "/main:SootanHostTests", "/out:" + str(inputs / "SootanHostTests.exe"), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll", "/r:System.Web.Extensions.dll", "/r:" + str(inputs / "Microsoft.Web.WebView2.Core.dll"), "/r:" + str(inputs / "Microsoft.Web.WebView2.WinForms.dll"), SPEC / "SootanHost.cs", SPEC / "SootanWorker.cs", SPEC / "SootanMigration.cs", SPEC / "tests/SootanHostTests.cs"])
     run([inputs / "SootanHostTests.exe"])
     (inputs / "SootanHostTests.exe").unlink()
     run([csc, "/nologo", "/target:exe", "/out:" + str(binary_dir / "ocrmypdf.exe"), SPEC / "OcrHelper.cs"])
@@ -204,14 +207,14 @@ def main():
             shutil.copy2(source, helpers / "python" / name)
     stop = WORK / "stop.properties"
     stop.write_text("arguments=--stop\nicon=" + (SPEC / "assets/sootan.ico").as_posix() + "\n")
-    run([jdk / "bin/jpackage.exe", "--type", "app-image", "--name", "Sootan PDF Editor", "--app-version", "3.2.5", "--vendor", "Sootan PDF Editor", "--input", inputs, "--main-jar", "launcher.jar", "--main-class", "SootanLauncher", "--runtime-image", runtime, "--icon", SPEC / "assets/sootan.ico", "--dest", OUT, "--add-launcher", "Stop Sootan PDF Editor=" + str(stop)])
+    run([jdk / "bin/jpackage.exe", "--type", "app-image", "--name", "Sootan PDF Editor", "--app-version", "3.2.6", "--vendor", "Sootan PDF Editor", "--input", inputs, "--main-jar", "launcher.jar", "--main-class", "SootanLauncher", "--runtime-image", runtime, "--icon", SPEC / "assets/sootan.ico", "--dest", OUT])
     env = os.environ.copy()
     env["PATH"] = str(CACHE / "wix") + os.pathsep + env["PATH"]
     installer = OUT / "installer"
     installer.mkdir()
     if not args.image_only:
-        run([jdk / "bin/jpackage.exe", "--type", "exe", "--app-image", OUT / "Sootan PDF Editor", "--name", "Sootan PDF Editor", "--app-version", "3.2.5", "--vendor", "Sootan PDF Editor", "--dest", installer, "--win-per-user-install", "--win-upgrade-uuid", "adcbdd25-309f-43c7-81cd-557cd7601674", "--win-menu", "--win-menu-group", "Sootan PDF Editor", "--win-shortcut", "--install-dir", "Sootan PDF Editor", "--license-file", ROOT / "LICENSE", "--temp", WORK / "installer"], env=env)
-    report = {"jar_bytes": jars[0].stat().st_size, "runtime_bytes": footprint(runtime), "helpers_bytes": footprint(helpers), "installed_image_bytes": footprint(OUT / "Sootan PDF Editor"), "installer_bytes": {p.name: p.stat().st_size for p in installer.glob("*.exe")}, "java_modules": modules.split(","), "tesseract_files": sorted(seen)}
+        run([jdk / "bin/jpackage.exe", "--type", "exe", "--app-image", OUT / "Sootan PDF Editor", "--name", "Sootan PDF Editor", "--app-version", "3.2.6", "--vendor", "Sootan PDF Editor", "--dest", installer, "--win-per-user-install", "--win-upgrade-uuid", "adcbdd25-309f-43c7-81cd-557cd7601674", "--win-menu", "--win-menu-group", "Sootan PDF Editor", "--win-shortcut", "--install-dir", "Sootan PDF Editor", "--license-file", ROOT / "LICENSE", "--temp", WORK / "installer"], env=env)
+    report = {"ui_bytes": footprint(inputs/"ui"),"worker_bytes": footprint(inputs/"worker"),"fonts_bytes": footprint(inputs/"fonts"), "runtime_bytes": footprint(runtime), "helpers_bytes": footprint(helpers), "installed_image_bytes": footprint(OUT / "Sootan PDF Editor"), "installer_bytes": {p.name: p.stat().st_size for p in installer.glob("*.exe")}, "java_modules": modules.split(","), "tesseract_files": sorted(seen)}
     (OUT / "sizes.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 

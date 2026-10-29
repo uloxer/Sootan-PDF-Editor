@@ -56,9 +56,17 @@ internal sealed class SootanHost : Form {
             ConfigureDpi();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(args[0]=="--offline"
+            if(args[0]=="--migrate") {using(var migration=new SootanMigration(data,args[2])){Application.Run(migration);return migration.Result;}}
+            bool created;
+            using(var instance=new Mutex(true,pipe+"-window",out created)) {
+                if(!created) {
+                    using(var client=new NamedPipeClientStream(".",pipe,PipeDirection.Out)) {client.Connect(120000);using(var writer=new StreamWriter(client))writer.WriteLine(new JavaScriptSerializer().Serialize(new {stop=false,files=args.Skip(3).ToArray()}));}
+                    return 0;
+                }
+            Application.Run(args[0]=="--offline"||args[0]=="--launch"
                 ? new SootanHost("https://sootan.local",data,0,args.Skip(3).ToArray(),args[2])
                 : new SootanHost(args[0],data,int.Parse(args[2]),args.Skip(3).ToArray()));
+            }
             return 0;
         } catch(Exception ex) {
             MessageBox.Show("Sootan PDF Editor could not start.\n\n"+ex.Message,"Sootan PDF Editor",MessageBoxButtons.OK,MessageBoxIcon.Error);

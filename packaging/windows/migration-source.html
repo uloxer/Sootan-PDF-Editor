@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>Sootan library migration</title><p>Copying the existing PDF library and settings locally. No server or network is used.</p><iframe hidden src="https://sootan.local/__sootan_migrate_target"></iframe><script>
+(async()=>{
+const frame=document.querySelector('iframe'),target='https://sootan.local';let id=0;const waiting=new Map();
+addEventListener('message',e=>{if(e.origin!==target||e.source!==frame.contentWindow)return;const entry=waiting.get(e.data.id);if(entry){waiting.delete(e.data.id);e.data.error?entry.reject(new Error(e.data.error)):entry.resolve(e.data.result);}});
+const call=(action,payload)=>new Promise((resolve,reject)=>{const request=++id;waiting.set(request,{resolve,reject});frame.contentWindow.postMessage({id:request,action,payload},target);});
+const read=(db,store,key)=>new Promise((resolve,reject)=>{const req=db.transaction(store).objectStore(store).get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+const open=(name)=>new Promise((resolve,reject)=>{const req=indexedDB.open(name);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+const keys=(db,store)=>new Promise((resolve,reject)=>{const req=db.transaction(store).objectStore(store).getAllKeys();req.onsuccess=()=>req.result.length<=1000000?resolve(req.result):reject(new Error('Library record limit exceeded'));req.onerror=()=>reject(req.error);});
+try {
+await new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+const stores=[];for(const info of await indexedDB.databases()){
+if(!info.name)continue;const db=await open(info.name);const schema={name:db.name,version:db.version,stores:[]};
+for(const name of db.objectStoreNames){const store=db.transaction(name).objectStore(name);schema.stores.push({name,keyPath:store.keyPath,autoIncrement:store.autoIncrement,indexes:[...store.indexNames].map(n=>{const i=store.index(n);return{name:n,keyPath:i.keyPath,unique:i.unique,multiEntry:i.multiEntry};})});}
+await call('schema',schema);
+for(const name of db.objectStoreNames){let count=0;for(const key of await keys(db,name)){await call('record',{database:db.name,store:name,key,value:await read(db,name,key)});count++;}stores.push({database:db.name,store:name,count});}db.close();}
+const settings={};for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);settings[key]=localStorage.getItem(key);}await call('settings',settings);
+const result=await call('finish',null);window.chrome.webview.postMessage({success:true,source:location.origin,target,stores,settingsCount:Object.keys(settings).length,verifiedRecords:result.records,verifiedDigest:result.digest});
+}catch(e){window.chrome.webview.postMessage({success:false,error:String(e.message||e)});}
+})();
+</script>
