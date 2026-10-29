@@ -259,7 +259,7 @@ public final class PdfLayouts {
         }
     }
 
-    private static PDRectangle displayedSize(PDPage page) {
+    static PDRectangle displayedSize(PDPage page) {
         PDRectangle box = page.getCropBox();
         int rotation = Math.floorMod(page.getRotation(), 360);
         return rotation == 90 || rotation == 270
@@ -267,7 +267,7 @@ public final class PdfLayouts {
                 : new PDRectangle(box.getWidth(), box.getHeight());
     }
 
-    private static PDFormXObject displayForm(PDDocument source, int index, LayerUtility utility)
+    static PDFormXObject displayForm(PDDocument source, int index, LayerUtility utility)
             throws IOException {
         PDPage page = source.getPage(index);
         PDRectangle box = page.getCropBox();

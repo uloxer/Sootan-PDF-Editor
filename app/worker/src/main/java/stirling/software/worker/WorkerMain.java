@@ -62,6 +62,8 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "layout-nup",
+                    "layout-poster",
                     "layout-booklet",
                     "layout-single-page",
                     "editor-charcodes",
@@ -304,6 +306,30 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "layout-nup" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "mode",
+                                    "pagesPerSheet",
+                                    "rows",
+                                    "cols",
+                                    "orientation",
+                                    "arrangement",
+                                    "readingDirection",
+                                    "innerMargin",
+                                    "topMargin",
+                                    "bottomMargin",
+                                    "leftMargin",
+                                    "rightMargin",
+                                    "borderWidth",
+                                    "addBorder");
+                    case "layout-poster" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "pageSize",
+                                    "xFactor",
+                                    "yFactor",
+                                    "rightToLeft");
                     case "layout-single-page" -> Set.of("sourcePassword");
                     case "layout-booklet" ->
                             Set.of(
@@ -1011,10 +1037,17 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
-            if (operation.equals("layout-booklet") || operation.equals("layout-single-page")) {
+            if (Set.of("layout-booklet", "layout-single-page", "layout-nup", "layout-poster")
+                    .contains(operation)) {
                 if (document.getNumberOfPages() < 1 || document.getNumberOfPages() > 1000)
                     throw new IOException("Select a document with 1 to 1000 pages.");
-                if (document.getDocumentCatalog().getAcroForm() != null
+                boolean nup = operation.equals("layout-nup");
+                var sourceForm = document.getDocumentCatalog().getAcroForm();
+                if (sourceForm != null && sourceForm.hasXFA()) throw new UnsupportedStructure();
+                if ((!nup
+                                        || stirling.software.common.util.GeneralFormCopyUtils
+                                                .hasAnyRotatedPage(document))
+                                && document.getDocumentCatalog().getAcroForm() != null
                                 && !document.getDocumentCatalog()
                                         .getAcroForm()
                                         .getFields()
@@ -1034,7 +1067,13 @@ public final class WorkerMain {
                                 .containsKey(org.apache.pdfbox.cos.COSName.getPDFName("AF")))
                     throw new UnsupportedStructure();
                 for (var page : document.getPages())
-                    if (!page.getAnnotations().isEmpty()) throw new UnsupportedStructure();
+                    for (var annotation : page.getAnnotations())
+                        if (!nup
+                                || !(annotation
+                                        instanceof
+                                        org.apache.pdfbox.pdmodel.interactive.annotation
+                                                .PDAnnotationWidget))
+                            throw new UnsupportedStructure();
                 try (var target = new PDDocument()) {
                     target.setDocumentInformation(
                             new org.apache.pdfbox.pdmodel.PDDocumentInformation(
@@ -1052,7 +1091,70 @@ public final class WorkerMain {
                     }
                     if (operation.equals("layout-single-page"))
                         stirling.software.pdf.PdfLayouts.singlePage(document, target);
-                    else {
+                    else if (nup) {
+                        var layout = new stirling.software.pdf.PdfNUp.Options();
+                        layout.setMode(text(options, "mode", "DEFAULT"));
+                        layout.setPagesPerSheet((int) number(options, "pagesPerSheet", 2));
+                        layout.setRows((int) number(options, "rows", 0));
+                        layout.setCols((int) number(options, "cols", 0));
+                        layout.setOrientation(text(options, "orientation", "PORTRAIT"));
+                        layout.setArrangement(text(options, "arrangement", "BY_ROWS"));
+                        layout.setReadingDirection(text(options, "readingDirection", "LTR"));
+                        layout.setInnerMargin((int) number(options, "innerMargin", 0));
+                        layout.setTopMargin((int) number(options, "topMargin", 0));
+                        layout.setBottomMargin((int) number(options, "bottomMargin", 0));
+                        layout.setLeftMargin((int) number(options, "leftMargin", 0));
+                        layout.setRightMargin((int) number(options, "rightMargin", 0));
+                        layout.setBorderWidth((int) number(options, "borderWidth", 0));
+                        layout.setAddBorder(flag(options, "addBorder"));
+                        stirling.software.pdf.PdfNUp.apply(document, target, layout);
+                        if (sourceForm != null && !sourceForm.getFields().isEmpty()) {
+                            var copiedForm = target.getDocumentCatalog().getAcroForm();
+                            if (copiedForm == null) throw new UnsupportedStructure();
+                            var expected = new ArrayList<String>();
+                            var actual = new ArrayList<String>();
+                            for (var field : sourceForm.getFieldTree())
+                                if (field
+                                        instanceof
+                                        org.apache.pdfbox.pdmodel.interactive.form
+                                                .PDTerminalField) {
+                                    for (var widget : field.getWidgets()) {
+                                        if (widget.getRectangle() == null)
+                                            throw new UnsupportedStructure();
+                                        expected.add(
+                                                field.getClass().getSimpleName()
+                                                        + ":"
+                                                        + field.getFieldFlags()
+                                                        + ":"
+                                                        + field.getValueAsString());
+                                    }
+                                }
+                            for (var field : copiedForm.getFieldTree()) {
+                                actual.add(
+                                        field.getClass().getSimpleName()
+                                                + ":"
+                                                + field.getFieldFlags()
+                                                + ":"
+                                                + field.getValueAsString());
+                                if (field.getWidgets().size() != 1
+                                        || field.getWidgets().get(0).getRectangle() == null
+                                        || field.getWidgets().get(0).getPage() == null)
+                                    throw new UnsupportedStructure();
+                            }
+                            java.util.Collections.sort(expected);
+                            java.util.Collections.sort(actual);
+                            if (!expected.equals(actual)) throw new UnsupportedStructure();
+                        }
+                    } else if (operation.equals("layout-poster")) {
+                        stirling.software.pdf.PdfPoster.apply(
+                                document,
+                                target,
+                                new stirling.software.pdf.PdfPoster.Options(
+                                        text(options, "pageSize", "A4"),
+                                        (int) number(options, "xFactor", 2),
+                                        (int) number(options, "yFactor", 2),
+                                        flag(options, "rightToLeft")));
+                    } else {
                         String spine = text(options, "spineLocation", "LEFT"),
                                 pass = text(options, "duplexPass", "BOTH");
                         float gutter = number(options, "gutterSize", 12);
@@ -1075,6 +1177,16 @@ public final class WorkerMain {
                                 flag(options, "flipOnShortEdge"));
                     }
                     target.save(output.toFile());
+                    if (operation.equals("layout-poster")) {
+                        Path zip = root.resolve("output.zip");
+                        try (var archive = new ZipOutputStream(Files.newOutputStream(zip))) {
+                            archive.putNextEntry(new ZipEntry("document_poster.pdf"));
+                            Files.copy(output, archive);
+                            archive.closeEntry();
+                        }
+                        Files.delete(output);
+                        return zip;
+                    }
                     return output;
                 }
             }

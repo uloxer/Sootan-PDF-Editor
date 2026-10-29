@@ -415,6 +415,8 @@ export async function requestDesktopWorker(
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
         ...([
+          "multi-page-layout",
+          "split-for-poster-print",
           "booklet-imposition",
           "pdf-to-single-page",
           "pdf-to-pdfa",

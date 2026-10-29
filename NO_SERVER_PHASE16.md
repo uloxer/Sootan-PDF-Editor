@@ -1,0 +1,16 @@
+# Server-free N-up and poster — Phase 16
+
+2026-10-29. Connected `multi-page-layout` → `layout-nup` and Split's existing `split-for-poster-print` → `layout-poster`. Both use the real existing form builders/processing dispatcher. No HTTP listener, new helper or filesystem grant is introduced. Shared `PdfNUp`/`PdfPoster` retain thin legacy controller transports; poster's private page-size reflection target remains a delegate.
+
+N-up retains DEFAULT 2/perfect-square and CUSTOM rows×columns, A4 portrait/landscape, row/column arrangement, LTR/RTL, outer/inner margins and borders. It uses Phase15's normalized vector form import for rotation/CropBox origins. Existing pure `GeneralFormCopyUtils` and field-type support moved to pdf-services under unchanged package/API. The original entry point remains; N-up supplies actual content placements so unrotated editable fields also follow margins/order/orientation/origins. Widget lists are linked explicitly and field/annotation flags retained. Worker output verifies field type/value/flags/count and widget/page links instead of returning silently skipped fields. Rotated forms, XFA and unsupported preservation results fail explicitly; safely copied ordinary forms remain available.
+
+Poster retains A4/Letter/A3/A5/Legal/Tabloid paper sizes, 1–10 horizontal/vertical factors and row-major LTR/RTL tiling. There is no separate margin parameter in its source contract: each tile is uniformly fitted and centered. A tile clip keeps adjacent content out of centered padding. Output is a ZIP containing the fixed safe entry `document_poster.pdf`. The job refuses more than 1000 output pages. Both operations retain owner/signed guards and existing unsupported bookmark/non-widget annotation/attachment-destination guards; selected inputs stay immutable. N-up has the source grid limits and an explicit positive pages-per-sheet check.
+
+Verification (one scoped cycle):
+- `task backend:check` with affected N-up/poster controller selection: 36 passed; `.tooling/phase16-backend-check.log`.
+- Same gate with moved form-helper/type-support selection in common: 33 passed; `.tooling/phase16-common-check.log`.
+- Scoped frontend type/lint/format and two real-form dispatch tests passed; `.tooling/phase16-frontend-check.log`.
+- Three actual worker jobs independently passed rotated/nonzero-origin N-up color placement/text/order with column-RTL/margins; editable readonly text field value/flags/appearance/widget/page link and rectangle within 0.05 points; four RTL Letter poster tiles with correct centered white padding. Original SHA256 hashes unchanged. `.tooling/nonweb-nup-poster-golden/results.json`, `.tooling/phase16-golden.log`; reproducible via `packaging/worker/nup_poster_smoke.py` and `NUpFormFixture.java`.
+- Worker install/nonweb guard and C# compilation passed; `.tooling/phase16-worker.log`, `.tooling/phase16-host-compile.log`. No broad suites or native UI bundle rebuild. Complex form authoring/relationships were not newly implemented or claimed.
+
+Remaining layout family: multi-file overlay (sequential/interleaved/repeat-count contract) is next, not approximated. Broader parity/profile migration/final standalone packaging remain pending. Installed 3.2.5/Data, isolated normal host and unrelated processes were untouched. No push/install/release or Firefox UI actions.

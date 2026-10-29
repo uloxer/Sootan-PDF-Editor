@@ -57,6 +57,36 @@ public class GeneralFormCopyUtils {
             float cellHeight)
             throws IOException {
 
+        java.util.List<Placement> placements = new java.util.ArrayList<>();
+        for (int index = 0; index < totalPages; index++) {
+            PDRectangle rect = sourceDocument.getPage(index).getMediaBox();
+            int target = index / pagesPerSheet,
+                    row = index % pagesPerSheet / cols,
+                    col = index % pagesPerSheet % cols;
+            if (row >= rows || target >= newDocument.getNumberOfPages()) {
+                placements.add(null);
+                continue;
+            }
+            float scale = Math.min(cellWidth / rect.getWidth(), cellHeight / rect.getHeight());
+            placements.add(
+                    new Placement(
+                            target,
+                            col * cellWidth + (cellWidth - rect.getWidth() * scale) / 2,
+                            newDocument.getPage(target).getMediaBox().getHeight()
+                                    - ((row + 1) * cellHeight
+                                            - (cellHeight - rect.getHeight() * scale) / 2),
+                            scale));
+        }
+        copyAndTransformFormFields(sourceDocument, newDocument, placements);
+    }
+
+    /** Coordinates use the same source-page-to-sheet transform as the page content. */
+    public record Placement(int destinationPage, float offsetX, float offsetY, float scale) {}
+
+    public void copyAndTransformFormFields(
+            PDDocument sourceDocument, PDDocument newDocument, java.util.List<Placement> placements)
+            throws IOException {
+        int totalPages = sourceDocument.getNumberOfPages();
         PDDocumentCatalog sourceCatalog = sourceDocument.getDocumentCatalog();
         PDAcroForm sourceAcroForm = sourceCatalog.getAcroForm();
 
@@ -92,40 +122,18 @@ public class GeneralFormCopyUtils {
                 continue;
             }
 
-            int destinationPageIndex = pageIndex / pagesPerSheet;
-            int adjustedPageIndex = pageIndex % pagesPerSheet;
-            int rowIndex = adjustedPageIndex / cols;
-            int colIndex = adjustedPageIndex % cols;
-
-            if (rowIndex >= rows) {
+            Placement placement = placements.get(pageIndex);
+            if (placement == null || placement.destinationPage() >= newDocument.getNumberOfPages())
                 continue;
-            }
-
-            if (destinationPageIndex >= newDocument.getNumberOfPages()) {
-                continue;
-            }
-
-            PDPage destinationPage = newDocument.getPage(destinationPageIndex);
-            PDRectangle sourceRect = sourcePage.getMediaBox();
-
-            float scaleWidth = cellWidth / sourceRect.getWidth();
-            float scaleHeight = cellHeight / sourceRect.getHeight();
-            float scale = Math.min(scaleWidth, scaleHeight);
-
-            float x = colIndex * cellWidth + (cellWidth - sourceRect.getWidth() * scale) / 2;
-            float y =
-                    destinationPage.getMediaBox().getHeight()
-                            - ((rowIndex + 1) * cellHeight
-                                    - (cellHeight - sourceRect.getHeight() * scale) / 2);
-
+            PDPage destinationPage = newDocument.getPage(placement.destinationPage());
             copyBasicFormFields(
                     sourceAcroForm,
                     newAcroForm,
                     sourcePage,
                     destinationPage,
-                    x,
-                    y,
-                    scale,
+                    placement.offsetX(),
+                    placement.offsetY(),
+                    placement.scale(),
                     pageIndex,
                     fieldNameCounters,
                     widgetFieldMap);
@@ -260,6 +268,7 @@ public class GeneralFormCopyUtils {
                 return;
             }
 
+            newField.setFieldFlags(sourceField.getFieldFlags());
             handler.copyFromOriginal(sourceField, newField);
         } catch (Exception e) {
             log.warn(
@@ -302,8 +311,9 @@ public class GeneralFormCopyUtils {
         float newHeight = sourceRect.getHeight() * scale;
         newWidget.setRectangle(new PDRectangle(newX, newY, newWidth, newHeight));
         newWidget.setPage(destinationPage);
+        newWidget.setAnnotationFlags(sourceWidget.getAnnotationFlags());
 
-        newField.getWidgets().add(newWidget);
+        newField.setWidgets(java.util.List.of(newWidget));
         newWidget.setParent(newField);
         newAcroForm.getFields().add(newField);
         destinationAnnotations.add(newWidget);

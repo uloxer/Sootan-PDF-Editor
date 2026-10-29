@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"layout-booklet","layout-single-page","editor-charcodes","pdfa-convert","json-export","json-import","svg-pdf-create","pdf-csv-export","office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"layout-nup","layout-poster","layout-booklet","layout-single-page","editor-charcodes","pdfa-convert","json-export","json-import","svg-pdf-create","pdf-csv-export","office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal long AttachmentBytes;internal int AttachmentCount;internal Task Work;
         public void Dispose() {
@@ -135,7 +135,7 @@ sealed class SootanWorker : IDisposable {
             if(job.Cancelled)throw new IOException();
             job.Process=Process.Start(start);job.Tree=new ProcessTree(job.Process);
         }
-        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="layout-booklet"||operation=="layout-single-page"||operation=="editor-charcodes"||operation=="pdfa-convert"||operation=="office-export"||operation=="office-import"||operation=="svg-pdf-create"||operation=="pdf-csv-export"||operation=="json-export"||operation=="json-import"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
+        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="layout-nup"||operation=="layout-poster"||operation=="layout-booklet"||operation=="layout-single-page"||operation=="editor-charcodes"||operation=="pdfa-convert"||operation=="office-export"||operation=="office-import"||operation=="svg-pdf-create"||operation=="pdf-csv-export"||operation=="json-export"||operation=="json-import"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
         var error=job.Process.StandardError.BaseStream.CopyToAsync(Stream.Null);
         byte[] requestBytes=Encoding.UTF8.GetBytes(header+"\n");job.Process.StandardInput.BaseStream.Write(requestBytes,0,requestBytes.Length);job.Process.StandardInput.BaseStream.Flush();job.Process.StandardInput.Close();
         Dictionary<string,object> result=null;string line;
