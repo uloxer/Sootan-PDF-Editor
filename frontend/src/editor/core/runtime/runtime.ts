@@ -63,6 +63,7 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  "overlay-pdfs": "overlay",
   "multi-page-layout": "layout-nup",
   "split-for-poster-print": "layout-poster",
   "booklet-imposition": "layout-booklet",

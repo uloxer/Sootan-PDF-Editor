@@ -1,16 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.multipdf.Overlay;
-import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -31,7 +22,6 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -58,190 +48,34 @@ public class PdfOverlayController {
     public ResponseEntity<Resource> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
             throws IOException {
         MultipartFile baseFile = request.getFileInput();
-        int overlayPos = request.getOverlayPosition();
-
-        MultipartFile[] overlayFiles = request.getOverlayFiles();
-        validateOverlayFiles(overlayFiles);
-        File[] overlayPdfFiles = new File[overlayFiles.length];
-        List<File> tempFiles = new ArrayList<>(); // List to keep track of temporary files
-
-        TempFile tempOut = null;
-        try {
-            for (int i = 0; i < overlayFiles.length; i++) {
-                overlayPdfFiles[i] = GeneralUtils.multipartToFile(overlayFiles[i]);
+        MultipartFile[] files = request.getOverlayFiles();
+        if (files == null || files.length == 0)
+            throw new IllegalArgumentException("At least one overlay file is required");
+        var documents = new java.util.ArrayList<PDDocument>();
+        TempFile output = null;
+        try (PDDocument base = pdfDocumentFactory.load(baseFile)) {
+            for (var file : files) {
+                if (file == null || file.isEmpty())
+                    throw new IllegalArgumentException("Overlay files must not be empty");
+                documents.add(pdfDocumentFactory.load(file));
             }
-
-            String mode = request.getOverlayMode(); // "SequentialOverlay", "InterleavedOverlay",
-            // "FixedRepeatOverlay"
-            int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
-
-            try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
-                    Overlay overlay = new Overlay()) {
-                Map<Integer, String> overlayGuide =
-                        prepareOverlayGuide(
-                                basePdf.getNumberOfPages(),
-                                overlayPdfFiles,
-                                mode,
-                                counts,
-                                tempFiles);
-
-                overlay.setInputPDF(basePdf);
-                if (overlayPos == 0) {
-                    overlay.setOverlayPosition(Overlay.Position.FOREGROUND);
-                } else {
-                    overlay.setOverlayPosition(Overlay.Position.BACKGROUND);
-                }
-
-                tempOut = tempFileManager.createManagedTempFile(".pdf");
-                overlay.overlay(overlayGuide).save(tempOut.getFile());
-                String outputFilename =
-                        GeneralUtils.generateFilename(
-                                baseFile.getOriginalFilename(), "_overlayed.pdf");
-
-                TempFile out = tempOut;
-                tempOut = null; // ownership transferred to response Resource
-                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
-            }
-        } catch (Exception e) {
-            if (tempOut != null) {
-                tempOut.close();
-            }
-            throw e;
+            output = tempFileManager.createManagedTempFile(".pdf");
+            stirling.software.pdf.PdfOverlays.apply(
+                    base,
+                    documents,
+                    request.getOverlayMode(),
+                    request.getCounts(),
+                    request.getOverlayPosition(),
+                    output.getPath());
+            TempFile response = output;
+            output = null;
+            return WebResponseUtils.pdfFileToWebResponse(
+                    response,
+                    GeneralUtils.generateFilename(
+                            baseFile.getOriginalFilename(), "_overlayed.pdf"));
         } finally {
-            for (File overlayPdfFile : overlayPdfFiles) {
-                if (overlayPdfFile != null) {
-                    Files.deleteIfExists(overlayPdfFile.toPath());
-                }
-            }
-            for (File tempFile : tempFiles) { // Delete temporary files
-                if (tempFile != null) {
-                    Files.deleteIfExists(tempFile.toPath());
-                }
-            }
-        }
-    }
-
-    // Both fields are declared required, but @ModelAttribute binding leaves them null when the
-    // caller omits them, which would otherwise surface as a 500 instead of a 400.
-    private void validateOverlayFiles(MultipartFile[] overlayFiles) {
-        if (overlayFiles == null || overlayFiles.length == 0) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.overlayFilesRequired", "At least one overlay file is required");
-        }
-        for (MultipartFile overlayFile : overlayFiles) {
-            if (overlayFile == null || overlayFile.isEmpty()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.overlayFileEmpty", "Overlay files must not be empty");
-            }
-        }
-    }
-
-    private Map<Integer, String> prepareOverlayGuide(
-            int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles)
-            throws IOException {
-        Map<Integer, String> overlayGuide = new HashMap<>();
-        if (mode == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", "null");
-        }
-        switch (mode) {
-            case "SequentialOverlay":
-                sequentialOverlay(overlayGuide, overlayFiles, basePageCount, tempFiles);
-                break;
-            case "InterleavedOverlay":
-                interleavedOverlay(overlayGuide, overlayFiles, basePageCount);
-                break;
-            case "FixedRepeatOverlay":
-                fixedRepeatOverlay(overlayGuide, overlayFiles, counts, basePageCount);
-                break;
-            default:
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", mode);
-        }
-        return overlayGuide;
-    }
-
-    private void sequentialOverlay(
-            Map<Integer, String> overlayGuide,
-            File[] overlayFiles,
-            int basePageCount,
-            List<File> tempFiles)
-            throws IOException {
-        int overlayFileIndex = 0;
-        int pageCountInCurrentOverlay = 0;
-
-        for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
-            if (pageCountInCurrentOverlay == 0
-                    || pageCountInCurrentOverlay
-                            >= getNumberOfPages(overlayFiles[overlayFileIndex])) {
-                pageCountInCurrentOverlay = 0;
-                overlayFileIndex = (overlayFileIndex + 1) % overlayFiles.length;
-            }
-
-            try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex]);
-                    PDDocument singlePageDocument = new PDDocument()) {
-                singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
-                File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
-                // NO_COMPRESSION: this single-page doc holds a page copied from overlayPdf.
-                // PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared resources imported
-                // across documents, corrupting overlay fonts. Revert once on 3.0.8.
-                singlePageDocument.save(tempFile, CompressParameters.NO_COMPRESSION);
-
-                overlayGuide.put(basePageIndex, tempFile.getAbsolutePath());
-                tempFiles.add(tempFile); // Keep track of the temporary file for cleanup
-            }
-
-            pageCountInCurrentOverlay++;
-        }
-    }
-
-    private int getNumberOfPages(File file) throws IOException {
-        try (PDDocument doc = Loader.loadPDF(file)) {
-            return doc.getNumberOfPages();
-        }
-    }
-
-    private void interleavedOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount)
-            throws IOException {
-        for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
-            File overlayFile = overlayFiles[(basePageIndex - 1) % overlayFiles.length];
-
-            // Load the overlay document to check its page count
-            try (PDDocument overlayPdf = Loader.loadPDF(overlayFile)) {
-                int overlayPageCount = overlayPdf.getNumberOfPages();
-                if ((basePageIndex - 1) % overlayPageCount < overlayPageCount) {
-                    overlayGuide.put(basePageIndex, overlayFile.getAbsolutePath());
-                }
-            }
-        }
-    }
-
-    private void fixedRepeatOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount)
-            throws IOException {
-        if (overlayFiles.length != counts.length) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "counts array",
-                    "length must match the number of overlay files");
-        }
-        int currentPage = 1;
-        for (int i = 0; i < overlayFiles.length; i++) {
-            File overlayFile = overlayFiles[i];
-            int repeatCount = counts[i];
-
-            // Load the overlay document to check its page count
-            try (PDDocument overlayPdf = Loader.loadPDF(overlayFile)) {
-                int overlayPageCount = overlayPdf.getNumberOfPages();
-                for (int j = 0; j < repeatCount && currentPage <= basePageCount; j++) {
-                    for (int page = 0; page < overlayPageCount; page++) {
-                        if (currentPage > basePageCount) break;
-                        overlayGuide.put(currentPage++, overlayFile.getAbsolutePath());
-                    }
-                }
-            }
+            if (output != null) output.close();
+            for (var document : documents) document.close();
         }
     }
 }

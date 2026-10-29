@@ -269,22 +269,24 @@ public final class PdfLayouts {
 
     static PDFormXObject displayForm(PDDocument source, int index, LayerUtility utility)
             throws IOException {
-        PDPage page = source.getPage(index);
+        AffineTransform transform = displayTransform(source.getPage(index));
+        PDFormXObject form = utility.importPageAsForm(source, index);
+        form.setMatrix(transform);
+        return form;
+    }
+
+    static AffineTransform displayTransform(PDPage page) throws IOException {
         PDRectangle box = page.getCropBox();
         float x = box.getLowerLeftX(),
                 y = box.getLowerLeftY(),
                 w = box.getWidth(),
                 h = box.getHeight();
-        AffineTransform transform =
-                switch (Math.floorMod(page.getRotation(), 360)) {
-                    case 0 -> new AffineTransform(1, 0, 0, 1, -x, -y);
-                    case 90 -> new AffineTransform(0, -1, 1, 0, -y, w + x);
-                    case 180 -> new AffineTransform(-1, 0, 0, -1, w + x, h + y);
-                    case 270 -> new AffineTransform(0, 1, -1, 0, h + y, -x);
-                    default -> throw new IOException("Unsupported page rotation.");
-                };
-        PDFormXObject form = utility.importPageAsForm(source, index);
-        form.setMatrix(transform);
-        return form;
+        return switch (Math.floorMod(page.getRotation(), 360)) {
+            case 0 -> new AffineTransform(1, 0, 0, 1, -x, -y);
+            case 90 -> new AffineTransform(0, -1, 1, 0, -y, w + x);
+            case 180 -> new AffineTransform(-1, 0, 0, -1, w + x, h + y);
+            case 270 -> new AffineTransform(0, 1, -1, 0, h + y, -x);
+            default -> throw new IOException("Unsupported page rotation.");
+        };
     }
 }

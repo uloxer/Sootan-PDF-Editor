@@ -62,6 +62,7 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "overlay",
                     "layout-nup",
                     "layout-poster",
                     "layout-booklet",
@@ -178,27 +179,33 @@ public final class WorkerMain {
                             "type",
                             "error",
                             "code",
-                            failure instanceof stirling.software.pdf.PdfArchive.NonCompliant
-                                    ? "PDFA_NONCOMPLIANT"
+                            failure instanceof stirling.software.pdf.PdfOverlays.SourceUnsupported
+                                    ? "OVERLAY_SOURCE_UNSUPPORTED"
                                     : failure
                                                     instanceof
-                                                    stirling.software.pdf.PdfArchive.HelperRequired
-                                            ? "PDFA_HELPER_REQUIRED"
-                                            : failure instanceof SvgResourceDenied
-                                                    ? "SVG_RESOURCE_DENIED"
-                                                    : failure
-                                                                    instanceof
-                                                                    PdfOfficeInput.ExternalResource
-                                                            ? "OFFICE_EXTERNAL_RESOURCE"
+                                                    stirling.software.pdf.PdfArchive.NonCompliant
+                                            ? "PDFA_NONCOMPLIANT"
+                                            : failure
+                                                            instanceof
+                                                            stirling.software.pdf.PdfArchive
+                                                                    .HelperRequired
+                                                    ? "PDFA_HELPER_REQUIRED"
+                                                    : failure instanceof SvgResourceDenied
+                                                            ? "SVG_RESOURCE_DENIED"
                                                             : failure
                                                                             instanceof
-                                                                            UnsupportedStructure
-                                                                    ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
+                                                                            PdfOfficeInput
+                                                                                    .ExternalResource
+                                                                    ? "OFFICE_EXTERNAL_RESOURCE"
                                                                     : failure
                                                                                     instanceof
-                                                                                    InspectionDenied
-                                                                            ? "INSPECTION_ACCESS_DENIED"
-                                                                            : "PROCESSING_FAILED",
+                                                                                    UnsupportedStructure
+                                                                            ? "UNSUPPORTED_DOCUMENT_STRUCTURE"
+                                                                            : failure
+                                                                                            instanceof
+                                                                                            InspectionDenied
+                                                                                    ? "INSPECTION_ACCESS_DENIED"
+                                                                                    : "PROCESSING_FAILED",
                             "message",
                             "The selected operation could not complete. Check its options, document permissions and private helper availability."));
             System.exit(1);
@@ -306,6 +313,13 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "overlay" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "overlayMode",
+                                    "overlayPosition",
+                                    "counts",
+                                    "selectedFiles");
                     case "layout-nup" ->
                             Set.of(
                                     "sourcePassword",
@@ -1037,6 +1051,49 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
+            if (operation.equals("overlay")) {
+                var grants = attachmentGrants(root, options);
+                if (grants.isEmpty()) throw new IOException("Select overlay PDFs.");
+                var overlays = new ArrayList<PDDocument>();
+                try {
+                    for (var entry : options.getAsJsonArray("selectedFiles")) {
+                        int index = entry.getAsJsonObject().get("index").getAsInt();
+                        Path selected = root.resolve("attachment-" + index + ".bin");
+                        try {
+                            overlays.add(Loader.loadPDF(selected.toFile()));
+                        } catch (
+                                org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
+                                        failure) {
+                            throw new stirling.software.pdf.PdfOverlays.SourceUnsupported();
+                        }
+                    }
+                    int[] counts = null;
+                    if (options.has("counts")) {
+                        var values = options.getAsJsonArray("counts");
+                        if (values.size() > 100) throw new IOException("Too many overlay counts.");
+                        counts = new int[values.size()];
+                        for (int i = 0; i < counts.length; i++) {
+                            double value = values.get(i).getAsDouble();
+                            if (!Double.isFinite(value)
+                                    || value < 0
+                                    || value > Integer.MAX_VALUE
+                                    || value != Math.floor(value))
+                                throw new IOException("Invalid overlay count.");
+                            counts[i] = (int) value;
+                        }
+                    }
+                    stirling.software.pdf.PdfOverlays.apply(
+                            document,
+                            overlays,
+                            text(options, "overlayMode", "SequentialOverlay"),
+                            counts,
+                            (int) number(options, "overlayPosition", 0),
+                            output);
+                    return output;
+                } finally {
+                    for (var overlay : overlays) overlay.close();
+                }
+            }
             if (Set.of("layout-booklet", "layout-single-page", "layout-nup", "layout-poster")
                     .contains(operation)) {
                 if (document.getNumberOfPages() < 1 || document.getNumberOfPages() > 1000)

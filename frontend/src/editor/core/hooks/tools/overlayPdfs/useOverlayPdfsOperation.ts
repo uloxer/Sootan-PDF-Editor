@@ -51,7 +51,7 @@ export const overlayPdfsFromApiParams = (
   counts: apiParams.counts ?? defaultParameters.counts,
 });
 
-const buildFormData = (
+export const buildOverlayPdfsFormData = (
   parameters: OverlayPdfsParameters,
   file: File,
 ): FormData =>
@@ -63,7 +63,7 @@ const buildFormData = (
 export const overlayPdfsOperationConfig: ToolOperationConfig<OverlayPdfsParameters> =
   defineSingleFileTool({
     validateParams: validateOverlayPdfsParameters,
-    buildFormData,
+    buildFormData: buildOverlayPdfsFormData,
     toApiParams: overlayPdfsToApiParams,
     fromApiParams: overlayPdfsFromApiParams,
     operationType: "overlayPdfs",

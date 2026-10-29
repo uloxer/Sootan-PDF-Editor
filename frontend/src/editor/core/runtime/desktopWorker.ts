@@ -72,7 +72,9 @@ export async function requestDesktopWorker(
         ? "fileInput"
         : portfolio
           ? "files"
-          : "attachments",
+          : name === "overlay-pdfs"
+            ? "overlayFiles"
+            : "attachments",
     )
     .filter((file): file is File => file instanceof File);
   const input = portfolio ? selected[0] : form.get("fileInput");
@@ -84,6 +86,7 @@ export async function requestDesktopWorker(
   const options: Record<
     string,
     | string
+    | number[]
     | Record<string, string>
     | { index: number; name: string; contentType: string }[]
   > = {};
@@ -94,6 +97,22 @@ export async function requestDesktopWorker(
       name === "update-metadata" && /^allRequestParams\[([^\]]+)\]$/.exec(key);
     if (custom) metadata[custom[1]] = value;
     else options[key] = value;
+  }
+  if (name === "overlay-pdfs") {
+    if (
+      !selected.length ||
+      selected.length > 100 ||
+      selected.some((file) => file.size > 50 * 1024 * 1024) ||
+      selected.reduce((n, file) => n + file.size, 0) > 200 * 1024 * 1024
+    )
+      throw new CorePdfError(
+        "INVALID_INPUT",
+        "Select 1–100 overlay PDFs, at most 50 MiB each and 200 MiB total.",
+      );
+    if (form.getAll("counts").length)
+      options.counts = form.getAll("counts").map(Number);
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
   }
   if (Object.keys(metadata).length) options.allRequestParams = metadata;
   if (form.getAll("languages").length > 1)
@@ -383,6 +402,11 @@ export async function requestDesktopWorker(
           "UNSUPPORTED_FEATURE",
           "This Office document contains external relationships. Embed linked resources or remove external links before converting; no remote content was fetched and the original is unchanged.",
         );
+      if (failure?.code === "OVERLAY_SOURCE_UNSUPPORTED")
+        throw new CorePdfError(
+          "UNSUPPORTED_FEATURE",
+          "An overlay source is encrypted without readable extraction permission or has visible annotations/forms. Use an unlocked page-content PDF (flatten its forms/annotations explicitly if needed). The base structures and original files are unchanged.",
+        );
       if (failure?.code === "PDFA_NONCOMPLIANT")
         throw new CorePdfError(
           "UNSUPPORTED_FEATURE",
@@ -415,6 +439,7 @@ export async function requestDesktopWorker(
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
         ...([
+          "overlay-pdfs",
           "multi-page-layout",
           "split-for-poster-print",
           "booklet-imposition",
@@ -433,7 +458,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" || operation.startsWith("layout-") ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" || operation.startsWith("layout-") || operation === "overlay" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },

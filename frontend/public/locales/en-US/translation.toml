@@ -6558,7 +6558,7 @@ title = "Overlay Results"
 title = "Settings"
 
 [overlay-pdfs.tooltip.counts]
-text = "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+text = "Provide a positive number for each overlay PDF showing how many times to repeat all of its pages before moving to the next. Required in Fixed Repeat mode."
 title = "Counts (Fixed Repeat only)"
 
 [overlay-pdfs.tooltip.description]
@@ -6569,7 +6569,7 @@ title = "Description"
 title = "Overlay PDFs Overview"
 
 [overlay-pdfs.tooltip.mode]
-fixedRepeat = "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+fixedRepeat = "Fixed Repeat Overlay: Repeat all pages of each overlay PDF the specified number of times, then move to the next."
 interleaved = "Interleaved Overlay: Take one page from each overlay in turn."
 sequential = "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next."
 text = "Choose how to distribute overlay pages across the base PDF pages."

@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"layout-nup","layout-poster","layout-booklet","layout-single-page","editor-charcodes","pdfa-convert","json-export","json-import","svg-pdf-create","pdf-csv-export","office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"overlay","layout-nup","layout-poster","layout-booklet","layout-single-page","editor-charcodes","pdfa-convert","json-export","json-import","svg-pdf-create","pdf-csv-export","office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal long AttachmentBytes;internal int AttachmentCount;internal Task Work;
         public void Dispose() {
@@ -115,6 +115,7 @@ sealed class SootanWorker : IDisposable {
             e.Response=environment.CreateWebResourceResponse(job.Output,200,"OK","Content-Type: "+(string)result["contentType"]+"\r\nCache-Control: no-store\r\n");
         } catch(SvgResourceDenied) {Reply(e,400,"{\"code\":\"SVG_RESOURCE_DENIED\"}");}
         catch(OfficeExternalResource) {Reply(e,400,"{\"code\":\"OFFICE_EXTERNAL_RESOURCE\"}");}
+        catch(OverlaySourceUnsupported) {Reply(e,400,"{\"code\":\"OVERLAY_SOURCE_UNSUPPORTED\"}");}
         catch(PdfaNonCompliant) {Reply(e,400,"{\"code\":\"PDFA_NONCOMPLIANT\"}");}
         catch(PdfaHelperRequired) {Reply(e,400,"{\"code\":\"PDFA_HELPER_REQUIRED\"}");}
         catch(InspectionDenied) {Reply(e,400,"{\"code\":\"INSPECTION_ACCESS_DENIED\"}");}
@@ -135,7 +136,7 @@ sealed class SootanWorker : IDisposable {
             if(job.Cancelled)throw new IOException();
             job.Process=Process.Start(start);job.Tree=new ProcessTree(job.Process);
         }
-        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="layout-nup"||operation=="layout-poster"||operation=="layout-booklet"||operation=="layout-single-page"||operation=="editor-charcodes"||operation=="pdfa-convert"||operation=="office-export"||operation=="office-import"||operation=="svg-pdf-create"||operation=="pdf-csv-export"||operation=="json-export"||operation=="json-import"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
+        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="overlay"||operation=="layout-nup"||operation=="layout-poster"||operation=="layout-booklet"||operation=="layout-single-page"||operation=="editor-charcodes"||operation=="pdfa-convert"||operation=="office-export"||operation=="office-import"||operation=="svg-pdf-create"||operation=="pdf-csv-export"||operation=="json-export"||operation=="json-import"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
         var error=job.Process.StandardError.BaseStream.CopyToAsync(Stream.Null);
         byte[] requestBytes=Encoding.UTF8.GetBytes(header+"\n");job.Process.StandardInput.BaseStream.Write(requestBytes,0,requestBytes.Length);job.Process.StandardInput.BaseStream.Flush();job.Process.StandardInput.Close();
         Dictionary<string,object> result=null;string line;
@@ -146,6 +147,7 @@ sealed class SootanWorker : IDisposable {
             if(message.ContainsKey("code")&&(string)message["code"]=="UNSUPPORTED_DOCUMENT_STRUCTURE")throw new UnsupportedStructure();
             if(message.ContainsKey("code")&&(string)message["code"]=="OFFICE_EXTERNAL_RESOURCE")throw new OfficeExternalResource();
             if(message.ContainsKey("code")&&(string)message["code"]=="SVG_RESOURCE_DENIED")throw new SvgResourceDenied();
+            if(message.ContainsKey("code")&&(string)message["code"]=="OVERLAY_SOURCE_UNSUPPORTED")throw new OverlaySourceUnsupported();
             if(message.ContainsKey("code")&&(string)message["code"]=="PDFA_NONCOMPLIANT")throw new PdfaNonCompliant();
             if(message.ContainsKey("code")&&(string)message["code"]=="PDFA_HELPER_REQUIRED")throw new PdfaHelperRequired();
             if(message.ContainsKey("code")&&(string)message["code"]=="INSPECTION_ACCESS_DENIED")throw new InspectionDenied();
@@ -156,6 +158,7 @@ sealed class SootanWorker : IDisposable {
         }
     }
     private sealed class UnsupportedStructure : IOException {}
+    private sealed class OverlaySourceUnsupported : IOException {}
     private sealed class PdfaNonCompliant : IOException {}
     private sealed class PdfaHelperRequired : IOException {}
     private sealed class InspectionDenied : IOException {}
