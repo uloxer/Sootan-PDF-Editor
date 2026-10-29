@@ -1,3 +1,8 @@
+import { getRuntime } from "@editor/runtime/runtime";
+import {
+  requestDesktopWorker,
+  supportsWorkerEndpoint,
+} from "@editor/runtime/desktopWorker";
 import apiClient from "@editor/services/apiClient";
 import type {
   CharcodeResolver,
@@ -56,6 +61,7 @@ function serializeDocCached<D>(
 
 /** Endpoint config - resolved relative to current origin in dev. */
 const ENDPOINT = "/api/v1/general/pdf-text-editor/encode-charcodes";
+let workerSession = new AbortController();
 
 /** Shape of the encode-charcodes JSON response (mirrors the controller). */
 interface EncodeCharcodesResponse {
@@ -71,6 +77,35 @@ async function postCharcodes(
   body: Record<string, unknown>,
 ): Promise<EncodeCharcodesResponse | null> {
   try {
+    if (!getRuntime().serverOperations) {
+      if (
+        !supportsWorkerEndpoint("encode-charcodes") ||
+        typeof body.pdfBase64 !== "string" ||
+        body.pdfBase64.length > 70 * 1024 * 1024
+      )
+        return null;
+      const bytes = Uint8Array.from(atob(body.pdfBase64), (ch) =>
+        ch.charCodeAt(0),
+      );
+      const form = new FormData();
+      form.set(
+        "fileInput",
+        new File([bytes], "Editor snapshot.pdf", { type: "application/pdf" }),
+      );
+      for (const key of [
+        "pageIndex",
+        "locatorChar",
+        "fontName",
+        "fontSha256",
+        "text",
+      ]) {
+        if (body[key] !== undefined) form.set(key, String(body[key]));
+      }
+      const result = await requestDesktopWorker("encode-charcodes", form, {
+        signal: workerSession.signal,
+      });
+      return JSON.parse(await result.data.text()) as EncodeCharcodesResponse;
+    }
     const resp = await apiClient.post<EncodeCharcodesResponse>(ENDPOINT, body, {
       suppressErrorToast: true,
       skipAuthRedirect: true,
@@ -830,6 +865,8 @@ export function _clearBackendCacheForTests(): void {
 // Reset ALL module-level caches keyed by raw PDFium pointers (per-char
 // charcodes, per-page prewarm guard, per-char font handles, in-flight set).
 export function resetBackendResolverCaches(): void {
+  workerSession.abort();
+  workerSession = new AbortController();
   charCache.clear();
   negativeUntil.clear();
   inFlight.clear();

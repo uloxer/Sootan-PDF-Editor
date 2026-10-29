@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
+import { getRuntime } from "@editor/runtime/runtime";
+import { requestPdfProcessing } from "@editor/runtime/processing";
 import { ensureBackendReady } from "@editor/services/backendReadinessGuard";
 import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
@@ -104,7 +106,10 @@ export function useEditorOcr({
       const creditError = await checkCredits(OCR_ENDPOINT);
       if (!isCurrent()) return;
       if (creditError) throw new Error(creditError);
-      if (!(await ensureBackendReady(OCR_ENDPOINT))) {
+      if (
+        getRuntime().serverOperations &&
+        !(await ensureBackendReady(OCR_ENDPOINT))
+      ) {
         throw new Error(
           t(
             "backendHealth.offline",
@@ -113,10 +118,12 @@ export function useEditorOcr({
         );
       }
       if (!isCurrent()) return;
-      const { data } = await apiClient.get<{ languages: string[] }>(
-        "/api/v1/ui-data/ocr-pdf",
-        { signal: request.signal },
-      );
+      const { data } = getRuntime().serverOperations
+        ? await apiClient.get<{ languages: string[] }>(
+            "/api/v1/ui-data/ocr-pdf",
+            { signal: request.signal },
+          )
+        : { data: { languages: ["eng"] } };
       if (!isCurrent()) return;
       const available = data.languages.filter((language) => language !== "osd");
       const language =
@@ -137,7 +144,7 @@ export function useEditorOcr({
       });
       assertFilesNotBlocked([fileId ?? undefined]);
       assertEditorOcrAllowed(doc, fileId, t);
-      const response = await apiClient.post<Blob>(
+      const response = await requestPdfProcessing(
         OCR_ENDPOINT,
         buildOCRFormData(
           { ...defaultParameters, languages: [language] },

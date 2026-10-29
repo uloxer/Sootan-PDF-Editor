@@ -63,6 +63,8 @@ export function supportsLocalEndpoint(endpoint: string): boolean {
 }
 
 export const WORKER_ENDPOINTS: Record<string, string> = {
+  "text-editor-pdf": "editor-charcodes",
+  "encode-charcodes": "editor-charcodes",
   "pdf-to-pdfa": "pdfa-convert",
   "pdf-to-text-editor": "json-export",
   "text-editor-to-pdf": "json-import",

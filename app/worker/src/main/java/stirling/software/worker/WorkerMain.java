@@ -62,6 +62,7 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "editor-charcodes",
                     "pdfa-convert",
                     "json-export",
                     "json-import",
@@ -301,6 +302,8 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "editor-charcodes" ->
+                            Set.of("pageIndex", "locatorChar", "fontName", "fontSha256", "text");
                     case "pdfa-convert" ->
                             Set.of("sourcePassword", "outputFormat", "strict", "pdfUa");
                     case "json-export" -> Set.of("sourcePassword", "lightweight");
@@ -504,6 +507,35 @@ public final class WorkerMain {
                     report,
                     JSON.toJson(
                             PdfCertificates.integrity(input, Files.exists(trust) ? trust : null)));
+            return report;
+        }
+        if (operation.equals("editor-charcodes")) {
+            var request = new stirling.software.pdf.PdfCharcodes.EncodeCharcodesRequest();
+            request.setPdfBase64(
+                    java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(input)));
+            request.setPageIndex((int) number(options, "pageIndex", -1));
+            request.setLocatorChar(text(options, "locatorChar", ""));
+            request.setFontName(text(options, "fontName", ""));
+            request.setFontSha256(text(options, "fontSha256", ""));
+            request.setText(text(options, "text", ""));
+            var service =
+                    new stirling.software.pdf.PdfCharcodes(
+                            bytes -> {
+                                var document = Loader.loadPDF(bytes);
+                                if (document.isEncrypted()
+                                        && !document.getCurrentAccessPermission()
+                                                .canExtractContent()) {
+                                    document.close();
+                                    throw new IOException(
+                                            "Text extraction permission is required.");
+                                }
+                                return document;
+                            });
+            var result = service.encode(request);
+            if (result.status() != 200)
+                throw new IOException("The selected font could not encode this request.");
+            Path report = root.resolve("output.json");
+            writeReport(report, JSON.toJson(result.body()));
             return report;
         }
         if (operation.equals("ocr")) return ocr(root, input, output, options);

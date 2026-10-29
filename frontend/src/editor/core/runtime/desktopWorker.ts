@@ -424,7 +424,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },
