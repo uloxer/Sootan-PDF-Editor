@@ -303,6 +303,10 @@ export async function requestDesktopWorker(
         "The legacy LibreOffice engine is not bundled. Use the in-process Office converter.",
       );
   }
+  if (operation.startsWith("layout-")) {
+    const access = getPdfAccess(input);
+    if (access?.encrypted) options.sourcePassword = access.password;
+  }
   const id = crypto.randomUUID();
   const route = `/__sootan_worker/${id}`;
   const controller = new AbortController();
@@ -397,7 +401,7 @@ export async function requestDesktopWorker(
       if (failure?.code === "UNSUPPORTED_DOCUMENT_STRUCTURE")
         throw new CorePdfError(
           "UNSUPPORTED_FEATURE",
-          "This page-format operation cannot yet preserve this document's forms, bookmarks or annotations. The original has not been changed.",
+          "This page-format operation cannot yet preserve this document's forms, bookmarks, annotations or document-level attachments/destinations. The original has not been changed.",
         );
       throw new CorePdfError(
         "UNSUPPORTED_OPTION",
@@ -411,6 +415,9 @@ export async function requestDesktopWorker(
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
         ...([
+          "booklet-imposition",
+          "pdf-to-single-page",
+          "pdf-to-pdfa",
           "pdf-to-text-editor",
           "text-editor-to-pdf",
           "svg-to-pdf",
@@ -424,7 +431,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" || name === "encode-charcodes" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" || name === "pdf-to-pdfa" || operation.startsWith("layout-") ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },

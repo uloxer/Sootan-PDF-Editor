@@ -62,6 +62,8 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "layout-booklet",
+                    "layout-single-page",
                     "editor-charcodes",
                     "pdfa-convert",
                     "json-export",
@@ -302,6 +304,18 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "layout-single-page" -> Set.of("sourcePassword");
+                    case "layout-booklet" ->
+                            Set.of(
+                                    "sourcePassword",
+                                    "pagesPerSheet",
+                                    "addBorder",
+                                    "spineLocation",
+                                    "addGutter",
+                                    "gutterSize",
+                                    "doubleSided",
+                                    "duplexPass",
+                                    "flipOnShortEdge");
                     case "editor-charcodes" ->
                             Set.of("pageIndex", "locatorChar", "fontName", "fontSha256", "text");
                     case "pdfa-convert" ->
@@ -997,6 +1011,73 @@ public final class WorkerMain {
                 return output;
             }
             PdfProtection.requireOwner(document);
+            if (operation.equals("layout-booklet") || operation.equals("layout-single-page")) {
+                if (document.getNumberOfPages() < 1 || document.getNumberOfPages() > 1000)
+                    throw new IOException("Select a document with 1 to 1000 pages.");
+                if (document.getDocumentCatalog().getAcroForm() != null
+                                && !document.getDocumentCatalog()
+                                        .getAcroForm()
+                                        .getFields()
+                                        .isEmpty()
+                        || document.getDocumentCatalog().getDocumentOutline() != null)
+                    throw new UnsupportedStructure();
+                var names = document.getDocumentCatalog().getNames();
+                if (names != null
+                                && (names.getCOSObject()
+                                                .containsKey(
+                                                        org.apache.pdfbox.cos.COSName
+                                                                .EMBEDDED_FILES)
+                                        || names.getCOSObject()
+                                                .containsKey(org.apache.pdfbox.cos.COSName.DESTS))
+                        || document.getDocumentCatalog()
+                                .getCOSObject()
+                                .containsKey(org.apache.pdfbox.cos.COSName.getPDFName("AF")))
+                    throw new UnsupportedStructure();
+                for (var page : document.getPages())
+                    if (!page.getAnnotations().isEmpty()) throw new UnsupportedStructure();
+                try (var target = new PDDocument()) {
+                    target.setDocumentInformation(
+                            new org.apache.pdfbox.pdmodel.PDDocumentInformation(
+                                    new org.apache.pdfbox.cos.COSDictionary(
+                                            document.getDocumentInformation().getCOSObject())));
+                    var metadata = document.getDocumentCatalog().getMetadata();
+                    if (metadata != null) {
+                        try (var stream = metadata.createInputStream()) {
+                            var copy = new org.apache.pdfbox.pdmodel.common.PDMetadata(target);
+                            byte[] xmp = stream.readNBytes(2 * 1024 * 1024 + 1);
+                            if (xmp.length > 2 * 1024 * 1024) throw new UnsupportedStructure();
+                            copy.importXMPMetadata(xmp);
+                            target.getDocumentCatalog().setMetadata(copy);
+                        }
+                    }
+                    if (operation.equals("layout-single-page"))
+                        stirling.software.pdf.PdfLayouts.singlePage(document, target);
+                    else {
+                        String spine = text(options, "spineLocation", "LEFT"),
+                                pass = text(options, "duplexPass", "BOTH");
+                        float gutter = number(options, "gutterSize", 12);
+                        if (number(options, "pagesPerSheet", 2) != 2
+                                || !Set.of("LEFT", "RIGHT").contains(spine)
+                                || !Set.of("BOTH", "FIRST", "SECOND").contains(pass)
+                                || gutter < 0
+                                || gutter > 10000)
+                            throw new IOException("Invalid booklet options.");
+                        stirling.software.pdf.PdfLayouts.booklet(
+                                document,
+                                target,
+                                document.getNumberOfPages(),
+                                flag(options, "addBorder"),
+                                spine,
+                                flag(options, "addGutter"),
+                                gutter,
+                                !options.has("doubleSided") || flag(options, "doubleSided"),
+                                pass,
+                                flag(options, "flipOnShortEdge"));
+                    }
+                    target.save(output.toFile());
+                    return output;
+                }
+            }
             if (operation.equals("pdfa-convert")) {
                 if (flag(options, "pdfUa"))
                     throw new IOException("PDF/UA tagging is not connected.");

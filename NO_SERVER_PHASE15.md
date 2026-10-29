@@ -1,0 +1,15 @@
+# Server-free vector page layouts — Phase 15
+
+2026-10-29. This finite batch connects `booklet-imposition` → `layout-booklet` and `pdf-to-single-page` → `layout-single-page`. Existing tool hooks already use the shared processing dispatcher; their actual form builders are exercised by the new dispatch regression. Booklet retains 2-up saddle ordering, padding, left/right spine, borders, gutter, automatic/manual duplex passes and short-edge flipping. Single-long-page stacks visible pages in source order. No raster conversion, helper, network or multi-file filesystem grant is introduced.
+
+The PDFBox algorithms now live in plain `PdfLayouts`; legacy controller transports/factory behavior remain. Imported forms preserve vector/text/resources. Placement normalizes CropBox origins and applies display rotation once: the old booklet applied rotation on top of LayerUtility's rotation, while the old long-page dimensions used unrotated MediaBoxes. The independent fixture checks all four rotations with nonzero origins rather than copying implementation matrices into assertions.
+
+Worker mutations retain owner/signed guards. Forms, bookmarks, annotations and document-level embedded-file/destination trees that these new-page layouts cannot preserve are explicitly refused, rather than silently lost. Input copies remain immutable; document information and bounded XMP are retained. Jobs accept 1–1000 pages and use the existing private-job cleanup and three-minute deadline. The narrow native allowlist exposes only the two connected operations.
+
+Verification:
+- Affected `task backend:check` controller selection: 21 tests passed; `.tooling/phase15-backend-check.log`.
+- Scoped frontend type/lint/format passed; the new tests caught missing download-name whitelist entries, corrected for these layouts and the connected PDF/A route. Only those two dispatch tests were rerun: both passed; `.tooling/phase15-frontend-check.log`, `.tooling/phase15-front-targeted.log`.
+- Real worker booklet and long-page outputs independently passed page-order/text/dimensions and rendered colored-marker placement within 2 pixels across 0/90/180/270° rotations and CropBox origin (20,30); original SHA256 unchanged. `.tooling/nonweb-layout-golden/results.json`, `.tooling/phase15-golden.log`. Output reopened after the processing source document closed.
+- Final worker compile/install/nonweb guard and C# host compilation passed; `.tooling/phase15-worker-final.log`, `.tooling/phase15-host-compile.log`. No broad suites or native UI bundle rebuild.
+
+Remaining layouts: N-up/multiple-pages-per-sheet (`MultiPageLayoutController`, including its existing form-copy path), poster (`PosterPdfController`, tiling/page-size options), and multi-file overlay (`PdfOverlayController`, sequential/interleaved/repeat counts). These remain unavailable in standalone mode pending their own extraction; they were not approximated or removed. Broader tool parity/profile migration/final packaging remain pending. Installed 3.2.5/Data and the normal isolated Phase 14 host were untouched. No push/install/release or Firefox UI actions.

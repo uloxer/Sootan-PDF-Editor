@@ -1,13 +1,8 @@
 package stirling.software.SPDF.controller.api;
 
-import java.awt.geom.AffineTransform;
 import java.io.IOException;
 
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -53,43 +48,10 @@ public class ToSinglePageController {
 
         // Load the source document
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
-            // Calculate total height and max width
-            float totalHeight = 0;
-            float maxWidth = 0;
-            for (PDPage page : sourceDocument.getPages()) {
-                PDRectangle pageSize = page.getMediaBox();
-                totalHeight += pageSize.getHeight();
-                maxWidth = Math.max(maxWidth, pageSize.getWidth());
-            }
-
             // Create new document and page with calculated dimensions
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
-                newDocument.addPage(newPage);
-
-                LayerUtility layerUtility = new LayerUtility(newDocument);
-                float yOffset = totalHeight;
-
-                // For each page, copy its content to the new page at the correct offset
-                try {
-                    layerUtility.wrapInSaveRestore(newPage);
-                } catch (NullPointerException e) {
-                }
-
-                int pageIndex = 0;
-                for (PDPage page : sourceDocument.getPages()) {
-                    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
-                    if (form != null) {
-                        AffineTransform af =
-                                AffineTransform.getTranslateInstance(
-                                        0, yOffset - page.getMediaBox().getHeight());
-                        String defaultLayerName = "Layer" + pageIndex;
-                        layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
-                    }
-                    yOffset -= page.getMediaBox().getHeight();
-                    pageIndex++;
-                }
+                stirling.software.pdf.PdfLayouts.singlePage(sourceDocument, newDocument);
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
