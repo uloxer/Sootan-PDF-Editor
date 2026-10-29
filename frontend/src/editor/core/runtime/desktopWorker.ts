@@ -23,6 +23,8 @@ export async function requestDesktopWorker(
   const name =
     (
       {
+        "/api/v1/convert/pdf/text-editor": "pdf-to-text-editor",
+        "/api/v1/convert/text-editor/pdf": "text-editor-to-pdf",
         "/api/v1/convert/svg/pdf": "svg-to-pdf",
         "/api/v1/convert/pdf/csv": "pdf-to-csv",
         "/api/v1/convert/pdf/text": "pdf-to-text",
@@ -42,13 +44,17 @@ export async function requestDesktopWorker(
       "This private worker capability is not connected.",
     );
   const portfolio =
+    name === "text-editor-to-pdf" ||
     name === "create-portfolio" ||
     name === "svg-to-pdf" ||
     name === "img-to-pdf" ||
     name === "file-to-pdf";
   const selected = form
     .getAll(
-      name === "img-to-pdf" || name === "file-to-pdf" || name === "svg-to-pdf"
+      name === "img-to-pdf" ||
+        name === "file-to-pdf" ||
+        name === "svg-to-pdf" ||
+        name === "text-editor-to-pdf"
         ? "fileInput"
         : portfolio
           ? "files"
@@ -211,7 +217,7 @@ export async function requestDesktopWorker(
       options.useStirlingOfficeConvert === "true")
       ? "office-export"
       : DESKTOP_ENDPOINTS[name];
-  if (operation === "pdf-csv-export") {
+  if (operation === "pdf-csv-export" || operation === "json-export") {
     const access = getPdfAccess(input);
     if (access?.encrypted) options.sourcePassword = access.password;
   }
@@ -377,6 +383,8 @@ export async function requestDesktopWorker(
         "content-type":
           response.headers.get("Content-Type") ?? "application/octet-stream",
         ...([
+          "pdf-to-text-editor",
+          "text-editor-to-pdf",
           "svg-to-pdf",
           "pdf-to-csv",
           "pdf-to-word",
@@ -388,7 +396,7 @@ export async function requestDesktopWorker(
           "img-to-pdf",
         ].includes(name)
           ? {
-              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
+              "content-disposition": `attachment; filename="converted.${response.headers.get("Content-Type")?.includes("zip") ? "zip" : name === "pdf-to-text-editor" ? "json" : name === "text-editor-to-pdf" ? "pdf" : name === "pdf-to-csv" ? "csv" : name === "svg-to-pdf" ? "pdf" : operation === "office-export" ? String(options.outputFormat) : name === "file-to-pdf" ? "pdf" : name === "pdf-to-text" ? "txt" : name === "img-to-pdf" ? "pdf" : String(options.imageFormat)}"`,
             }
           : {}),
       },

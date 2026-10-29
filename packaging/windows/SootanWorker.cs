@@ -17,7 +17,7 @@ sealed class SootanWorker : IDisposable {
     private readonly JavaScriptSerializer json = new JavaScriptSerializer {MaxJsonLength=65536};
     private readonly Dictionary<string,Job> jobs=new Dictionary<string,Job>();
     private bool disposed;
-    internal static readonly string[] Operations={"svg-pdf-create","pdf-csv-export","office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
+    internal static readonly string[] Operations={"json-export","json-import","svg-pdf-create","pdf-csv-export","office-export","office-import","pdf-text-export","pdf-image-export","image-pdf-create","image-extract","attachments","portfolio-create","portfolio-flatten","document-inspect","stamp","page-crop","page-scale","page-numbers","watermark","sanitize","password-protect","decrypt","cert-sign-pkcs12","signature-integrity","signature-remove","ocr","metadata-update","forms-unlock","flatten"};
     private sealed class Job : IDisposable {
         internal string Directory; internal Process Process; internal Stream Output; internal ProcessTree Tree; internal bool Running,Cancelled;internal long AttachmentBytes;internal int AttachmentCount;internal Task Work;
         public void Dispose() {
@@ -48,7 +48,7 @@ sealed class SootanWorker : IDisposable {
     }
     internal string[] Capabilities {
         get {if(!File.Exists(java)||!System.IO.Directory.Exists(libraries)||!System.IO.Directory.GetFiles(libraries,"worker-*.jar").Any())return new string[0];
-            return Operations.Where(operation=>(operation!="ocr"||File.Exists(Path.Combine(helpers,"bin","ocrmypdf.exe")))&&((operation!="watermark"&&operation!="stamp")||new[]{"NotoSans-Regular.ttf","NotoSansArabic-Regular.ttf","NotoSansJP-Regular.ttf","NotoSansKR-Regular.ttf","NotoSansSC-Regular.ttf","NotoSansThai-Regular.ttf"}.All(name=>File.Exists(Path.Combine(fonts,name))))).ToArray();}
+            return Operations.Where(operation=>(!operation.StartsWith("json-",StringComparison.Ordinal)||File.Exists(Path.Combine(fonts,"NotoSans-Regular.ttf")))&&(operation!="ocr"||File.Exists(Path.Combine(helpers,"bin","ocrmypdf.exe")))&&((operation!="watermark"&&operation!="stamp")||new[]{"NotoSans-Regular.ttf","NotoSansArabic-Regular.ttf","NotoSansJP-Regular.ttf","NotoSansKR-Regular.ttf","NotoSansSC-Regular.ttf","NotoSansThai-Regular.ttf"}.All(name=>File.Exists(Path.Combine(fonts,name))))).ToArray();}
     }
     private async void Resource(object sender,CoreWebView2WebResourceRequestedEventArgs e) {
         var uri=new Uri(e.Request.Uri);
@@ -133,7 +133,7 @@ sealed class SootanWorker : IDisposable {
             if(job.Cancelled)throw new IOException();
             job.Process=Process.Start(start);job.Tree=new ProcessTree(job.Process);
         }
-        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="office-export"||operation=="office-import"||operation=="svg-pdf-create"||operation=="pdf-csv-export"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
+        using(var deadline=new System.Threading.Timer(_=>{lock(job){job.Cancelled=true;if(job.Tree!=null)job.Tree.Dispose();}},null,operation=="office-export"||operation=="office-import"||operation=="svg-pdf-create"||operation=="pdf-csv-export"||operation=="json-export"||operation=="json-import"?180000:System.Threading.Timeout.Infinite,System.Threading.Timeout.Infinite)) {
         var error=job.Process.StandardError.BaseStream.CopyToAsync(Stream.Null);
         job.Process.StandardInput.WriteLine(header);job.Process.StandardInput.Close();
         Dictionary<string,object> result=null;string line;

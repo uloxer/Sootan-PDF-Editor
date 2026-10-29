@@ -62,6 +62,8 @@ public final class WorkerMain {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private static final Set<String> OPERATIONS =
             Set.of(
+                    "json-export",
+                    "json-import",
                     "svg-pdf-create",
                     "pdf-csv-export",
                     "office-export",
@@ -187,6 +189,15 @@ public final class WorkerMain {
 
     private static List<String> capabilities() {
         return OPERATIONS.stream()
+                .filter(
+                        operation ->
+                                !operation.startsWith("json-")
+                                        || System.getenv("SOOTAN_WORKER_FONTS") != null
+                                                && Files.isRegularFile(
+                                                        Path.of(
+                                                                System.getenv(
+                                                                        "SOOTAN_WORKER_FONTS"),
+                                                                "NotoSans-Regular.ttf")))
                 .filter(operation -> !operation.equals("ocr") || helper() != null)
                 .filter(
                         operation ->
@@ -277,6 +288,8 @@ public final class WorkerMain {
         if (operation.equals("cert-sign-pkcs12")) operation = "cert-sign-invisible";
         Set<String> allowed =
                 switch (operation) {
+                    case "json-export" -> Set.of("sourcePassword", "lightweight");
+                    case "json-import" -> Set.of("selectedFiles");
                     case "svg-pdf-create" -> Set.of("selectedFiles", "combineIntoSinglePdf");
                     case "pdf-csv-export" -> Set.of("sourcePassword", "pageNumbers");
                     case "office-export" ->
@@ -498,6 +511,35 @@ public final class WorkerMain {
                 && options.has("useStirlingOfficeConvert")
                 && !flag(options, "useStirlingOfficeConvert"))
             throw new IOException("The legacy Office engine is not connected.");
+        if (operation.equals("json-export") || operation.equals("json-import")) {
+            String fontDirectory = System.getenv("SOOTAN_WORKER_FONTS");
+            if (fontDirectory == null) throw new IOException("Bundled fonts are unavailable.");
+            var converter =
+                    new stirling.software.pdf.json.LocalPdfJson(
+                            root, Path.of(fontDirectory), credential);
+            if (operation.equals("json-export")) {
+                if (flag(options, "lightweight"))
+                    throw new IOException("Use a complete embedded JSON export.");
+                Path target = root.resolve("output.json");
+                converter.export(input, target);
+                return target;
+            }
+            var files = attachmentGrants(root, options);
+            if (files.size() != 1
+                    || !files.getFirst()
+                            .name()
+                            .toLowerCase(java.util.Locale.ROOT)
+                            .endsWith(".json"))
+                throw new IOException("Select one editable JSON file.");
+            int index =
+                    options.getAsJsonArray("selectedFiles")
+                            .get(0)
+                            .getAsJsonObject()
+                            .get("index")
+                            .getAsInt();
+            converter.rebuild(root.resolve("attachment-" + index + ".bin"), output);
+            return output;
+        }
         if (operation.equals("svg-pdf-create")) {
             var files = attachmentGrants(root, options);
             if (files.isEmpty() || files.size() > 20)

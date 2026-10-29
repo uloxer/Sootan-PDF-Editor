@@ -15,14 +15,12 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType3CharProc;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
 
 @Slf4j
-@Component
 public class Type3GlyphExtractor {
 
     public List<Type3GlyphOutline> extractGlyphs(

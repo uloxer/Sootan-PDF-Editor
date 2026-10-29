@@ -91,6 +91,47 @@ it("advertises exact modes instead of all branches sharing the same endpoint", (
   expect(supportsLocalConversion("tiff", "pdf")).toBe(true);
   expect(supportsLocalConversion("svg", "pdf")).toBe(false);
 });
+it("uses complete editable JSON in the actual Convert export/import processors", async () => {
+  native();
+  vi.stubGlobal("__SOOTAN_RUNTIME__", {
+    kind: "offline-desktop",
+    advancedOperations: ["json-export", "json-import"],
+  });
+  expect(supportsLocalConversion("pdf", "json")).toBe(true);
+  expect(supportsLocalConversion("json", "pdf")).toBe(true);
+  let mime = "application/json";
+  const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({
+    ok: true,
+    headers: new Headers({ "Content-Type": mime }),
+    blob: async () => new Blob(['{"pages":[]}'], { type: mime }),
+  }));
+  vi.stubGlobal("fetch", fetch);
+  const exported = await convertProcessor(
+    { ...defaultParameters, fromExtension: "pdf", toExtension: "json" },
+    [new File(["PDF"], "Editable.pdf")],
+  );
+  expect(exported.files[0].name).toBe("converted.json");
+  expect(JSON.parse(String(fetch.mock.calls[1][1]?.body))).toMatchObject({
+    operation: "json-export",
+    options: {},
+  });
+  fetch.mockClear();
+  mime = "application/pdf";
+  const imported = await convertProcessor(
+    { ...defaultParameters, fromExtension: "json", toExtension: "pdf" },
+    [
+      new File(['{"pages":[]}'], "Edited with spaces.json", {
+        type: "application/json",
+      }),
+    ],
+  );
+  expect(imported.files[0].name).toBe("converted.pdf");
+  expect(fetch.mock.calls[1][0]).toMatch(/attachment-0$/);
+  expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toMatchObject({
+    operation: "json-import",
+    options: { selectedFiles: [{ index: 0, name: "Edited with spaces.json" }] },
+  });
+});
 it("dispatches the actual Convert processor and retains ZIP filename/MIME", async () => {
   native();
   const fetch = vi.fn(async (_url: string, _options?: RequestInit) => ({

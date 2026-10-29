@@ -150,6 +150,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: "html", label: "HTML", group: "Web" },
   { value: "zip", label: "ZIP", group: "Web" },
   { value: "md", label: "MD", group: "Text" },
+  { value: "json", label: "Editable PDF JSON", group: "Text" },
   { value: "txt", label: "TXT", group: "Text" },
   { value: "rtf", label: "RTF", group: "Text" },
   { value: "eml", label: "EML", group: "Email" },
@@ -178,6 +179,7 @@ export const TO_FORMAT_OPTIONS = [
   { value: "xlsx", label: "XLSX", group: "Spreadsheet" },
   { value: "pptx", label: "PPTX", group: "Presentation" },
   { value: "odp", label: "ODP", group: "Presentation" },
+  { value: "json", label: "Editable PDF JSON", group: "Text" },
   { value: "txt", label: "TXT", group: "Text" },
   { value: "rtf", label: "RTF", group: "Text" },
   { value: "md", label: "MD", group: "Text" },
@@ -197,7 +199,9 @@ export const TO_FORMAT_OPTIONS = [
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   any: ["pdf"], // Mixed files always convert to PDF
   image: ["pdf"], // Multiple images always convert to PDF
+  json: ["pdf"],
   pdf: [
+    "json",
     "png",
     "jpg",
     "gif",
@@ -259,7 +263,9 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
 export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   any: { pdf: "file-to-pdf" }, // Mixed files use file-to-pdf endpoint
   image: { pdf: "img-to-pdf" }, // Multiple images use img-to-pdf endpoint
+  json: { pdf: "text-editor-to-pdf" },
   pdf: {
+    json: "pdf-to-text-editor",
     png: "pdf-to-img",
     jpg: "pdf-to-img",
     gif: "pdf-to-img",
